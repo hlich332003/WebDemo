@@ -1,58 +1,26 @@
-<div class="row">
-  <div class="col-md-3">
-    <span class="hipster img-fluid rounded"></span>
-  </div>
+<section class="hero">
+  <h1>Chào mừng đến với SHOPAPPDEMO</h1>
+  <p>Nơi mua sắm tin cậy cho mọi người</p>
+  <a routerLink="/products" class="cta-button">Mua sắm ngay</a>
+</section>
 
-  <div class="col-md-9">
-    <h1 class="display-4"><span>Welcome, Java Hipster!</span> (Web Demo)</h1>
-
-    <p class="lead">This is your homepage</p>
-
-    <div>
-      @if (account() !== null) {
-        <div class="alert alert-success">
-          @if (account(); as accountRef) {
-            <span id="home-logged-message">You are logged in as user &quot;{{ accountRef.login }}&quot;.</span>
-          }
+<section class="categories-section">
+  <h2>🔥 Danh Mục Nổi Bật</h2>
+  <div class="categories-grid">
+    <div class="category-card" *ngFor="let category of featuredCategories">
+      <h3>{{ category.name }}</h3>
+      <div class="category-products">
+        <div class="category-product" *ngFor="let product of category.products.slice(0, 4)" (click)="viewProductDetail(product.id)">
+          <img [src]="product.image" [alt]="product.name" loading="lazy" />
+          <h4>{{ product.name }}</h4>
+          <p class="price">{{ formatPrice(product.price) }}</p>
+          <small>Còn {{ product.stock }} sản phẩm</small>
+          <button (click)="addToCart(product.id); $event.stopPropagation()" [disabled]="product.stock === 0" class="add-to-cart-btn">
+            🛒 Thêm vào giỏ
+          </button>
         </div>
-      } @else {
-        <div class="alert alert-warning">
-          <span>If you want to </span>
-          <a class="alert-link" (click)="login()">sign in</a
-          ><span
-            >, you can try the default accounts:<br />- Administrator (login=&quot;admin&quot; and password=&quot;admin&quot;) <br />- User
-            (login=&quot;user&quot; and password=&quot;user&quot;).</span
-          >
-        </div>
-
-        <div class="alert alert-warning">
-          <span>You don&apos;t have an account yet?</span>&nbsp;
-          <a class="alert-link" routerLink="/account/register">Register a new account</a>
-        </div>
-      }
+      </div>
+      <a [routerLink]="['/products']" [queryParams]="{ category: category.slug }" class="view-more-btn"> Xem tất cả {{ category.name }} </a>
     </div>
-
-    <p>If you have any question on JHipster:</p>
-
-    <ul>
-      <li><a href="https://www.jhipster.tech/" target="_blank" rel="noopener noreferrer">JHipster homepage</a></li>
-      <li>
-        <a href="https://stackoverflow.com/tags/jhipster/info" target="_blank" rel="noopener noreferrer">JHipster on Stack Overflow</a>
-      </li>
-      <li>
-        <a href="https://github.com/jhipster/generator-jhipster/issues?state=open" target="_blank" rel="noopener noreferrer"
-          >JHipster bug tracker</a
-        >
-      </li>
-      <li>
-        <a href="https://gitter.im/jhipster/generator-jhipster" target="_blank" rel="noopener noreferrer">JHipster public chat room</a>
-      </li>
-      <li><a href="https://twitter.com/jhipster" target="_blank" rel="noopener noreferrer">follow &#64;jhipster on Twitter</a></li>
-    </ul>
-
-    <p>
-      <span>If you like JHipster, don&apos;t forget to give us a star on</span>
-      <a href="https://github.com/jhipster/generator-jhipster" target="_blank" rel="noopener noreferrer">GitHub</a>!
-    </p>
   </div>
-</div>
+</section>

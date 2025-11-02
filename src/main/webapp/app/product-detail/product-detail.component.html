@@ -1,0 +1,14 @@
+<div class="product-detail" *ngIf="product">
+  <img [src]="product.image" [alt]="product.name" />
+  <div class="product-info">
+    <h2>{{ product.name }}</h2>
+    <p class="price">{{ formatPrice(product.price) }}</p>
+    <p class="stock">Còn {{ product.stock }} sản phẩm</p>
+    <button (click)="addToCart(product.id)" [disabled]="product.stock === 0" class="add-to-cart-btn">🛒 Thêm vào giỏ</button>
+  </div>
+</div>
+
+<div *ngIf="!product">
+  <p>😔 Không tìm thấy sản phẩm</p>
+  <a routerLink="/product-list" class="btn btn-primary">Quay lại danh sách</a>
+</div>

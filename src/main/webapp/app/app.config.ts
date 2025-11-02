@@ -12,16 +12,26 @@ import {
 } from '@angular/router';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-
 import { NgbDateAdapter } from '@ng-bootstrap/ng-bootstrap';
 
 import './config/dayjs';
 import { environment } from 'environments/environment';
 import { httpInterceptorProviders } from './core/interceptor';
 import routes from './app.routes';
-// jhipster-needle-angular-add-module-import JHipster will add new module here
 import { NgbDateDayjsAdapter } from './config/datepicker-adapter';
 import { AppPageTitleStrategy } from './app-page-title-strategy';
+
+// 👉 Cấu hình chung (từ config.js cũ)
+export const CONFIG = {
+  CART_STORAGE_KEY: 'shopapp_cart',
+  PRODUCTS_STORAGE_KEY: 'shopapp_products',
+  THEME: {
+    primary: '#004080',
+    secondary: '#ff6b6b',
+    success: '#28a745',
+    danger: '#dc3545',
+  },
+};
 
 const routerFeatures: RouterFeatures[] = [
   withComponentInputBinding(),
@@ -38,6 +48,7 @@ const routerFeatures: RouterFeatures[] = [
     }
   }),
 ];
+
 if (environment.DEBUG_INFO_ENABLED) {
   routerFeatures.push(withDebugTracing());
 }
@@ -46,7 +57,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes, ...routerFeatures),
     importProvidersFrom(BrowserModule),
-    // Set this to true to enable service worker (PWA)
     importProvidersFrom(ServiceWorkerModule.register('ngsw-worker.js', { enabled: false })),
     provideHttpClient(withInterceptorsFromDi()),
     Title,

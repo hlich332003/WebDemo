@@ -12,11 +12,12 @@ import NavbarItem from './navbar-item.model';
 
 @Component({
   selector: 'jhi-navbar',
+  standalone: true,
   templateUrl: './navbar.component.html',
-  styleUrl: './navbar.component.scss',
+  styleUrls: ['./navbar.component.scss'],
   imports: [RouterModule, SharedModule, HasAnyAuthorityDirective],
 })
-export default class NavbarComponent implements OnInit {
+export class NavbarComponent implements OnInit {
   inProduction?: boolean;
   isNavbarCollapsed = signal(true);
   openAPIEnabled?: boolean;

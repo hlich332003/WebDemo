@@ -1,0 +1,36 @@
+<h1>🛒 Giỏ hàng của bạn</h1>
+
+<div *ngIf="cart.length === 0" class="empty-cart">
+  <p>🛒 Giỏ hàng của bạn đang trống</p>
+  <a routerLink="/product-list" class="btn btn-primary">Mua sắm ngay</a>
+</div>
+
+<div *ngIf="cart.length > 0">
+  <div class="cart-item" *ngFor="let item of cart">
+    <img [src]="item.image" [alt]="item.name" />
+    <div class="item-info">
+      <h4>{{ item.name }}</h4>
+      <p class="price">{{ formatPrice(item.price) }}</p>
+    </div>
+    <div class="quantity-controls">
+      <button (click)="updateQuantity(item.id, item.quantity - 1)">−</button>
+      <span>{{ item.quantity }}</span>
+      <button (click)="updateQuantity(item.id, item.quantity + 1)">+</button>
+    </div>
+    <div class="item-total">
+      {{ formatPrice(+item.price.replace('.', '') * item.quantity) }}
+    </div>
+    <button (click)="remove(item.id)" class="remove-btn">🗑️</button>
+  </div>
+
+  <div class="cart-summary">
+    <div class="cart-total">
+      <strong>Tổng cộng: {{ formatPrice(getTotal()) }}</strong>
+    </div>
+  </div>
+
+  <div class="cart-actions">
+    <a routerLink="/product-list" class="btn btn-secondary">← Tiếp tục mua sắm</a>
+    <button [disabled]="cart.length === 0" routerLink="/checkout" class="btn btn-primary">Thanh toán →</button>
+  </div>
+</div>
