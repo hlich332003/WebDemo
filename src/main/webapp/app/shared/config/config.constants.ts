@@ -1,5 +1,6 @@
 export const CONFIG = {
   CART_STORAGE_KEY: 'shopapp_cart',
+  ORDERS_STORAGE_KEY: 'shopapp_orders',
   PRODUCTS_STORAGE_KEY: 'shopapp_products',
   THEME: {
     primary: '#004080',

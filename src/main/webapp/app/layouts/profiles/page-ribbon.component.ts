@@ -8,6 +8,7 @@ import { ProfileService } from './profile.service';
 
 @Component({
   selector: 'jhi-page-ribbon',
+  standalone: true,
   template: `
     @if (ribbonEnvSignal; as ribbonEnv) {
       <div class="ribbon">

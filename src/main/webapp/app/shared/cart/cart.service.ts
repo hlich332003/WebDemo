@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { ProductService } from '../product/product.service';
 import { NotificationService } from '../notification/notification.service';
+import { CONFIG } from 'app/shared/config/config.constants';
 
 @Injectable({ providedIn: 'root' })
 export class CartService {
   private cart: any[] = [];
-  private readonly CART_KEY = 'shopapp_cart';
-  private readonly ORDER_KEY = 'shopapp_orders';
+  private readonly CART_KEY = CONFIG.CART_STORAGE_KEY;
+  private readonly ORDER_KEY = CONFIG.ORDERS_STORAGE_KEY;
 
   constructor(
     private productService: ProductService,
@@ -19,6 +20,11 @@ export class CartService {
     const stored = localStorage.getItem(this.CART_KEY);
     try {
       this.cart = stored ? JSON.parse(stored) : [];
+      this.cart.forEach(item => {
+        if (item.selected === undefined) {
+          item.selected = true;
+        }
+      });
     } catch (e) {
       console.error('❌ Lỗi parse giỏ hàng:', e);
       this.cart = [];
@@ -33,10 +39,24 @@ export class CartService {
     return [...this.cart];
   }
 
+  getSelectedItems(): any[] {
+    return this.cart.filter(item => item.selected);
+  }
+
+  getNumericPrice(price: string | number): number {
+    if (typeof price === 'string') {
+      return parseInt(price.replace(/\./g, ''));
+    }
+    return price;
+  }
+
   getCartTotal(): number {
     return this.cart.reduce((total, item) => {
-      const price = typeof item.price === 'string' ? parseInt(item.price.replace(/\./g, '')) : item.price;
-      return total + price * item.quantity;
+      if (item.selected) {
+        const price = this.getNumericPrice(item.price);
+        return total + price * item.quantity;
+      }
+      return total;
     }, 0);
   }
 
@@ -63,6 +83,7 @@ export class CartService {
         return false;
       }
       item.quantity += quantity;
+      item.selected = true;
     } else {
       this.cart.push({
         id: product.id,
@@ -70,6 +91,7 @@ export class CartService {
         price: product.price,
         image: product.image,
         quantity,
+        selected: true,
       });
     }
 
@@ -108,13 +130,28 @@ export class CartService {
     }
   }
 
+  toggleItemSelected(productId: number): void {
+    const item = this.cart.find(i => i.id === productId);
+    if (item) {
+      item.selected = !item.selected;
+      this.saveCart();
+    }
+  }
+
+  toggleAllItems(selected: boolean): void {
+    this.cart.forEach(item => (item.selected = selected));
+    this.saveCart();
+  }
+
   processPayment(): any | false {
-    if (this.cart.length === 0) {
-      this.notify.error('Giỏ hàng trống!');
+    const selectedItems = this.cart.filter(item => item.selected);
+
+    if (selectedItems.length === 0) {
+      this.notify.error('Vui lòng chọn ít nhất một sản phẩm để thanh toán!');
       return false;
     }
 
-    for (const item of this.cart) {
+    for (const item of selectedItems) {
       const product = this.productService.findById(item.id);
       if (!product || product.stock < item.quantity) {
         this.notify.error(`"${item.name}" không đủ số lượng!`);
@@ -122,7 +159,7 @@ export class CartService {
       }
     }
 
-    for (const item of this.cart) {
+    for (const item of selectedItems) {
       const product = this.productService.findById(item.id);
       if (product) {
         product.stock -= item.quantity;
@@ -132,14 +169,16 @@ export class CartService {
 
     const order = {
       id: Date.now(),
-      items: [...this.cart],
+      items: [...selectedItems],
       total: this.getCartTotal(),
       date: new Date().toISOString(),
     };
 
     this.saveOrder(order);
-    this.cart = [];
+
+    this.cart = this.cart.filter(item => !item.selected);
     this.saveCart();
+
     this.notify.success('✅ Thanh toán thành công!');
     return order;
   }

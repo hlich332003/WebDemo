@@ -24,7 +24,10 @@ export class ProductDetailComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.queryParamMap.get('id'));
+    // Đọc id từ route param '/product/:id' (ưu tiên), fallback query param nếu cần
+    const paramId = this.route.snapshot.paramMap.get('id');
+    const queryId = this.route.snapshot.queryParamMap.get('id');
+    const id = Number(paramId ?? queryId);
     if (id) {
       this.product = this.productService.findById(id);
     }
@@ -36,5 +39,9 @@ export class ProductDetailComponent implements OnInit {
 
   formatPrice(price: string | number): string {
     return this.utils.formatPrice(price);
+  }
+
+  previousState(): void {
+    window.history.back();
   }
 }

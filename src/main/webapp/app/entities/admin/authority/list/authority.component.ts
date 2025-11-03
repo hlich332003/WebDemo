@@ -13,6 +13,7 @@ import { AuthorityDeleteDialogComponent } from '../delete/authority-delete-dialo
 
 @Component({
   selector: 'jhi-authority',
+  standalone: true,
   templateUrl: './authority.component.html',
   imports: [RouterModule, FormsModule, SharedModule, SortDirective, SortByDirective],
 })

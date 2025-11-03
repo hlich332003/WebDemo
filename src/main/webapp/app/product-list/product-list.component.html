@@ -1,23 +1,24 @@
 <h1>🛍️ Tất cả Sản phẩm</h1>
 
 <div class="filter-section">
-  <input type="text" [(ngModel)]="searchTerm" (keyup)="searchProducts()" placeholder="🔍 Tìm kiếm sản phẩm..." />
-  <select [(ngModel)]="selectedCategory" (change)="filterByCategory()">
+  <input type="text" [(ngModel)]="searchTerm" (keyup)="filterAndSearch()" placeholder="🔍 Tìm kiếm sản phẩm..." />
+  <select [(ngModel)]="selectedCategory" (change)="filterAndSearch()">
     <option value="all">Tất cả sản phẩm</option>
     <option *ngFor="let category of categories" [value]="category.slug">{{ category.name }}</option>
   </select>
 </div>
 
 <div class="products-grid">
-  <div class="product-card" *ngFor="let product of filteredProducts">
+  <div class="product-card" *ngFor="let product of filteredProducts" (click)="viewProductDetail(product.id)">
     <img [src]="product.image" [alt]="product.name" loading="lazy" />
     <div class="product-info">
       <h3>{{ product.name }}</h3>
       <p class="price">{{ formatPrice(product.price) }}</p>
       <p class="stock">Còn {{ product.stock }} sản phẩm</p>
       <div class="product-buttons">
-        <button (click)="addToCart(product.id)" [disabled]="product.stock === 0" class="add-to-cart-btn">🛒 Thêm vào giỏ</button>
-        <a [routerLink]="['/product-detail']" [queryParams]="{ id: product.id }" class="btn-view-detail"> 👁️ Xem chi tiết </a>
+        <button (click)="addToCart(product.id); $event.stopPropagation()" [disabled]="product.stock === 0" class="add-to-cart-btn">
+          🛒 Thêm vào giỏ
+        </button>
       </div>
     </div>
   </div>

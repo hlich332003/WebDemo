@@ -1,4 +1,6 @@
 import { ApplicationConfig, LOCALE_ID, importProvidersFrom, inject } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localeVi from '@angular/common/locales/vi';
 import { BrowserModule, Title } from '@angular/platform-browser';
 import {
   NavigationError,
@@ -21,17 +23,8 @@ import routes from './app.routes';
 import { NgbDateDayjsAdapter } from './config/datepicker-adapter';
 import { AppPageTitleStrategy } from './app-page-title-strategy';
 
-// 👉 Cấu hình chung (từ config.js cũ)
-export const CONFIG = {
-  CART_STORAGE_KEY: 'shopapp_cart',
-  PRODUCTS_STORAGE_KEY: 'shopapp_products',
-  THEME: {
-    primary: '#004080',
-    secondary: '#ff6b6b',
-    success: '#28a745',
-    danger: '#dc3545',
-  },
-};
+// Đăng ký locale tiếng Việt cho các pipe/định dạng mặc định
+registerLocaleData(localeVi);
 
 const routerFeatures: RouterFeatures[] = [
   withComponentInputBinding(),
@@ -60,7 +53,7 @@ export const appConfig: ApplicationConfig = {
     importProvidersFrom(ServiceWorkerModule.register('ngsw-worker.js', { enabled: false })),
     provideHttpClient(withInterceptorsFromDi()),
     Title,
-    { provide: LOCALE_ID, useValue: 'en' },
+    { provide: LOCALE_ID, useValue: 'vi' },
     { provide: NgbDateAdapter, useClass: NgbDateDayjsAdapter },
     httpInterceptorProviders,
     { provide: TitleStrategy, useClass: AppPageTitleStrategy },

@@ -1,0 +1,102 @@
+.footer {
+  background-color: #212529;
+  color: #f8f9fa;
+  padding: 3rem 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  flex-shrink: 0; /* Ngăn footer co lại */
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: grid; /* Sử dụng Grid Layout */
+  grid-template-columns: repeat(3, 1fr); /* Tạo 3 cột bằng nhau */
+  gap: 2rem; /* Khoảng cách giữa các cột */
+}
+
+.footer-section {
+  /* Không cần flex: 1 nữa */
+  h4 {
+    color: #ffffff;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    position: relative;
+
+    &::after {
+      content: '';
+      display: block;
+      width: 40px;
+      height: 2px;
+      background-color: #007bff;
+      margin-top: 0.5rem;
+    }
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+      margin-bottom: 0.7rem;
+
+      a {
+        color: #adb5bd;
+        text-decoration: none;
+        transition: color 0.2s ease-in-out;
+
+        &:hover {
+          color: #007bff;
+        }
+      }
+    }
+  }
+
+  p {
+    color: #adb5bd;
+  }
+
+  .social-icons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+
+    a {
+      color: #adb5bd;
+      font-size: 1.2rem; /* Giảm kích thước icon một chút */
+      text-decoration: none;
+      transition: color 0.2s ease-in-out;
+
+      &:hover {
+        color: #007bff;
+      }
+    }
+  }
+}
+
+.footer-bottom {
+  width: 100%;
+  text-align: center;
+  padding-top: 2rem;
+  margin-top: 2rem;
+  border-top: 1px solid #343a40;
+  color: #adb5bd;
+}
+
+@media (max-width: 768px) {
+  .footer-container {
+    grid-template-columns: 1fr; /* Chuyển thành 1 cột trên màn hình nhỏ */
+    text-align: center;
+  }
+
+  .footer-section h4::after {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .footer-section .social-icons {
+    justify-content: center;
+  }
+}

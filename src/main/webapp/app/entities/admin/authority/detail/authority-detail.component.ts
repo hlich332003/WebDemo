@@ -6,6 +6,7 @@ import { IAuthority } from '../authority.model';
 
 @Component({
   selector: 'jhi-authority-detail',
+  standalone: true,
   templateUrl: './authority-detail.component.html',
   imports: [SharedModule, RouterModule],
 })

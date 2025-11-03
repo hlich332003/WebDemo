@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
@@ -15,7 +16,7 @@ import { UtilsService } from 'app/shared/utils/utils.service';
   standalone: true,
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
-  imports: [SharedModule, RouterModule],
+  imports: [SharedModule, RouterModule, CommonModule],
 })
 export class HomeComponent implements OnInit, OnDestroy {
   account = signal<Account | null>(null);

@@ -59,6 +59,13 @@ export class ProductService {
             image: 'https://via.placeholder.com/200x150/007acc/ffffff?text=Dell',
             stock: 6,
           },
+          {
+            id: 105, // Sản phẩm mới
+            name: 'ViewSonic VX2780J',
+            price: '5.800.000',
+            image: 'https://via.placeholder.com/200x150/f0ad4e/ffffff?text=ViewSonic',
+            stock: 10,
+          },
         ],
       },
       {
@@ -121,6 +128,27 @@ export class ProductService {
             price: '2.800.000',
             image: 'https://via.placeholder.com/200x150/45b7d1/ffffff?text=Ghế2',
             stock: 12,
+          },
+        ],
+      },
+      {
+        id: 4, // Danh mục mới
+        name: '🖱️ Chuột Máy Tính',
+        slug: 'chuot-may-tinh',
+        products: [
+          {
+            id: 401,
+            name: 'Logitech G Pro X Superlight',
+            price: '2.990.000',
+            image: 'https://via.placeholder.com/200x150/d9534f/ffffff?text=LogitechG',
+            stock: 25,
+          },
+          {
+            id: 402,
+            name: 'Razer Viper Ultimate',
+            price: '2.500.000',
+            image: 'https://via.placeholder.com/200x150/5cb85c/ffffff?text=RazerViper',
+            stock: 18,
           },
         ],
       },

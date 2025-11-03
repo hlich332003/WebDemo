@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 
 import { CartService } from 'app/shared/cart/cart.service';
 import { UtilsService } from 'app/shared/utils/utils.service';
+import { NotificationService } from 'app/shared/notification/notification.service';
 
 @Component({
   selector: 'jhi-checkout',
@@ -18,13 +19,14 @@ export class CheckoutComponent implements OnInit {
   total = 0;
 
   constructor(
-    private cartService: CartService,
+    public cartService: CartService,
     private utils: UtilsService,
+    private notify: NotificationService,
     private router: Router,
   ) {}
 
   ngOnInit(): void {
-    this.cart = this.cartService.getCart();
+    this.cart = this.cartService.getSelectedItems(); // Chỉ lấy các sản phẩm đã được chọn
     this.total = this.cartService.getCartTotal();
   }
 
@@ -36,15 +38,15 @@ export class CheckoutComponent implements OnInit {
     event.preventDefault();
 
     if (this.cart.length === 0) {
-      this.utils.showNotification('Giỏ hàng trống!', 'error');
+      this.notify.error('Giỏ hàng trống hoặc chưa có sản phẩm nào được chọn!');
       return;
     }
 
     const order = this.cartService.processPayment();
     if (order) {
-      this.utils.showNotification('✅ Thanh toán thành công! Cảm ơn bạn đã mua sắm.', 'success');
+      this.notify.success('✅ Thanh toán thành công! Cảm ơn bạn đã mua sắm.');
       setTimeout(() => {
-        this.router.navigate(['/home']);
+        this.router.navigate(['/']);
       }, 2000);
     }
   }

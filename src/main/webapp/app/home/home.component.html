@@ -1,26 +1,26 @@
-<section class="hero">
-  <h1>Chào mừng đến với SHOPAPPDEMO</h1>
-  <p>Nơi mua sắm tin cậy cho mọi người</p>
-  <a routerLink="/products" class="cta-button">Mua sắm ngay</a>
+<section class="hero-section">
+  <div class="hero-content">
+    <h1>Chào mừng đến với WebDemo</h1>
+    <p>Nơi mua sắm tin cậy cho mọi người</p>
+    <a routerLink="/products" class="btn btn-primary">Mua sắm ngay</a>
+  </div>
 </section>
 
-<section class="categories-section">
-  <h2>🔥 Danh Mục Nổi Bật</h2>
-  <div class="categories-grid">
+<section class="featured-categories">
+  <h2 class="section-title">🔥 Danh Mục Nổi Bật</h2>
+  <div class="category-grid">
     <div class="category-card" *ngFor="let category of featuredCategories">
-      <h3>{{ category.name }}</h3>
-      <div class="category-products">
-        <div class="category-product" *ngFor="let product of category.products.slice(0, 4)" (click)="viewProductDetail(product.id)">
+      <h3 class="category-title">{{ category.name }}</h3>
+      <div class="product-preview-grid">
+        <div class="product-card-sm" *ngFor="let product of category.products.slice(0, 4)" (click)="viewProductDetail(product.id)">
           <img [src]="product.image" [alt]="product.name" loading="lazy" />
-          <h4>{{ product.name }}</h4>
-          <p class="price">{{ formatPrice(product.price) }}</p>
-          <small>Còn {{ product.stock }} sản phẩm</small>
-          <button (click)="addToCart(product.id); $event.stopPropagation()" [disabled]="product.stock === 0" class="add-to-cart-btn">
-            🛒 Thêm vào giỏ
-          </button>
+          <div class="product-info">
+            <h4 class="product-name">{{ product.name }}</h4>
+            <p class="product-price">{{ formatPrice(product.price) }}</p>
+          </div>
         </div>
       </div>
-      <a [routerLink]="['/products']" [queryParams]="{ category: category.slug }" class="view-more-btn"> Xem tất cả {{ category.name }} </a>
+      <a [routerLink]="['/products']" [queryParams]="{ category: category.slug }" class="view-all-link">Xem tất cả {{ category.name }} →</a>
     </div>
   </div>
 </section>

@@ -5,6 +5,15 @@
       <span class="navbar-title">WebDemo</span>
       <span class="navbar-version">{{ version }}</span>
     </a>
+
+    <!-- Thanh tìm kiếm -->
+    <div class="search-container">
+      <form class="search-form" (ngSubmit)="search()">
+        <input type="text" [(ngModel)]="searchTerm" name="searchTerm" placeholder="🔍 Tìm kiếm sản phẩm..." />
+        <button type="submit"><fa-icon icon="search"></fa-icon></button>
+      </form>
+    </div>
+
     <a
       class="navbar-toggler d-lg-none"
       href="javascript:void(0);"
@@ -24,6 +33,18 @@
             <span>
               <fa-icon icon="home"></fa-icon>
               <span>Home</span>
+            </span>
+          </a>
+        </li>
+        <!-- Nút giỏ hàng -->
+        <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          <a class="nav-link" routerLink="/cart" (click)="collapseNavbar()">
+            <span>
+              <fa-icon icon="shopping-cart"></fa-icon>
+              <span>Giỏ hàng</span>
+              @if (getCartItemCount() > 0) {
+                <span class="badge bg-danger rounded-pill">{{ getCartItemCount() }}</span>
+              }
             </span>
           </a>
         </li>
@@ -176,4 +197,6 @@
       </ul>
     </div>
   </div>
+  <!-- Notification container -->
+  <div id="notification" class="notification hidden" aria-live="polite"></div>
 </nav>
