@@ -7,7 +7,7 @@
     </a>
 
     <!-- Thanh tìm kiếm -->
-    <div class="search-container">
+    <div class="search-container flex-grow-1">
       <form class="search-form" (ngSubmit)="search()">
         <input type="text" [(ngModel)]="searchTerm" name="searchTerm" placeholder="🔍 Tìm kiếm sản phẩm..." />
         <button type="submit"><fa-icon icon="search"></fa-icon></button>
@@ -36,8 +36,8 @@
             </span>
           </a>
         </li>
-        <!-- Nút giỏ hàng -->
-        <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <!-- Nút giỏ hàng (ẩn cho admin) -->
+        <li *ngIf="showCart()" class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
           <a class="nav-link" routerLink="/cart" (click)="collapseNavbar()">
             <span>
               <fa-icon icon="shopping-cart"></fa-icon>
@@ -49,25 +49,24 @@
           </a>
         </li>
         <!-- jhipster-needle-add-element-to-menu - JHipster will add new menu items here -->
-        @if (account() !== null) {
-          <li
-            ngbDropdown
-            class="nav-item dropdown pointer"
-            display="dynamic"
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{ exact: true }"
-          >
-            <a class="nav-link dropdown-toggle" ngbDropdownToggle href="javascript:void(0);" id="entity-menu" data-cy="entity">
-              <span>
-                <fa-icon icon="th-list"></fa-icon>
-                <span>Entities</span>
-              </span>
-            </a>
-            <ul class="dropdown-menu" ngbDropdownMenu aria-labelledby="entity-menu">
-              <!-- jhipster-needle-add-entity-to-menu - JHipster will add entities to the menu here -->
-            </ul>
-          </li>
-        }
+        <li
+          *jhiHasAnyAuthority="'ROLE_ADMIN'"
+          ngbDropdown
+          class="nav-item dropdown pointer"
+          display="dynamic"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          <a class="nav-link dropdown-toggle" ngbDropdownToggle href="javascript:void(0);" id="entity-menu" data-cy="entity">
+            <span>
+              <fa-icon icon="th-list"></fa-icon>
+              <span>Entities</span>
+            </span>
+          </a>
+          <ul class="dropdown-menu" ngbDropdownMenu aria-labelledby="entity-menu">
+            <!-- jhipster-needle-add-entity-to-menu - JHipster will add entities to the menu here -->
+          </ul>
+        </li>
         <li
           *jhiHasAnyAuthority="'ROLE_ADMIN'"
           ngbDropdown
@@ -83,6 +82,18 @@
             </span>
           </a>
           <ul class="dropdown-menu" ngbDropdownMenu aria-labelledby="admin-menu">
+            <li>
+              <a class="dropdown-item" routerLink="/admin/product-management" routerLinkActive="active" (click)="collapseNavbar()">
+                <fa-icon icon="box-open" [fixedWidth]="true"></fa-icon>
+                <span>Quản lý sản phẩm</span>
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" routerLink="/admin/order-management" routerLinkActive="active" (click)="collapseNavbar()">
+                <fa-icon icon="receipt" [fixedWidth]="true"></fa-icon>
+                <span>Quản lý đơn hàng</span>
+              </a>
+            </li>
             <li>
               <a
                 class="dropdown-item"
@@ -142,6 +153,18 @@
           </a>
           <ul class="dropdown-menu" ngbDropdownMenu aria-labelledby="account-menu">
             @if (accountRef !== null) {
+              <li>
+                <a
+                  class="dropdown-item"
+                  routerLink="/account/my-orders"
+                  routerLinkActive="active"
+                  (click)="collapseNavbar()"
+                  data-cy="myOrders"
+                >
+                  <fa-icon icon="receipt" [fixedWidth]="true"></fa-icon>
+                  <span>Đơn hàng của tôi</span>
+                </a>
+              </li>
               <li>
                 <a
                   class="dropdown-item"

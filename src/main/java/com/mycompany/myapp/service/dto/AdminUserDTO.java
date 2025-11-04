@@ -4,17 +4,11 @@ import com.mycompany.myapp.config.Constants;
 import com.mycompany.myapp.domain.Authority;
 import com.mycompany.myapp.domain.User;
 import jakarta.validation.constraints.*;
-import java.io.Serializable;
 import java.time.Instant;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * A DTO representing a user, with his authorities.
- */
-public class AdminUserDTO implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class AdminUserDTO {
 
     private Long id;
 
@@ -32,6 +26,9 @@ public class AdminUserDTO implements Serializable {
     @Email
     @Size(min = 5, max = 254)
     private String email;
+
+    @Size(max = 20)
+    private String phone;
 
     @Size(max = 256)
     private String imageUrl;
@@ -51,9 +48,7 @@ public class AdminUserDTO implements Serializable {
 
     private Set<String> authorities;
 
-    public AdminUserDTO() {
-        // Empty constructor needed for Jackson.
-    }
+    public AdminUserDTO() {}
 
     public AdminUserDTO(User user) {
         this.id = user.getId();
@@ -61,6 +56,7 @@ public class AdminUserDTO implements Serializable {
         this.firstName = user.getFirstName();
         this.lastName = user.getLastName();
         this.email = user.getEmail();
+        this.phone = user.getPhone();
         this.activated = user.isActivated();
         this.imageUrl = user.getImageUrl();
         this.langKey = user.getLangKey();
@@ -109,6 +105,14 @@ public class AdminUserDTO implements Serializable {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public String getImageUrl() {
@@ -175,22 +179,46 @@ public class AdminUserDTO implements Serializable {
         this.authorities = authorities;
     }
 
-    // prettier-ignore
     @Override
     public String toString() {
-        return "AdminUserDTO{" +
-            "login='" + login + '\'' +
-            ", firstName='" + firstName + '\'' +
-            ", lastName='" + lastName + '\'' +
-            ", email='" + email + '\'' +
-            ", imageUrl='" + imageUrl + '\'' +
-            ", activated=" + activated +
-            ", langKey='" + langKey + '\'' +
-            ", createdBy=" + createdBy +
-            ", createdDate=" + createdDate +
-            ", lastModifiedBy='" + lastModifiedBy + '\'' +
-            ", lastModifiedDate=" + lastModifiedDate +
-            ", authorities=" + authorities +
-            "}";
+        return (
+            "AdminUserDTO{" +
+            "login='" +
+            login +
+            '\'' +
+            ", firstName='" +
+            firstName +
+            '\'' +
+            ", lastName='" +
+            lastName +
+            '\'' +
+            ", email='" +
+            email +
+            '\'' +
+            ", phone='" +
+            phone +
+            '\'' +
+            ", imageUrl='" +
+            imageUrl +
+            '\'' +
+            ", activated=" +
+            activated +
+            ", langKey='" +
+            langKey +
+            '\'' +
+            ", createdBy='" +
+            createdBy +
+            '\'' +
+            ", createdDate=" +
+            createdDate +
+            ", lastModifiedBy='" +
+            lastModifiedBy +
+            '\'' +
+            ", lastModifiedDate=" +
+            lastModifiedDate +
+            ", authorities=" +
+            authorities +
+            "}"
+        );
     }
 }

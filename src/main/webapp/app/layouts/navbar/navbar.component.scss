@@ -17,12 +17,11 @@ Navbar
 
 .navbar {
   padding: 0.2rem 1rem;
-  position: relative; /* Cần thiết cho việc định vị tuyệt đối của phần tử con */
 
   .container-fluid {
     display: flex;
     align-items: center;
-    justify-content: space-between; /* Đẩy các phần tử ra hai bên */
+    flex-wrap: nowrap; /* Ngăn các item xuống dòng */
   }
 
   a.nav-link {
@@ -43,14 +42,15 @@ Logo styles
 }
 
 /* ==========================================================================
-Search form styles
+Search form styles (Sửa lỗi layout)
 ========================================================================== */
 .search-container {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  // Xóa position: absolute và các thuộc tính liên quan
+  // left: 50%;
+  // transform: translateX(-50%);
   width: 50%;
   max-width: 600px;
+  margin: 0 1.5rem; /* Thêm khoảng cách với logo và menu bên phải */
 }
 
 .search-form {

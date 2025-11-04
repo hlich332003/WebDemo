@@ -1,6 +1,6 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms'; // Import FormsModule
+import { FormsModule } from '@angular/forms';
 
 import SharedModule from 'app/shared/shared.module';
 import HasAnyAuthorityDirective from 'app/shared/auth/has-any-authority.directive';
@@ -17,7 +17,7 @@ import { CartService } from 'app/shared/cart/cart.service';
   standalone: true,
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss'],
-  imports: [RouterModule, SharedModule, HasAnyAuthorityDirective, FormsModule], // Thêm FormsModule vào imports
+  imports: [RouterModule, SharedModule, HasAnyAuthorityDirective, FormsModule],
 })
 export class NavbarComponent implements OnInit {
   inProduction?: boolean;
@@ -26,7 +26,21 @@ export class NavbarComponent implements OnInit {
   version = '';
   account = inject(AccountService).trackCurrentAccount();
   entitiesNavbarItems: NavbarItem[] = [];
-  searchTerm = ''; // Thêm thuộc tính searchTerm
+  searchTerm = '';
+
+  /**
+   * Computed signal to determine if the cart should be shown.
+   * The cart is hidden only for users with the 'ROLE_ADMIN' authority.
+   */
+  showCart = computed(() => {
+    const currentAccount = this.account();
+    // If the user is not logged in, show the cart.
+    if (!currentAccount) {
+      return true;
+    }
+    // Hide the cart if the user is an admin.
+    return !currentAccount.authorities.includes('ROLE_ADMIN');
+  });
 
   private readonly loginService = inject(LoginService);
   private readonly profileService = inject(ProfileService);
@@ -70,11 +84,10 @@ export class NavbarComponent implements OnInit {
     return this.cartService.getCartItemsCount();
   }
 
-  // Phương thức xử lý tìm kiếm
   search(): void {
     if (this.searchTerm.trim()) {
       this.router.navigate(['/products'], { queryParams: { search: this.searchTerm.trim() } });
-      this.searchTerm = ''; // Xóa nội dung tìm kiếm sau khi đã tìm
+      this.searchTerm = '';
     }
   }
 }

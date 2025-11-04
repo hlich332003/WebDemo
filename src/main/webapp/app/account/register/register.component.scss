@@ -1,0 +1,71 @@
+@import '../../../content/scss/variables';
+
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 500px;
+  padding: 2.5rem;
+  background: $card-bg;
+  border-radius: $card-border-radius;
+  box-shadow: $box-shadow;
+
+  h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+
+  .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
+    font-size: 1rem;
+
+    &.ng-invalid.ng-touched {
+      border-color: $danger;
+    }
+  }
+}
+
+.error-message {
+  color: $danger;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+
+  small {
+    display: block;
+  }
+}
+
+.btn-register {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1.1rem;
+  margin-top: 1rem;
+}
+
+.alert-link {
+  color: $primary;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

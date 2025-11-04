@@ -21,16 +21,51 @@
 
   <div class="customer-info">
     <h3>Thông tin khách hàng</h3>
-    <form (submit)="confirmPayment($event)">
-      <input type="text" placeholder="Họ và tên" required />
-      <input type="tel" placeholder="Số điện thoại" required />
-      <input type="email" placeholder="Email" required />
-      <textarea placeholder="Địa chỉ giao hàng" required></textarea>
-      <select required>
-        <option value="">Phương thức thanh toán</option>
-        <option value="cod">Thanh toán khi nhận hàng</option>
-        <option value="bank">Chuyển khoản ngân hàng</option>
-      </select>
+    <form [formGroup]="checkoutForm" (ngSubmit)="confirmPayment()" novalidate>
+      <div class="form-group">
+        <label for="fullName">Họ và tên</label>
+        <input type="text" id="fullName" formControlName="fullName" placeholder="Họ và tên" />
+        <div *ngIf="checkoutForm.get('fullName')?.invalid && checkoutForm.get('fullName')?.touched" class="error-message">
+          <small *ngIf="checkoutForm.get('fullName')?.errors?.['required']">Vui lòng nhập họ và tên.</small>
+          <small *ngIf="checkoutForm.get('fullName')?.errors?.['minlength']">Họ và tên phải có ít nhất 5 ký tự.</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Số điện thoại</label>
+        <input type="tel" id="phone" formControlName="phone" placeholder="Số điện thoại" />
+        <div *ngIf="checkoutForm.get('phone')?.invalid && checkoutForm.get('phone')?.touched" class="error-message">
+          <small *ngIf="checkoutForm.get('phone')?.errors?.['required']">Vui lòng nhập số điện thoại.</small>
+          <small *ngIf="checkoutForm.get('phone')?.errors?.['pattern']">Số điện thoại không hợp lệ.</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" formControlName="email" placeholder="Email" />
+        <div *ngIf="checkoutForm.get('email')?.invalid && checkoutForm.get('email')?.touched" class="error-message">
+          <small *ngIf="checkoutForm.get('email')?.errors?.['required']">Vui lòng nhập email.</small>
+          <small *ngIf="checkoutForm.get('email')?.errors?.['email']">Email không hợp lệ.</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="address">Địa chỉ giao hàng</label>
+        <textarea id="address" formControlName="address" placeholder="Địa chỉ giao hàng"></textarea>
+        <div *ngIf="checkoutForm.get('address')?.invalid && checkoutForm.get('address')?.touched" class="error-message">
+          <small *ngIf="checkoutForm.get('address')?.errors?.['required']">Vui lòng nhập địa chỉ.</small>
+          <small *ngIf="checkoutForm.get('address')?.errors?.['minlength']">Địa chỉ phải có ít nhất 10 ký tự.</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="paymentMethod">Phương thức thanh toán</label>
+        <select id="paymentMethod" formControlName="paymentMethod">
+          <option value="cod">Thanh toán khi nhận hàng</option>
+          <option value="bank">Chuyển khoản ngân hàng</option>
+        </select>
+      </div>
+
       <button type="submit" class="btn btn-primary btn-payment">Xác nhận thanh toán</button>
     </form>
   </div>

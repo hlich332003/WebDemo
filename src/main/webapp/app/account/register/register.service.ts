@@ -3,7 +3,16 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { ApplicationConfigService } from 'app/core/config/application-config.service';
-import { Registration } from './register.model';
+
+export interface Registration {
+  login: string;
+  email: string;
+  password?: string;
+  langKey?: string;
+  phone?: string;
+  firstName?: string; // Thêm thuộc tính firstName
+  lastName?: string; // Thêm thuộc tính lastName
+}
 
 @Injectable({ providedIn: 'root' })
 export class RegisterService {

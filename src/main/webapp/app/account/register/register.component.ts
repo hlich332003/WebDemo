@@ -13,9 +13,10 @@ import { RegisterService } from './register.service';
   standalone: true,
   imports: [SharedModule, RouterModule, FormsModule, ReactiveFormsModule, PasswordStrengthBarComponent],
   templateUrl: './register.component.html',
+  styleUrls: ['./register.component.scss'],
 })
 export default class RegisterComponent implements AfterViewInit {
-  login = viewChild.required<ElementRef>('login');
+  emailInput = viewChild.required<ElementRef>('email');
 
   doNotMatch = signal(false);
   error = signal(false);
@@ -23,19 +24,18 @@ export default class RegisterComponent implements AfterViewInit {
   errorUserExists = signal(false);
   success = signal(false);
 
+  vietnamesePhonePattern = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+
   registerForm = new FormGroup({
-    login: new FormControl('', {
-      nonNullable: true,
-      validators: [
-        Validators.required,
-        Validators.minLength(1),
-        Validators.maxLength(50),
-        Validators.pattern('^[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$|^[_.@A-Za-z0-9-]+$'),
-      ],
-    }),
+    firstName: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(50)] }),
+    lastName: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(50)] }),
     email: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.minLength(5), Validators.maxLength(254), Validators.email],
+    }),
+    phone: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.pattern(this.vietnamesePhonePattern)],
     }),
     password: new FormControl('', {
       nonNullable: true,
@@ -50,7 +50,7 @@ export default class RegisterComponent implements AfterViewInit {
   private readonly registerService = inject(RegisterService);
 
   ngAfterViewInit(): void {
-    this.login().nativeElement.focus();
+    this.emailInput().nativeElement.focus();
   }
 
   register(): void {
@@ -63,9 +63,9 @@ export default class RegisterComponent implements AfterViewInit {
     if (password !== confirmPassword) {
       this.doNotMatch.set(true);
     } else {
-      const { login, email } = this.registerForm.getRawValue();
+      const { firstName, lastName, email, phone } = this.registerForm.getRawValue();
       this.registerService
-        .save({ login, email, password, langKey: 'en' })
+        .save({ login: email, email, password, firstName, lastName, phone, langKey: 'en' })
         .subscribe({ next: () => this.success.set(true), error: response => this.processError(response) });
     }
   }

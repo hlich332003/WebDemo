@@ -14,15 +14,9 @@ import java.util.Locale;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-/**
- * A user.
- */
 @Entity
 @Table(name = "jhi_user")
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class User extends AbstractAuditingEntity<Long> implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -56,6 +50,10 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
     @Column(length = 254, unique = true)
     private String email;
 
+    @Size(max = 20)
+    @Column(name = "phone", length = 20)
+    private String phone;
+
     @NotNull
     @Column(nullable = false)
     private boolean activated = false;
@@ -88,7 +86,6 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
         joinColumns = { @JoinColumn(name = "user_id", referencedColumnName = "id") },
         inverseJoinColumns = { @JoinColumn(name = "authority_name", referencedColumnName = "name") }
     )
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     @BatchSize(size = 20)
     private Set<Authority> authorities = new HashSet<>();
 
@@ -104,7 +101,6 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
         return login;
     }
 
-    // Lowercase the login before saving it in database
     public void setLogin(String login) {
         this.login = StringUtils.lowerCase(login, Locale.ENGLISH);
     }
@@ -141,12 +137,12 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
         this.email = email;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
+    public String getPhone() {
+        return phone;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public boolean isActivated() {
@@ -155,6 +151,22 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
 
     public void setActivated(boolean activated) {
         this.activated = activated;
+    }
+
+    public String getLangKey() {
+        return langKey;
+    }
+
+    public void setLangKey(String langKey) {
+        this.langKey = langKey;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public String getActivationKey() {
@@ -181,14 +193,6 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
         this.resetDate = resetDate;
     }
 
-    public String getLangKey() {
-        return langKey;
-    }
-
-    public void setLangKey(String langKey) {
-        this.langKey = langKey;
-    }
-
     public Set<Authority> getAuthorities() {
         return authorities;
     }
@@ -210,22 +214,41 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
 
     @Override
     public int hashCode() {
-        // see https://vladmihalcea.com/how-to-implement-equals-and-hashcode-using-the-jpa-entity-identifier/
         return getClass().hashCode();
     }
 
-    // prettier-ignore
     @Override
     public String toString() {
-        return "User{" +
-            "login='" + login + '\'' +
-            ", firstName='" + firstName + '\'' +
-            ", lastName='" + lastName + '\'' +
-            ", email='" + email + '\'' +
-            ", imageUrl='" + imageUrl + '\'' +
-            ", activated='" + activated + '\'' +
-            ", langKey='" + langKey + '\'' +
-            ", activationKey='" + activationKey + '\'' +
-            "}";
+        return (
+            "User{" +
+            "login='" +
+            login +
+            '\'' +
+            ", firstName='" +
+            firstName +
+            '\'' +
+            ", lastName='" +
+            lastName +
+            '\'' +
+            ", email='" +
+            email +
+            '\'' +
+            ", phone='" +
+            phone +
+            '\'' +
+            ", imageUrl='" +
+            imageUrl +
+            '\'' +
+            ", activated='" +
+            activated +
+            '\'' +
+            ", langKey='" +
+            langKey +
+            '\'' +
+            ", activationKey='" +
+            activationKey +
+            '\'' +
+            "}"
+        );
     }
 }
