@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./target/out-tsc/app",
+    "types": ["@angular/localize"],
+    "composite": true // Thêm dòng này
+  },
+  "files": ["src/main/webapp/main.ts"],
+  "include": ["src/main/webapp/**/*.ts"],
+  "exclude": ["src/main/webapp/**/*.spec.ts"]
+}

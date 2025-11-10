@@ -39,4 +39,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findOneWithAuthoritiesByPhone(String phone);
 
     Page<User> findAllByIdNotNullAndActivatedIsTrue(Pageable pageable);
+
+    @Override
+    @EntityGraph(attributePaths = "authorities")
+    Page<User> findAll(Pageable pageable);
 }

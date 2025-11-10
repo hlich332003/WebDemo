@@ -1,0 +1,56 @@
+<div class="admin-home-container">
+  <h1>Chào mừng, {{ account()?.login }}!</h1>
+  <p>Đây là trang chủ quản trị của bạn.</p>
+
+  <!-- Phần thống kê -->
+  @if (stats()) {
+    <div class="stats-grid">
+      <div class="stat-card">
+        <fa-icon icon="dollar-sign"></fa-icon>
+        <div class="stat-info">
+          <h4>Tổng doanh thu</h4>
+          <p>{{ stats()?.totalRevenue | currency: 'VND' : 'symbol' : '1.0-0' }}</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <fa-icon icon="cart-shopping"></fa-icon>
+        <div class="stat-info">
+          <h4>Tổng đơn hàng</h4>
+          <p>{{ stats()?.totalOrders }}</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <fa-icon icon="users"></fa-icon>
+        <div class="stat-info">
+          <h4>Tổng khách hàng</h4>
+          <p>{{ stats()?.totalCustomers }}</p>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <p>Đang tải thống kê...</p>
+  }
+
+  <hr class="my-4" />
+
+  <h2>Quản lý các mục</h2>
+  <div class="admin-dashboard-links">
+    <a routerLink="/admin/user-management" class="dashboard-link">
+      <fa-icon icon="users"></fa-icon>
+      <span>Quản lý người dùng</span>
+    </a>
+    <a routerLink="/admin/product-management" class="dashboard-link">
+      <fa-icon icon="box-open"></fa-icon>
+      <span>Quản lý sản phẩm</span>
+    </a>
+    <a routerLink="/admin/order-management" class="dashboard-link">
+      <fa-icon icon="receipt"></fa-icon>
+      <span>Quản lý đơn hàng</span>
+    </a>
+    <a routerLink="/authority" class="dashboard-link">
+      <fa-icon icon="asterisk"></fa-icon>
+      <span>Quản lý quyền hạn</span>
+    </a>
+    <!-- Thêm các liên kết quản trị khác tại đây -->
+  </div>
+</div>

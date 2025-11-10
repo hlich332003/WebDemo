@@ -1,18 +1,33 @@
-<div class="product-detail-container">
-  <button (click)="previousState()" class="btn btn-info btn-sm mb-3">← Quay lại</button>
+<div class="product-detail-page">
+  @if (product) {
+    <div class="product-detail-card">
+      <div class="product-image-section">
+        @if (product.imageUrl) {
+          <img [src]="product.imageUrl" [alt]="product.name" />
+        }
+      </div>
+      <div class="product-info-section">
+        <h1 class="product-name">{{ product.name }}</h1>
+        <p class="product-description">{{ product.description }}</p>
+        <p class="product-price">{{ formatPrice(product.price) }}</p>
+        <p class="product-stock">Số lượng tồn kho: {{ product.quantity }}</p>
 
-  <div class="product-detail" *ngIf="product">
-    <img [src]="product.image" [alt]="product.name" />
-    <div class="product-info">
-      <h2>{{ product.name }}</h2>
-      <p class="price">{{ formatPrice(product.price) }}</p>
-      <p class="stock">Còn {{ product.stock }} sản phẩm</p>
-      <button (click)="addToCart(product.id)" [disabled]="product.stock === 0" class="add-to-cart-btn">🛒 Thêm vào giỏ</button>
+        <div class="product-actions">
+          <button type="button" (click)="previousState()" class="btn btn-info">
+            <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span>Quay lại</span>
+          </button>
+
+          @if (account()?.authorities?.includes('ROLE_ADMIN')) {
+            <button type="button" [routerLink]="['/admin/product-management', product.id, 'edit']" class="btn btn-primary">
+              <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span>Sửa</span>
+            </button>
+          } @else {
+            <button type="button" (click)="addToCart(product)" class="btn btn-primary" [disabled]="product.quantity === 0">
+              <fa-icon icon="cart-shopping"></fa-icon>&nbsp;<span>Thêm vào giỏ</span>
+            </button>
+          }
+        </div>
+      </div>
     </div>
-  </div>
-
-  <div *ngIf="!product">
-    <p>😔 Không tìm thấy sản phẩm</p>
-    <a routerLink="/products" class="btn btn-primary">Quay lại danh sách</a>
-  </div>
+  }
 </div>

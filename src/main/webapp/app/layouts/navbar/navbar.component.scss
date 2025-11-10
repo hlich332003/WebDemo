@@ -42,15 +42,12 @@ Logo styles
 }
 
 /* ==========================================================================
-Search form styles (Sửa lỗi layout)
+Search form styles
 ========================================================================== */
 .search-container {
-  // Xóa position: absolute và các thuộc tính liên quan
-  // left: 50%;
-  // transform: translateX(-50%);
   width: 50%;
   max-width: 600px;
-  margin: 0 1.5rem; /* Thêm khoảng cách với logo và menu bên phải */
+  margin: 0 1.5rem;
 }
 
 .search-form {

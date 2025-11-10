@@ -1,0 +1,73 @@
+<div class="order-detail-container">
+  <h1>Chi tiết đơn hàng #{{ order?.id }}</h1>
+
+  @if (isLoading) {
+    <p>Đang tải chi tiết đơn hàng...</p>
+  } @else if (order) {
+    <div class="order-summary-card">
+      <div class="summary-item"><strong>Ngày đặt hàng:</strong> {{ formatOrderDate(order.orderDate) }}</div>
+      <div class="summary-item"><strong>Tổng tiền:</strong> {{ formatPrice(order.totalAmount) }}</div>
+      <div class="summary-item">
+        <strong>Trạng thái:</strong> <span [class]="'order-status-' + (order.status | lowercase)">{{ order.status }}</span>
+      </div>
+    </div>
+
+    <div class="customer-info-card">
+      <h3>Thông tin khách hàng</h3>
+      <div class="info-item"><strong>Họ và tên:</strong> {{ order.customerFullName }}</div>
+      <div class="info-item"><strong>Email:</strong> {{ order.customerEmail }}</div>
+      <div class="info-item"><strong>Điện thoại:</strong> {{ order.customerPhone }}</div>
+      <div class="info-item">
+        <strong>Địa chỉ giao hàng:</strong>
+        @if (!isEditingAddress) {
+          <span>{{ order.deliveryAddress }}</span>
+          @if (order.status === 'PENDING') {
+            <button type="button" class="btn btn-link btn-sm" (click)="toggleEditAddress()">
+              <fa-icon icon="pencil-alt"></fa-icon> Sửa
+            </button>
+          }
+        } @else {
+          <div class="input-group">
+            <input type="text" class="form-control" [(ngModel)]="newDeliveryAddress" />
+            <button type="button" class="btn btn-success btn-sm" (click)="saveDeliveryAddress(order.id!)">
+              <fa-icon icon="check"></fa-icon> Lưu
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="toggleEditAddress()">
+              <fa-icon icon="times"></fa-icon> Hủy
+            </button>
+          </div>
+        }
+      </div>
+      <div class="info-item"><strong>Phương thức thanh toán:</strong> {{ order.paymentMethod }}</div>
+    </div>
+
+    <div class="order-items-card">
+      <h3>Sản phẩm trong đơn hàng</h3>
+      <div class="items-list">
+        @for (item of order.items; track item.id) {
+          <div class="order-item">
+            <div class="item-details">
+              <strong>{{ item.productName }}</strong> x {{ item.quantity }}
+            </div>
+            <div class="item-price">
+              {{ formatPrice((item.price ?? 0) * (item.quantity ?? 0)) }}
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="order-actions">
+      <button type="button" (click)="previousState()" class="btn btn-info me-2">
+        <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span>Quay lại</span>
+      </button>
+      @if (order.status === 'PENDING') {
+        <button type="button" (click)="cancelOrder(order.id!)" class="btn btn-danger">
+          <fa-icon icon="times"></fa-icon>&nbsp;<span>Hủy đơn hàng</span>
+        </button>
+      }
+    </div>
+  } @else {
+    <div class="alert alert-warning">Không tìm thấy đơn hàng.</div>
+  }
+</div>

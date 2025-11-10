@@ -1,37 +1,71 @@
 package com.mycompany.myapp.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.mycompany.myapp.domain.enumeration.OrderStatus; // Import OrderStatus enum
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
+/**
+ * A Order.
+ */
 @Entity
 @Table(name = "jhi_order")
-public class Order extends AbstractAuditingEntity<Long> implements Serializable {
+@SuppressWarnings("common-java:DuplicatedBlocks")
+public class Order implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
     @Column(name = "order_date")
     private Instant orderDate;
 
+    @Column(name = "total_amount")
+    private Double totalAmount;
+
+    @Enumerated(EnumType.STRING) // Chú thích cho Enum
     @Column(name = "status")
-    private String status;
+    private OrderStatus status; // Thay đổi kiểu dữ liệu thành OrderStatus enum
 
-    @Column(name = "total_price")
-    private Double totalPrice;
+    @Column(name = "customer_full_name")
+    private String customerFullName;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties(value = { "orders" }, allowSetters = true)
-    private User user;
+    @Column(name = "customer_email")
+    private String customerEmail;
 
-    // Getters and setters
+    @Column(name = "customer_phone")
+    private String customerPhone;
+
+    @Column(name = "delivery_address")
+    private String deliveryAddress;
+
+    @Column(name = "payment_method")
+    private String paymentMethod;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "user_id") // Explicitly map to user_id column
+    @JsonIgnoreProperties(value = { "authorities" }, allowSetters = true)
+    private User customer;
+
+    @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties(value = { "order", "product" }, allowSetters = true)
+    private Set<OrderItem> items = new HashSet<>();
+
+    // jhipster-needle-entity-add-field - JHipster will add fields here
 
     public Long getId() {
-        return id;
+        return this.id;
+    }
+
+    public Order id(Long id) {
+        this.setId(id);
+        return this;
     }
 
     public void setId(Long id) {
@@ -39,36 +73,129 @@ public class Order extends AbstractAuditingEntity<Long> implements Serializable 
     }
 
     public Instant getOrderDate() {
-        return orderDate;
+        return this.orderDate;
+    }
+
+    public Order orderDate(Instant orderDate) {
+        this.setOrderDate(orderDate);
+        return this;
     }
 
     public void setOrderDate(Instant orderDate) {
         this.orderDate = orderDate;
     }
 
-    public String getStatus() {
-        return status;
+    public Double getTotalAmount() {
+        return this.totalAmount;
     }
 
-    public void setStatus(String status) {
+    public Order totalAmount(Double totalAmount) {
+        this.setTotalAmount(totalAmount);
+        return this;
+    }
+
+    public void setTotalAmount(Double totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public OrderStatus getStatus() { // Getter trả về OrderStatus
+        return this.status;
+    }
+
+    public Order status(OrderStatus status) { // Setter nhận OrderStatus
+        this.setStatus(status);
+        return this;
+    }
+
+    public void setStatus(OrderStatus status) { // Setter nhận OrderStatus
         this.status = status;
     }
 
-    public Double getTotalPrice() {
-        return totalPrice;
+    public String getCustomerFullName() {
+        return this.customerFullName;
     }
 
-    public void setTotalPrice(Double totalPrice) {
-        this.totalPrice = totalPrice;
+    public void setCustomerFullName(String customerFullName) {
+        this.customerFullName = customerFullName;
     }
 
-    public User getUser() {
-        return user;
+    public String getCustomerEmail() {
+        return this.customerEmail;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setCustomerEmail(String customerEmail) {
+        this.customerEmail = customerEmail;
     }
+
+    public String getCustomerPhone() {
+        return this.customerPhone;
+    }
+
+    public void setCustomerPhone(String customerPhone) {
+        this.customerPhone = customerPhone;
+    }
+
+    public String getDeliveryAddress() {
+        return this.deliveryAddress;
+    }
+
+    public void setDeliveryAddress(String deliveryAddress) {
+        this.deliveryAddress = deliveryAddress;
+    }
+
+    public String getPaymentMethod() {
+        return this.paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public User getCustomer() {
+        return this.customer;
+    }
+
+    public void setCustomer(User user) {
+        this.customer = user;
+    }
+
+    public Order customer(User user) {
+        this.setCustomer(user);
+        return this;
+    }
+
+    public Set<OrderItem> getItems() {
+        return this.items;
+    }
+
+    public void setItems(Set<OrderItem> orderItems) {
+        if (this.items != null) {
+            this.items.forEach(e -> e.setOrder(null));
+        }
+        if (orderItems != null) {
+            orderItems.forEach(e -> e.setOrder(this));
+        }
+        this.items = orderItems;
+    }
+
+    public Order items(Set<OrderItem> orderItems) {
+        this.setItems(orderItems);
+        return this;
+    }
+
+    public Order addItems(OrderItem orderItem) {
+        this.items.add(orderItem);
+        orderItem.setOrder(this);
+        return this;
+    }
+
+    public Order removeItems(OrderItem orderItem) {
+        this.items.remove(orderItem);
+        orderItem.setOrder(null);
+        return this;
+    }
+
+    // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
 
     @Override
     public boolean equals(Object o) {
@@ -78,29 +205,32 @@ public class Order extends AbstractAuditingEntity<Long> implements Serializable 
         if (!(o instanceof Order)) {
             return false;
         }
-        return id != null && id.equals(((Order) o).id);
+        Order order = (Order) o;
+        if (this.id == null) {
+            return false;
+        }
+        return getClass().hashCode() == order.getClass().hashCode() && id.equals(order.id);
     }
 
     @Override
     public int hashCode() {
+        // see https://vladmihalcea.com/how-to-implement-equals-and-hashcode-using-the-jpa-entity-identifier/
         return getClass().hashCode();
     }
 
+    // prettier-ignore
     @Override
     public String toString() {
-        return (
-            "Order{" +
-            "id=" +
-            getId() +
-            ", orderDate='" +
-            getOrderDate() +
-            "'" +
-            ", status='" +
-            getStatus() +
-            "'" +
-            ", totalPrice=" +
-            getTotalPrice() +
-            "}"
-        );
+        return "Order{" +
+            "id=" + getId() +
+            ", orderDate='" + getOrderDate() + "'" +
+            ", totalAmount=" + getTotalAmount() +
+            ", status='" + getStatus() + "'" +
+            ", customerFullName='" + getCustomerFullName() + "'" +
+            ", customerEmail='" + getCustomerEmail() + "'" +
+            ", customerPhone='" + getCustomerPhone() + "'" +
+            ", deliveryAddress='" + getDeliveryAddress() + "'" +
+            ", paymentMethod='" + getPaymentMethod() + "'" +
+            "}";
     }
 }

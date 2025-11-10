@@ -1,13 +1,12 @@
-import { Route } from '@angular/router';
+import { Routes } from '@angular/router';
+import { MyOrdersComponent } from './my-orders.component';
 
-import MyOrdersComponent from './my-orders.component';
-
-const myOrdersRoute: Route = {
-  path: 'my-orders',
-  component: MyOrdersComponent,
-  data: {
-    pageTitle: 'Đơn hàng của tôi',
+const myOrdersRoute: Routes = [
+  {
+    path: 'my-orders',
+    component: MyOrdersComponent,
+    data: { pageTitle: 'Đơn hàng của tôi' },
   },
-};
+];
 
 export default myOrdersRoute;

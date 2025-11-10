@@ -1,43 +1,73 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterModule } from '@angular/router';
+import { HttpResponse } from '@angular/common/http';
 
-import { ProductService, Product } from 'app/shared/product/product.service';
-import { CartService } from 'app/shared/cart/cart.service';
+import SharedModule from 'app/shared/shared.module';
+import { IProduct } from 'app/entities/product/product.model';
+import { ProductService } from 'app/entities/product/product.service';
+import { CartService } from 'app/shared/services/cart.service'; // Sửa đường dẫn import
 import { UtilsService } from 'app/shared/utils/utils.service';
+import { AccountService } from 'app/core/auth/account.service';
+import { Account } from 'app/core/auth/account.model';
+import { NotificationService } from 'app/shared/notification/notification.service';
 
 @Component({
   selector: 'jhi-product-detail',
   standalone: true,
   templateUrl: './product-detail.component.html',
   styleUrls: ['./product-detail.component.scss'],
-  imports: [CommonModule, RouterModule],
+  imports: [SharedModule, RouterModule],
 })
 export class ProductDetailComponent implements OnInit {
-  product: Product | null = null;
+  product: IProduct | null = null;
+  isLoading = false;
+  account = signal<Account | null>(null);
 
-  constructor(
-    private route: ActivatedRoute,
-    private productService: ProductService,
-    private cartService: CartService,
-    private utils: UtilsService,
-  ) {}
+  private productService = inject(ProductService);
+  private cartService = inject(CartService); // Inject CartService
+  private utils = inject(UtilsService);
+  private route = inject(ActivatedRoute);
+  private accountService = inject(AccountService);
+  private notify = inject(NotificationService);
 
   ngOnInit(): void {
-    // Đọc id từ route param '/product/:id' (ưu tiên), fallback query param nếu cần
-    const paramId = this.route.snapshot.paramMap.get('id');
-    const queryId = this.route.snapshot.queryParamMap.get('id');
-    const id = Number(paramId ?? queryId);
-    if (id) {
-      this.product = this.productService.findById(id);
+    this.accountService.getAuthenticationState().subscribe(account => this.account.set(account));
+    this.route.paramMap.subscribe(params => {
+      const productId = params.get('id');
+      if (productId) {
+        this.loadProductDetail(+productId);
+      }
+    });
+  }
+
+  loadProductDetail(id: number): void {
+    this.isLoading = true;
+    this.productService.find(id).subscribe({
+      next: (res: HttpResponse<IProduct>) => {
+        this.isLoading = false;
+        this.product = res.body;
+      },
+      error: () => {
+        this.isLoading = false;
+      },
+    });
+  }
+
+  // Sửa phương thức addToCart để nhận IProduct
+  addToCart(product: IProduct): void {
+    const productToAdd: IProduct = {
+      ...product,
+      price: product.price ?? 0,
+      quantity: product.quantity ?? 0,
+    };
+    this.cartService.addToCart(productToAdd);
+    this.notify.success('Đã thêm sản phẩm vào giỏ hàng!');
+  }
+
+  formatPrice(price: number | null | undefined): string {
+    if (price === null || price === undefined) {
+      return this.utils.formatPrice(0);
     }
-  }
-
-  addToCart(id: number): void {
-    this.cartService.addToCart(id);
-  }
-
-  formatPrice(price: string | number): string {
     return this.utils.formatPrice(price);
   }
 

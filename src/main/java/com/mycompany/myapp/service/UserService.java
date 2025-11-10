@@ -228,7 +228,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public Page<AdminUserDTO> getAllManagedUsers(Pageable pageable) {
-        return userRepository.findAll(pageable).map(AdminUserDTO::new);
+        return userRepository.findAll(pageable).map(AdminUserDTO::new); // Đã sửa
     }
 
     @Transactional(readOnly = true)

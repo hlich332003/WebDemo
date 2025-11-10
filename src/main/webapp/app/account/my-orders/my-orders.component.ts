@@ -1,40 +1,52 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import SharedModule from 'app/shared/shared.module';
-import { OrderService } from 'app/entities/order/order.service';
 import { HttpResponse } from '@angular/common/http';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+
+import { IOrder } from 'app/admin/order-management/order.model';
+import { MyOrdersService } from './my-orders.service';
 
 @Component({
   selector: 'jhi-my-orders',
   standalone: true,
-  imports: [SharedModule, RouterModule],
+  imports: [CommonModule, RouterModule, FontAwesomeModule],
   templateUrl: './my-orders.component.html',
   styleUrls: ['./my-orders.component.scss'],
 })
-export default class MyOrdersComponent implements OnInit {
-  orders: any[] = [];
+export class MyOrdersComponent implements OnInit {
+  orders: IOrder[] = [];
   isLoading = false;
 
-  private orderService = inject(OrderService);
+  private myOrdersService = inject(MyOrdersService);
 
   ngOnInit(): void {
-    this.loadOrders();
+    this.loadAll();
   }
 
-  loadOrders(): void {
+  loadAll(): void {
     this.isLoading = true;
-    this.orderService.queryMyOrders().subscribe({
-      next: (res: HttpResponse<any[]>) => {
-        this.isLoading = false;
+    this.myOrdersService.query().subscribe({
+      next: (res: HttpResponse<IOrder[]>) => {
         this.orders = res.body ?? [];
+        this.isLoading = false;
       },
       error: () => {
         this.isLoading = false;
+        // Xử lý lỗi
       },
     });
   }
 
-  trackId(index: number, item: any): number {
-    return item.id;
+  trackId(index: number, item: IOrder): number {
+    return item.id ?? 0; // Đã sửa lỗi: Thêm ?? 0
+  }
+
+  formatOrderDate(date: Date | null | undefined): string {
+    if (!date) {
+      return 'N/A';
+    }
+    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+    return new Date(date).toLocaleDateString('vi-VN', options);
   }
 }

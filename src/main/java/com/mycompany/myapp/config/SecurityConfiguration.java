@@ -4,7 +4,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
 
 import com.mycompany.myapp.security.*;
-import com.mycompany.myapp.web.filter.SpaWebFilter;
+import com.mycompany.myapp.web.filter.SpaWebFilter; // Import SpaWebFilter
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -19,7 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter; // Import BasicAuthenticationFilter
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
@@ -49,7 +49,7 @@ public class SecurityConfiguration {
         http
             .cors(withDefaults())
             .csrf(csrf -> csrf.disable())
-            .addFilterAfter(new SpaWebFilter(), BasicAuthenticationFilter.class)
+            .addFilterAfter(new SpaWebFilter(), BasicAuthenticationFilter.class) // Thêm lại SpaWebFilter
             .headers(headers ->
                 headers
                     .contentSecurityPolicy(csp -> csp.policyDirectives(jHipsterProperties.getSecurity().getContentSecurityPolicy()))
@@ -76,6 +76,12 @@ public class SecurityConfiguration {
                     .requestMatchers(mvc.pattern("/api/activate")).permitAll()
                     .requestMatchers(mvc.pattern("/api/account/reset-password/init")).permitAll()
                     .requestMatchers(mvc.pattern("/api/account/reset-password/finish")).permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/products")).permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/products/*")).permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/categories")).permitAll() // Cho phép truy cập công khai vào API danh mục
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/categories/*")).permitAll() // Cho phép truy cập công khai vào API chi tiết danh mục
+                    .requestMatchers(mvc.pattern(HttpMethod.POST, "/api/orders")).permitAll() // Cho phép người dùng không đăng nhập tạo đơn hàng
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/orders")).hasAuthority(AuthoritiesConstants.ADMIN) // CHỈ ADMIN MỚI CÓ THỂ XEM TẤT CẢ ĐƠN HÀNG
                     .requestMatchers(mvc.pattern("/api/admin/**")).hasAuthority(AuthoritiesConstants.ADMIN)
                     .requestMatchers(mvc.pattern("/api/**")).authenticated()
                     .requestMatchers(mvc.pattern("/v3/api-docs/**")).hasAuthority(AuthoritiesConstants.ADMIN)

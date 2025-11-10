@@ -1,0 +1,92 @@
+.order-detail-container {
+  padding: 2rem;
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+  }
+
+  .order-summary-card,
+  .customer-info-card,
+  .order-items-card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+
+    h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: #555;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.5rem;
+    }
+
+    .summary-item,
+    .info-item {
+      margin-bottom: 0.5rem;
+
+      strong {
+        color: #333;
+      }
+    }
+  }
+
+  .order-status-pending {
+    color: #ffc107; /* Yellow */
+    font-weight: bold;
+  }
+
+  .order-status-processing {
+    color: #17a2b8; /* Cyan */
+    font-weight: bold;
+  }
+
+  .order-status-shipped {
+    color: #007bff; /* Blue */
+    font-weight: bold;
+  }
+
+  .order-status-delivered {
+    color: #28a745; /* Green */
+    font-weight: bold;
+  }
+
+  .order-status-cancelled {
+    color: #dc3545; /* Red */
+    font-weight: bold;
+  }
+
+  .items-list {
+    .order-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px dashed #eee;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .item-details {
+        flex-grow: 1;
+      }
+
+      .item-price {
+        font-weight: bold;
+      }
+    }
+  }
+
+  .order-actions {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1rem;
+  }
+
+  .alert-warning {
+    margin-top: 1.5rem;
+  }
+}

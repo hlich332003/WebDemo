@@ -1,7 +1,8 @@
-@import '../../content/scss/variables';
+@use '../../content/scss/variables' as *;
+@use 'sass:color';
 
 .hero-section {
-  background: linear-gradient(135deg, lighten($primary, 10%), darken($primary, 10%));
+  background: linear-gradient(135deg, color.adjust($primary, $lightness: 10%), color.adjust($primary, $lightness: -10%));
   color: white;
   padding: 5rem 2rem;
   text-align: center;
@@ -29,8 +30,81 @@
       border-color: $danger;
 
       &:hover {
-        background-color: darken($danger, 10%);
-        border-color: darken($danger, 10%);
+        background-color: color.adjust($danger, $lightness: -10%);
+        border-color: color.adjust($danger, $lightness: -10%);
+      }
+    }
+  }
+}
+
+.featured-products {
+  .section-title {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 2rem;
+    justify-items: center;
+  }
+
+  .product-card-sm {
+    background: $card-bg;
+    border-radius: $card-border-radius;
+    box-shadow: $card-box-shadow;
+    padding: 1rem;
+    transition:
+      transform 0.2s ease-in-out,
+      box-shadow 0.2s ease-in-out;
+    cursor: pointer;
+    width: 100%;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: $box-shadow;
+    }
+
+    img {
+      width: 100%;
+      height: 180px;
+      object-fit: contain;
+      margin-bottom: 1rem;
+    }
+
+    .product-info {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+
+      .product-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .product-price {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: $primary;
+        margin-bottom: 1rem;
+      }
+
+      .btn-success {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 1rem;
+        border-radius: 9999px; // Sửa lỗi: dùng giá trị cứng để bo tròn
       }
     }
   }
@@ -45,7 +119,7 @@
 
   .category-grid {
     display: grid;
-    grid-template-columns: 1fr; // Một cột mặc định
+    grid-template-columns: 1fr;
     gap: 2rem;
   }
 
@@ -85,20 +159,24 @@
       cursor: pointer;
       transition: all 0.2s ease-in-out;
       box-shadow: $box-shadow-sm;
-
-      &:hover {
-        transform: scale(1.03);
-        box-shadow: $box-shadow;
-      }
+      display: flex;
+      flex-direction: column;
+      min-height: 300px;
 
       img {
         width: 100%;
         height: 150px;
-        object-fit: cover;
+        object-fit: contain;
+        padding: 5px;
+        flex-shrink: 0;
       }
 
       .product-info {
         padding: 1rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
 
         .product-name {
           font-size: 1rem;

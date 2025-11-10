@@ -6,7 +6,8 @@ import passwordResetFinishRoute from './password-reset/finish/password-reset-fin
 import passwordResetInitRoute from './password-reset/init/password-reset-init.route';
 import registerRoute from './register/register.route';
 import settingsRoute from './settings/settings.route';
-import myOrdersRoute from './my-orders/my-orders.route'; // Import route mới
+import myOrdersRoute from './my-orders/my-orders.route';
+import { MyOrderDetailComponent } from './my-orders/detail/my-order-detail.component'; // Import MyOrderDetailComponent
 
 const accountRoutes: Routes = [
   activateRoute,
@@ -15,7 +16,12 @@ const accountRoutes: Routes = [
   passwordResetInitRoute,
   registerRoute,
   settingsRoute,
-  myOrdersRoute, // Thêm route mới vào mảng
+  ...myOrdersRoute,
+  {
+    path: 'my-orders/:id',
+    component: MyOrderDetailComponent,
+    data: { pageTitle: 'Chi tiết đơn hàng của tôi' },
+  },
 ];
 
 export default accountRoutes;

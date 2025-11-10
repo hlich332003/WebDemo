@@ -1,43 +1,41 @@
-<div>
+<div class="my-orders-container">
   <h2>Đơn hàng của tôi</h2>
 
-  <div class="alert alert-warning" *ngIf="isLoading">
-    <span>Đang tải đơn hàng...</span>
-  </div>
-
-  <div class="table-responsive" *ngIf="orders && orders.length > 0">
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th><span>ID</span></th>
-          <th><span>Ngày đặt</span></th>
-          <th><span>Trạng thái</span></th>
-          <th><span>Tổng tiền</span></th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let order of orders; trackBy: trackId">
-          <td>
-            <a [routerLink]="['/order', order.id, 'view']">{{ order.id }}</a>
-          </td>
-          <td>{{ order.orderDate | date: 'medium' }}</td>
-          <td>{{ order.status }}</td>
-          <td>{{ order.totalPrice | currency: 'VND' }}</td>
-          <td class="text-end">
-            <div class="btn-group">
-              <a [routerLink]="['/order', order.id, 'view']" class="btn btn-info btn-sm">
-                <fa-icon icon="eye"></fa-icon>
-                <span class="d-none d-md-inline">Xem</span>
-              </a>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="alert alert-warning" *ngIf="!isLoading && (!orders || orders.length === 0)">
-    <span>Bạn chưa có đơn hàng nào.</span>
-  </div>
+  @if (isLoading) {
+    <p>Đang tải đơn hàng...</p>
+  } @else if (orders.length === 0) {
+    <div class="alert alert-warning">Bạn chưa có đơn hàng nào.</div>
+  } @else {
+    <div class="table-responsive">
+      <table class="table table-striped" aria-describedby="my-orders">
+        <thead>
+          <tr>
+            <th scope="col"><span>ID</span></th>
+            <th scope="col"><span>Ngày đặt</span></th>
+            <th scope="col"><span>Tổng tiền</span></th>
+            <th scope="col"><span>Trạng thái</span></th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of orders; track trackId($index, order)) {
+            <tr>
+              <td>{{ order.id }}</td>
+              <td>{{ formatOrderDate(order.orderDate) }}</td>
+              <td>{{ order.totalAmount | currency: 'VND' : 'symbol' : '1.0-0' }}</td>
+              <td>{{ order.status }}</td>
+              <td class="text-end">
+                <div class="btn-group">
+                  <button type="submit" [routerLink]="['/order', order.id]" class="btn btn-info btn-sm">
+                    <fa-icon icon="eye"></fa-icon>
+                    <span class="d-none d-md-inline">Xem chi tiết</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 </div>

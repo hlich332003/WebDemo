@@ -1,25 +1,57 @@
 <h1>🛍️ Tất cả Sản phẩm</h1>
 
 <div class="filter-section">
-  <input type="text" [(ngModel)]="searchTerm" (keyup)="filterAndSearch()" placeholder="🔍 Tìm kiếm sản phẩm..." />
-  <select [(ngModel)]="selectedCategory" (change)="filterAndSearch()">
+  <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearchTermChange($event)" placeholder="🔍 Tìm kiếm sản phẩm..." />
+  <select [(ngModel)]="selectedCategorySlug" (change)="onCategoryChange()">
     <option value="all">Tất cả sản phẩm</option>
-    <option *ngFor="let category of categories" [value]="category.slug">{{ category.name }}</option>
+    @for (category of categories; track category.id) {
+      <option [value]="category.slug">{{ category.name }}</option>
+    }
   </select>
 </div>
 
+<h2 class="section-title">Tất cả sản phẩm</h2>
 <div class="products-grid">
-  <div class="product-card" *ngFor="let product of filteredProducts" (click)="viewProductDetail(product.id)">
-    <img [src]="product.image" [alt]="product.name" loading="lazy" />
-    <div class="product-info">
-      <h3>{{ product.name }}</h3>
-      <p class="price">{{ formatPrice(product.price) }}</p>
-      <p class="stock">Còn {{ product.stock }} sản phẩm</p>
-      <div class="product-buttons">
-        <button (click)="addToCart(product.id); $event.stopPropagation()" [disabled]="product.stock === 0" class="add-to-cart-btn">
-          🛒 Thêm vào giỏ
-        </button>
+  @if (isLoading) {
+    <p>Đang tải sản phẩm...</p>
+  } @else if (filteredProducts.length === 0) {
+    <p>Không tìm thấy sản phẩm nào.</p>
+  } @else {
+    @for (product of filteredProducts; track product.id) {
+      <div class="product-card" (click)="viewProductDetail(product.id)">
+        <img [src]="product.imageUrl" [alt]="product.name" loading="lazy" />
+        <div class="product-info">
+          <h3>{{ product.name }}</h3>
+          <p class="price">{{ formatPrice(product.price) }}</p>
+          <p class="stock">Còn {{ product.quantity }} sản phẩm</p>
+          <div class="product-buttons">
+            <button (click)="addToCart(product); $event.stopPropagation()" [disabled]="product.quantity === 0" class="add-to-cart-btn">
+              Thêm vào giỏ
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
+    }
+    <!-- Đóng khối @for -->
+  }
+  <!-- Đóng khối @else if (filteredProducts.length === 0) -->
 </div>
+
+<!-- Phân trang -->
+@if (filteredProducts.length > 0) {
+  <div class="d-flex justify-content-center">
+    <jhi-item-count [params]="{ page, totalItems, itemsPerPage }" />
+  </div>
+
+  <div class="d-flex justify-content-center">
+    <ngb-pagination
+      [collectionSize]="totalItems"
+      [(page)]="page"
+      [pageSize]="itemsPerPage"
+      [maxSize]="5"
+      [rotate]="true"
+      [boundaryLinks]="true"
+      (pageChange)="transition()"
+    ></ngb-pagination>
+  </div>
+}

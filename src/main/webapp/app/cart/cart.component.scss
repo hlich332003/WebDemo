@@ -4,55 +4,43 @@ h1 {
   color: #333;
 }
 
-.cart-page-container {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2rem;
+.cart-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem;
 }
 
-.empty-cart-container {
+.alert-warning {
   text-align: center;
-  padding: 3rem;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  max-width: 600px;
-  margin: 2rem auto;
-
-  p {
-    font-size: 1.2rem;
-    color: #555;
-    margin-bottom: 1.5rem;
-  }
-
-  .btn-primary {
-    padding: 0.8rem 2rem;
-    font-size: 1rem;
-  }
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border-radius: 8px;
 }
 
-.cart-items-list {
+.cart-items {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  margin-bottom: 2rem;
 }
 
 .cart-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 50px 80px 2fr 120px 120px auto; /* Select, Image, Details, Quantity, Total, Actions */
   align-items: center;
   gap: 1rem;
   padding: 0.5rem 1rem;
   font-weight: 600;
   color: #555;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 0.5rem;
 }
 
 .cart-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 50px 80px 2fr 120px 120px auto; /* Select, Image, Details, Quantity, Total, Actions */
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
   padding: 1rem;
   background: #fff;
   border-radius: 8px;
@@ -63,22 +51,26 @@ h1 {
     transform: translateY(-3px);
   }
 
-  input[type='checkbox'] {
-    width: 20px;
-    height: 20px;
+  .item-select {
+    display: flex;
+    justify-content: center;
+    input[type='checkbox'] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
   }
 
   .item-image {
     width: 80px;
-    height: 80px;
-    object-fit: cover;
+    height: 80px; /* Chiều cao cố định cho khung ảnh */
+    object-fit: contain; /* Đảm bảo hình ảnh thu nhỏ vừa khung */
     border-radius: 4px;
     border: 1px solid #eee;
+    padding: 5px; /* Thêm padding để hình ảnh không chạm viền khung */
   }
 
   .item-details {
-    flex-grow: 1;
-
     .item-name {
       font-size: 1.1rem;
       font-weight: 600;
@@ -92,10 +84,11 @@ h1 {
     }
   }
 
-  .quantity-controls {
+  .item-quantity-controls {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: center;
+    gap: 0.25rem;
 
     button {
       background: #f0f0f0;
@@ -117,11 +110,19 @@ h1 {
       }
     }
 
-    .item-quantity {
-      font-weight: 600;
-      color: #333;
-      min-width: 25px;
+    .quantity-input {
+      width: 50px;
       text-align: center;
+      padding: 0.3rem 0.2rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      -moz-appearance: textfield;
+
+      &::-webkit-outer-spin-button,
+      &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
     }
   }
 
@@ -129,136 +130,78 @@ h1 {
     font-size: 1.1rem;
     font-weight: 700;
     color: #007bff;
-    min-width: 120px;
     text-align: right;
   }
 
-  .remove-item-btn {
-    background: none;
-    border: none;
-    color: #dc3545;
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    transition: color 0.2s;
+  .item-actions {
+    display: flex;
+    justify-content: flex-end;
 
-    &:hover {
-      color: #c82333;
+    .btn-danger {
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
     }
   }
 }
 
-.cart-summary-card {
+.cart-summary {
   background: #fff;
   padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  height: fit-content;
+  text-align: right;
 
-  h2 {
+  h3 {
     font-size: 1.4rem;
     margin-bottom: 1.5rem;
     color: #333;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 1rem;
-  }
+    border-top: 1px solid #eee;
+    padding-top: 1rem;
 
-  .summary-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.8rem;
-    font-size: 1rem;
-    color: #555;
-
-    &.total {
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: #333;
-      margin-top: 1.5rem;
-      padding-top: 1rem;
-      border-top: 1px solid #eee;
+    .total-price {
+      color: #007bff;
     }
-  }
-}
-
-.cart-actions-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-top: 2rem;
-
-  .btn-primary,
-  .btn-secondary {
-    width: 100%;
-    padding: 0.8rem 1.5rem;
-    font-size: 1rem;
-    border-radius: 6px;
-    text-align: center;
-    text-decoration: none;
-    display: block;
   }
 
   .btn-primary {
-    background-color: #007bff;
-    border-color: #007bff;
-    color: white;
-
-    &:hover {
-      background-color: #0056b3;
-      border-color: #0056b3;
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-  }
-
-  .btn-secondary {
-    background-color: #6c757d;
-    border-color: #6c757d;
-    color: white;
-
-    &:hover {
-      background-color: #5a6268;
-      border-color: #5a6268;
-    }
+    margin-top: 1rem;
   }
 }
 
 @media (max-width: 768px) {
-  .cart-page-container {
-    grid-template-columns: 1fr;
-  }
-
   .cart-item {
-    flex-wrap: wrap;
-    justify-content: space-between;
+    grid-template-columns: 50px 80px 1fr auto; /* Select, Image, Details, Actions */
+    grid-template-rows: auto auto auto; /* Details, Quantity, Total */
+    grid-template-areas:
+      'select image details actions'
+      'select image quantity .'
+      'select image total . ';
+    gap: 0.5rem;
 
+    .item-select {
+      grid-area: select;
+    }
     .item-image {
-      flex-basis: 100%;
-      margin-bottom: 0.5rem;
+      grid-area: image;
     }
-
     .item-details {
-      flex-basis: calc(100% - 120px);
+      grid-area: details;
     }
-
-    .quantity-controls,
-    .item-total-price,
-    .remove-item-btn {
-      flex-basis: auto;
+    .item-quantity-controls {
+      grid-area: quantity;
+      justify-content: flex-start;
+    }
+    .item-total-price {
+      grid-area: total;
+      text-align: left;
+    }
+    .item-actions {
+      grid-area: actions;
+      justify-content: flex-end;
     }
   }
 
-  .cart-actions-summary {
-    flex-direction: row;
-    justify-content: space-between;
-
-    .btn-primary,
-    .btn-secondary {
-      width: auto;
-      flex-grow: 1;
-    }
+  .cart-header {
+    display: none; /* Ẩn header trên mobile */
   }
 }

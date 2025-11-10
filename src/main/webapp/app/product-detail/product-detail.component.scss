@@ -1,59 +1,104 @@
-.product-detail-container {
+.product-detail-page {
   max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+  margin: 2rem auto;
+  padding: 1rem;
 }
 
-.product-detail {
+.product-detail-card {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 3rem;
+  grid-template-columns: 1fr 1.5fr; /* Cột ảnh 1 phần, cột thông tin 1.5 phần */
+  gap: 2rem;
   background: white;
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr; /* Trên màn hình nhỏ thì thành 1 cột */
+  }
 }
 
-.product-detail-image img {
-  width: 100%;
-  border-radius: 8px;
-}
-
-.product-detail-info h1 {
-  color: #333;
-  margin-bottom: 1rem;
-  font-size: 2rem;
-}
-
-.product-detail-price {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #e44d26;
-  margin-bottom: 1rem;
-}
-
-.product-detail-stock {
-  font-size: 1.1rem;
-  color: #28a745;
-  margin-bottom: 2rem;
-}
-
-.product-actions {
+.product-image-section {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  background-color: #f8f8f8; /* Nền nhẹ cho khung ảnh */
+  border-radius: 8px;
+  padding: 1rem;
+
+  img {
+    max-width: 100%;
+    max-height: 400px; /* Chiều cao tối đa cho ảnh */
+    object-fit: contain; /* Đảm bảo ảnh vừa khung, giữ tỷ lệ */
+    border-radius: 4px;
+  }
 }
 
-.product-description {
-  border-top: 1px solid #eee;
-  padding-top: 2rem;
-}
+.product-info-section {
+  .product-name {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 1rem;
+  }
 
-.error-message {
-  text-align: center;
-  padding: 4rem;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  .product-description {
+    font-size: 1.1rem;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  .product-price {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #e44d26; /* Màu nổi bật cho giá */
+    margin-bottom: 1rem;
+  }
+
+  .product-stock {
+    font-size: 1rem;
+    color: #28a745; /* Màu xanh cho số lượng tồn kho */
+    margin-bottom: 2rem;
+  }
+
+  .product-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    .btn {
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 6px;
+    }
+
+    .btn-primary {
+      background-color: #007bff;
+      border-color: #007bff;
+      color: white;
+
+      &:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+
+    .btn-info {
+      background-color: #17a2b8;
+      border-color: #17a2b8;
+      color: white;
+
+      &:hover {
+        background-color: #138496;
+        border-color: #117a8b;
+      }
+    }
+  }
 }

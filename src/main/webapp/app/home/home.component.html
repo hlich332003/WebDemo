@@ -2,25 +2,61 @@
   <div class="hero-content">
     <h1>Chào mừng đến với WebDemo</h1>
     <p>Nơi mua sắm tin cậy cho mọi người</p>
-    <a routerLink="/products" class="btn btn-primary">Mua sắm ngay</a>
+    <!-- Nút "Mua sắm ngay" chỉ hiển thị nếu người dùng không phải là admin -->
+    @if (!isAdmin()) {
+      <a routerLink="/products" class="btn btn-primary">Mua sắm ngay</a>
+    }
+  </div>
+</section>
+
+<!-- Phần sản phẩm nổi bật -->
+<section class="featured-products">
+  <h2 class="section-title">✨ Sản Phẩm Nổi Bật</h2>
+  <div class="product-grid">
+    @if (featuredProducts.length === 0) {
+      <p>Không có sản phẩm nổi bật nào.</p>
+    } @else {
+      @for (product of featuredProducts; track product.id) {
+        <div class="product-card-sm">
+          <img [src]="product.imageUrl" [alt]="product.name" loading="lazy" (click)="viewProductDetail(product.id)" />
+          <div class="product-info">
+            <h4 class="product-name" (click)="viewProductDetail(product.id)">{{ product.name }}</h4>
+            <p class="product-price">{{ formatPrice(product.price) }}</p>
+            <button class="btn btn-sm btn-success" (click)="addToCart(product)">Thêm vào giỏ</button>
+          </div>
+        </div>
+      }
+    }
   </div>
 </section>
 
 <section class="featured-categories">
-  <h2 class="section-title">🔥 Danh Mục Nổi Bật</h2>
   <div class="category-grid">
-    <div class="category-card" *ngFor="let category of featuredCategories">
-      <h3 class="category-title">{{ category.name }}</h3>
-      <div class="product-preview-grid">
-        <div class="product-card-sm" *ngFor="let product of category.products.slice(0, 4)" (click)="viewProductDetail(product.id)">
-          <img [src]="product.image" [alt]="product.name" loading="lazy" />
-          <div class="product-info">
-            <h4 class="product-name">{{ product.name }}</h4>
-            <p class="product-price">{{ formatPrice(product.price) }}</p>
+    @if (isLoading) {
+      <p>Đang tải danh mục...</p>
+    } @else if (featuredCategories.length === 0) {
+      <p>Không có danh mục nổi bật nào.</p>
+    } @else {
+      @for (category of featuredCategories; track category.id) {
+        <div class="category-card">
+          <h3 class="category-title">{{ category.name }}</h3>
+          <div class="product-preview-grid">
+            @for (product of category.products?.slice(0, 4); track product.id) {
+              <div class="product-card-sm">
+                <img [src]="product.imageUrl" [alt]="product.name" loading="lazy" (click)="viewProductDetail(product.id)" />
+                <div class="product-info">
+                  <h4 class="product-name" (click)="viewProductDetail(product.id)">{{ product.name }}</h4>
+                  <p class="product-price">{{ formatPrice(product.price) }}</p>
+                  <button class="btn btn-sm btn-success" (click)="addToCart(product)">Thêm vào giỏ</button>
+                </div>
+              </div>
+            }
           </div>
+          <a [routerLink]="['/products']" [queryParams]="{ categorySlug: category.slug }" class="view-all-link"
+            >Xem tất cả {{ category.name }} →</a
+          >
         </div>
-      </div>
-      <a [routerLink]="['/products']" [queryParams]="{ category: category.slug }" class="view-all-link">Xem tất cả {{ category.name }} →</a>
-    </div>
+      }
+    }
   </div>
 </section>

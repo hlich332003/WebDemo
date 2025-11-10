@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
-import { CartService } from 'app/shared/cart/cart.service';
+import { CartService, ICartItem } from 'app/shared/services/cart.service'; // Sửa đường dẫn và import ICartItem
 import { UtilsService } from 'app/shared/utils/utils.service';
 
 @Component({
@@ -13,62 +15,61 @@ import { UtilsService } from 'app/shared/utils/utils.service';
   styleUrls: ['./cart.component.scss'],
   imports: [CommonModule, RouterModule, FormsModule],
 })
-export class CartComponent implements OnInit {
-  cart: any[] = [];
-  isAllSelected = true;
+export class CartComponent implements OnInit, OnDestroy {
+  cart: ICartItem[] = [];
   total = 0;
 
-  constructor(
-    public cartService: CartService,
-    private utils: UtilsService,
-  ) {}
+  private readonly destroy$ = new Subject<void>();
+
+  public cartService = inject(CartService);
+  private utils = inject(UtilsService);
 
   ngOnInit(): void {
-    this.loadCartData();
+    this.cartService.cartItems$.pipe(takeUntil(this.destroy$)).subscribe(items => {
+      this.cart = items;
+      this.updateTotal();
+    });
   }
 
-  loadCartData(): void {
-    this.cart = this.cartService.getCart();
-    this.updateTotal();
-    this.updateSelectAllState();
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  updateQuantity(id: number, quantity: number): void {
-    this.cartService.updateQuantity(id, quantity);
-    this.loadCartData(); // Tải lại toàn bộ là cần thiết khi số lượng thay đổi
+  updateQuantity(productId: number, quantity: number | string): void {
+    const q = Number(quantity);
+    if (!Number.isFinite(q) || q < 0) {
+      return;
+    }
+    if (q === 0) {
+      this.cartService.removeFromCart(productId);
+    } else {
+      this.cartService.updateQuantity(productId, q);
+    }
   }
 
-  remove(id: number): void {
-    this.cartService.removeFromCart(id);
-    this.loadCartData(); // Tải lại toàn bộ là cần thiết khi xóa sản phẩm
+  increaseQuantity(productId: number, currentQuantity: number): void {
+    this.cartService.updateQuantity(productId, currentQuantity + 1);
+  }
+
+  decreaseQuantity(productId: number, currentQuantity: number): void {
+    if (currentQuantity > 1) {
+      this.cartService.updateQuantity(productId, currentQuantity - 1);
+    }
+  }
+
+  remove(productId: number): void {
+    this.cartService.removeFromCart(productId);
   }
 
   updateTotal(): void {
-    this.total = this.cartService.getCartTotal();
+    this.total = this.cartService.getTotalPrice(); // Sử dụng getTotalPrice từ CartService
   }
 
-  formatPrice(price: string | number): string {
-    return this.utils.formatPrice(price);
-  }
-
-  // Tối ưu hóa: Chỉ cập nhật các giá trị cần thiết, không tải lại toàn bộ giỏ hàng
-  onItemToggle(): void {
-    this.updateTotal();
-    this.updateSelectAllState();
-    this.cartService.saveCart(); // Lưu lại trạng thái mới của giỏ hàng
-  }
-
-  onSelectAllToggle(): void {
-    this.cart.forEach(item => (item.selected = this.isAllSelected));
-    this.updateTotal();
-    this.cartService.saveCart(); // Lưu lại trạng thái mới của giỏ hàng
-  }
-
-  updateSelectAllState(): void {
-    if (this.cart.length === 0) {
-      this.isAllSelected = false;
-    } else {
-      this.isAllSelected = this.cart.every(item => item.selected);
+  formatPrice(price: number | null | undefined): string {
+    if (price === null || price === undefined) {
+      return this.utils.formatPrice(0);
     }
+    return this.utils.formatPrice(price);
   }
 }

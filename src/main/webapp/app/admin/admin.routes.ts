@@ -8,6 +8,21 @@ const routes: Routes = [
     title: 'userManagement.home.title',
   },
   {
+    path: 'product-management',
+    loadChildren: () => import('./product-management/product-management.route'),
+    title: 'Quản lý sản phẩm',
+  },
+  {
+    path: 'order-management', // Thêm route cho quản lý đơn hàng
+    loadChildren: () => import('./order-management/order-management.route'),
+    title: 'Quản lý đơn hàng',
+  },
+  {
+    path: 'import', // Thêm route cho import
+    loadComponent: () => import('./import/import.component').then(m => m.ImportComponent),
+    title: 'Import Dữ liệu',
+  },
+  {
     path: 'docs',
     loadComponent: () => import('./docs/docs.component'),
     title: 'global.menu.admin.apidocs',

@@ -20,6 +20,10 @@ export class OrderService {
   protected resourceUrl = this.applicationConfigService.getEndpointFor('api/orders');
   protected myOrdersUrl = this.applicationConfigService.getEndpointFor('api/my-orders');
 
+  create(orderData: any): Observable<EntityResponseType> {
+    return this.http.post<any>(this.resourceUrl, orderData, { observe: 'response' });
+  }
+
   query(req?: any): Observable<EntityArrayResponseType> {
     const options = createRequestOption(req);
     return this.http
@@ -33,10 +37,31 @@ export class OrderService {
       .pipe(map((res: EntityArrayResponseType) => this.convertDateArrayFromServer(res)));
   }
 
+  find(id: number): Observable<EntityResponseType> {
+    return this.http
+      .get<any>(`${this.resourceUrl}/${id}`, { observe: 'response' })
+      .pipe(map((res: EntityResponseType) => this.convertDateFromServer(res)));
+  }
+
+  cancelOrder(id: number): Observable<EntityResponseType> {
+    return this.http.patch<any>(`${this.resourceUrl}/${id}/cancel`, null, { observe: 'response' });
+  }
+
+  updateDeliveryAddress(id: number, address: string): Observable<EntityResponseType> {
+    return this.http.patch<any>(`${this.resourceUrl}/${id}/address`, { address: address }, { observe: 'response' }); // Sửa payload
+  }
+
+  protected convertDateFromServer(res: EntityResponseType): EntityResponseType {
+    if (res.body) {
+      res.body.orderDate = res.body.orderDate ? dayjs(res.body.orderDate).toDate() : null; // Đã sửa lỗi
+    }
+    return res;
+  }
+
   protected convertDateArrayFromServer(res: EntityArrayResponseType): EntityArrayResponseType {
     if (res.body) {
       res.body.forEach((order: any) => {
-        order.orderDate = order.orderDate ? dayjs(order.orderDate) : undefined;
+        order.orderDate = order.orderDate ? dayjs(order.orderDate).toDate() : null; // Đã sửa lỗi
       });
     }
     return res;

@@ -1,4 +1,4 @@
-@import '../../content/scss/variables';
+@use '../../content/scss/variables' as *;
 
 h1 {
   text-align: center;

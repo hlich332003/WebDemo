@@ -1,5 +1,7 @@
 package com.mycompany.myapp.config;
 
+import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule; // Import JavaTimeModule
 import java.time.Duration;
 import org.ehcache.config.builders.*;
 import org.ehcache.jsr107.Eh107Configuration;
@@ -9,58 +11,37 @@ import org.springframework.boot.autoconfigure.cache.JCacheManagerCustomizer;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.boot.info.GitProperties;
-import org.springframework.cache.annotation.EnableCaching;
+// import org.springframework.cache.annotation.EnableCaching; // Tạm thời vô hiệu hóa
 import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.context.annotation.*;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
 import tech.jhipster.config.JHipsterProperties;
 import tech.jhipster.config.cache.PrefixedKeyGenerator;
 
-@Configuration
-@EnableCaching
+// @Configuration // Tạm thời vô hiệu hóa
+// @EnableCaching // Tạm thời vô hiệu hóa
 public class CacheConfiguration {
 
     private GitProperties gitProperties;
     private BuildProperties buildProperties;
-    private final javax.cache.configuration.Configuration<Object, Object> jcacheConfiguration;
 
-    public CacheConfiguration(JHipsterProperties jHipsterProperties) {
-        JHipsterProperties.Cache.Ehcache ehcache = jHipsterProperties.getCache().getEhcache();
+    @Bean
+    public RedisCacheConfiguration redisCacheConfiguration(JHipsterProperties jHipsterProperties) {
+        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig();
+        int expirationInSeconds = jHipsterProperties.getCache().getRedis().getExpiration();
+        Duration ttl = Duration.ofSeconds(expirationInSeconds);
 
-        jcacheConfiguration = Eh107Configuration.fromEhcacheCacheConfiguration(
-            CacheConfigurationBuilder.newCacheConfigurationBuilder(
-                Object.class,
-                Object.class,
-                ResourcePoolsBuilder.heap(ehcache.getMaxEntries())
-            )
-                .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofSeconds(ehcache.getTimeToLiveSeconds())))
-                .build()
+        config = config.entryTtl(ttl);
+        return config.serializeValuesWith(
+            RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer())
         );
     }
 
     @Bean
-    public HibernatePropertiesCustomizer hibernatePropertiesCustomizer(javax.cache.CacheManager cacheManager) {
-        return hibernateProperties -> hibernateProperties.put(ConfigSettings.CACHE_MANAGER, cacheManager);
-    }
-
-    @Bean
-    public JCacheManagerCustomizer cacheManagerCustomizer() {
-        return cm -> {
-            createCache(cm, com.mycompany.myapp.repository.UserRepository.USERS_BY_LOGIN_CACHE);
-            createCache(cm, com.mycompany.myapp.repository.UserRepository.USERS_BY_EMAIL_CACHE);
-            createCache(cm, com.mycompany.myapp.domain.User.class.getName());
-            createCache(cm, com.mycompany.myapp.domain.Authority.class.getName());
-            createCache(cm, com.mycompany.myapp.domain.User.class.getName() + ".authorities");
-            // jhipster-needle-ehcache-add-entry
-        };
-    }
-
-    private void createCache(javax.cache.CacheManager cm, String cacheName) {
-        javax.cache.Cache<Object, Object> cache = cm.getCache(cacheName);
-        if (cache != null) {
-            cache.clear();
-        } else {
-            cm.createCache(cacheName, jcacheConfiguration);
-        }
+    public Module jsonHibernate5Module() { // Thêm bean này
+        return new JavaTimeModule();
     }
 
     @Autowired(required = false)

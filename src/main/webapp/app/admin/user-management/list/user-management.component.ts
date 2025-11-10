@@ -36,7 +36,7 @@ export default class UserManagementComponent implements OnInit {
   private readonly modalService = inject(NgbModal);
 
   ngOnInit(): void {
-    this.handleNavigation();
+    this.loadAll();
   }
 
   setActive(user: User, isActivated: boolean): void {
@@ -50,7 +50,6 @@ export default class UserManagementComponent implements OnInit {
   deleteUser(user: User): void {
     const modalRef = this.modalService.open(UserManagementDeleteDialogComponent, { size: 'lg', backdrop: 'static' });
     modalRef.componentInstance.user = user;
-    // unsubscribe not needed because closed completes on modal close
     modalRef.closed.subscribe(reason => {
       if (reason === 'deleted') {
         this.loadAll();
@@ -62,8 +61,8 @@ export default class UserManagementComponent implements OnInit {
     this.isLoading.set(true);
     this.userService
       .query({
-        page: this.page - 1,
-        size: this.itemsPerPage,
+        page: 0, // Bắt đầu từ trang 0
+        size: 1000, // Đặt size lớn để tải tất cả
         sort: this.sortService.buildSortParam(this.sortState(), 'id'),
       })
       .subscribe({
@@ -73,25 +72,6 @@ export default class UserManagementComponent implements OnInit {
         },
         error: () => this.isLoading.set(false),
       });
-  }
-
-  transition(sortState?: SortState): void {
-    this.router.navigate(['./'], {
-      relativeTo: this.activatedRoute.parent,
-      queryParams: {
-        page: this.page,
-        sort: this.sortService.buildSortParam(sortState ?? this.sortState()),
-      },
-    });
-  }
-
-  private handleNavigation(): void {
-    combineLatest([this.activatedRoute.data, this.activatedRoute.queryParamMap]).subscribe(([data, params]) => {
-      const page = params.get('page');
-      this.page = +(page ?? 1);
-      this.sortState.set(this.sortService.parseSortParam(params.get(SORT) ?? data.defaultSort));
-      this.loadAll();
-    });
   }
 
   private onSuccess(users: User[] | null, headers: HttpHeaders): void {

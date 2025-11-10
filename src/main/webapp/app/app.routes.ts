@@ -73,6 +73,14 @@ const routes: Routes = [
     title: 'Thanh toán',
   },
 
+  // Trang chi tiết đơn hàng
+  {
+    path: 'order/:id',
+    loadComponent: () => import('./order-detail/order-detail.component').then(m => m.default),
+    title: 'Chi tiết đơn hàng',
+    canActivate: [UserRouteAccessService], // Yêu cầu đăng nhập
+  },
+
   // Các route lỗi
   ...errorRoute,
 ];

@@ -10,7 +10,7 @@ import { ProfileService } from 'app/layouts/profiles/profile.service';
 import { EntityNavbarItems } from 'app/entities/entity-navbar-items';
 import { environment } from 'environments/environment';
 import NavbarItem from './navbar-item.model';
-import { CartService } from 'app/shared/cart/cart.service';
+import { CartService } from 'app/shared/services/cart.service'; // Import CartService
 
 @Component({
   selector: 'jhi-navbar',
@@ -27,6 +27,9 @@ export class NavbarComponent implements OnInit {
   account = inject(AccountService).trackCurrentAccount();
   entitiesNavbarItems: NavbarItem[] = [];
   searchTerm = '';
+
+  // Signal để theo dõi số lượng sản phẩm trong giỏ hàng
+  cartItemCount = signal(0);
 
   /**
    * Computed signal to determine if the cart should be shown.
@@ -45,7 +48,7 @@ export class NavbarComponent implements OnInit {
   private readonly loginService = inject(LoginService);
   private readonly profileService = inject(ProfileService);
   private readonly router = inject(Router);
-  private readonly cartService = inject(CartService);
+  private readonly cartService = inject(CartService); // Inject CartService
 
   constructor() {
     const { VERSION } = environment;
@@ -59,6 +62,11 @@ export class NavbarComponent implements OnInit {
     this.profileService.getProfileInfo().subscribe(profileInfo => {
       this.inProduction = profileInfo.inProduction;
       this.openAPIEnabled = profileInfo.openAPIEnabled;
+    });
+
+    // Theo dõi sự thay đổi của giỏ hàng và cập nhật cartItemCount
+    this.cartService.cartItems$.subscribe(items => {
+      this.cartItemCount.set(this.cartService.getTotalQuantity());
     });
   }
 
@@ -78,10 +86,6 @@ export class NavbarComponent implements OnInit {
 
   toggleNavbar(): void {
     this.isNavbarCollapsed.update(isNavbarCollapsed => !isNavbarCollapsed);
-  }
-
-  getCartItemCount(): number {
-    return this.cartService.getCartItemsCount();
   }
 
   search(): void {

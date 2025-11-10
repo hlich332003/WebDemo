@@ -5,10 +5,10 @@ import { Observable } from 'rxjs';
 import { isPresent } from 'app/core/util/operators';
 import { ApplicationConfigService } from 'app/core/config/application-config.service';
 import { createRequestOption } from 'app/core/request/request-util';
-import { IUser } from '../user.model';
+import { IUser } from '../user.model'; // Đã khôi phục import IUser
 
-export type EntityResponseType = HttpResponse<IUser>;
-export type EntityArrayResponseType = HttpResponse<IUser[]>;
+export type EntityResponseType = HttpResponse<IUser>; // Đã khôi phục kiểu
+export type EntityArrayResponseType = HttpResponse<IUser[]>; // Đã khôi phục kiểu
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -18,16 +18,16 @@ export class UserService {
   protected resourceUrl = this.applicationConfigService.getEndpointFor('api/users');
 
   find(id: number): Observable<EntityResponseType> {
-    return this.http.get<IUser>(`${this.resourceUrl}/${id}`, { observe: 'response' });
+    return this.http.get<IUser>(`${this.resourceUrl}/${id}`, { observe: 'response' }); // Đã khôi phục kiểu
   }
 
   query(req?: any): Observable<EntityArrayResponseType> {
     const options = createRequestOption(req);
-    return this.http.get<IUser[]>(this.resourceUrl, { params: options, observe: 'response' });
+    return this.http.get<IUser[]>(this.resourceUrl, { params: options, observe: 'response' }); // Đã khôi phục kiểu
   }
 
   getUserIdentifier(user: Pick<IUser, 'id'>): number {
-    return user.id;
+    return user.id ?? 0; // Đã sửa lỗi: Thêm ?? 0
   }
 
   compareUser(o1: Pick<IUser, 'id'> | null, o2: Pick<IUser, 'id'> | null): boolean {

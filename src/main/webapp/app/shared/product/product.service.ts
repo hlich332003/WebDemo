@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { CONFIG } from 'app/shared/config/config.constants';
 
-export interface Product {
+export interface MockProduct {
   id: number;
   name: string;
   price: string;
@@ -9,16 +9,16 @@ export interface Product {
   stock: number;
 }
 
-export interface Category {
+export interface MockCategory {
   id: number;
   name: string;
   slug: string;
-  products: Product[];
+  products: MockProduct[];
 }
 
 @Injectable({ providedIn: 'root' })
-export class ProductService {
-  private categoriesData: Category[] = [];
+export class MockProductService {
+  private categoriesData: MockCategory[] = [];
 
   constructor() {
     this.loadProductsData();
@@ -175,7 +175,7 @@ export class ProductService {
     }
   }
 
-  getAllProducts(): Product[] {
+  getAllProducts(): MockProduct[] {
     if (!this.categoriesData || this.categoriesData.length === 0) {
       this.loadProductsData();
     }
@@ -183,7 +183,7 @@ export class ProductService {
     return this.categoriesData.flatMap(category => category.products || []);
   }
 
-  findById(productId: number): Product | null {
+  findById(productId: number): MockProduct | null {
     for (const category of this.categoriesData) {
       const product = category.products.find(p => p.id === productId);
       if (product) return product;
@@ -199,7 +199,7 @@ export class ProductService {
     }
   }
 
-  getCategories(): Category[] {
+  getCategories(): MockCategory[] {
     return [...this.categoriesData];
   }
 }

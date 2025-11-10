@@ -1,0 +1,64 @@
+<div class="row justify-content-center">
+  <div class="col-8">
+    @if (product) {
+      <div>
+        <h2 data-cy="productDetailsHeading"><span>Thông tin sản phẩm</span></h2>
+
+        <hr />
+
+        <jhi-alert-error></jhi-alert-error>
+
+        <jhi-alert></jhi-alert>
+
+        <dl class="row">
+          <dt>
+            <span>ID</span>
+          </dt>
+          <dd>
+            <span>{{ product.id }}</span>
+          </dd>
+          <dt>
+            <span>Tên sản phẩm</span>
+          </dt>
+          <dd>
+            <span>{{ product.name }}</span>
+          </dd>
+          <dt>
+            <span>Mô tả</span>
+          </dt>
+          <dd>
+            <span>{{ product.description }}</span>
+          </dd>
+          <dt>
+            <span>Giá</span>
+          </dt>
+          <dd>
+            <span>{{ product.price }}</span>
+          </dd>
+          <dt>
+            <span>Số lượng tồn kho</span>
+          </dt>
+          <dd>
+            <span>{{ product.quantity }}</span>
+          </dd>
+          <dt>
+            <span>Hình ảnh</span>
+          </dt>
+          <dd>
+            @if (product.imageUrl) {
+              <img [src]="product.imageUrl" alt="Product Image" style="max-height: 200px" />
+            }
+          </dd>
+        </dl>
+
+        <button type="button" (click)="previousState()" class="btn btn-info">
+          <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span>Quay lại</span>
+        </button>
+
+        <button type="button" [routerLink]="['/admin/product-management', product.id, 'edit']" class="btn btn-primary">
+          <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span>Sửa</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>

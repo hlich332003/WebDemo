@@ -1,0 +1,84 @@
+<div>
+  <h2>
+    <span id="product-management-page-heading" data-cy="productManagementPageHeading">Quản lý sản phẩm</span>
+
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-info me-2 rounded-pill" (click)="loadAll()" [disabled]="isLoading()">
+        <span>Làm mới danh sách</span>
+      </button>
+      <button class="btn btn-primary jh-create-entity me-2 rounded-pill" [routerLink]="['./new']">
+        <span>Tạo sản phẩm mới</span>
+      </button>
+      <button class="btn btn-success ms-2 rounded-pill" (click)="exportProducts()">
+        <span>Export Excel</span>
+      </button>
+      <label for="importProductsFile" class="btn btn-warning ms-2 mb-0 rounded-pill">
+        <span>Import Sản phẩm</span>
+        <input type="file" id="importProductsFile" style="display: none" (change)="importProducts($event)" accept=".xlsx" />
+      </label>
+    </div>
+  </h2>
+
+  <jhi-alert-error />
+
+  <jhi-alert />
+
+  @if (products()) {
+    <div class="table-responsive">
+      <table class="table table-striped" aria-describedby="product-management-page-heading">
+        <thead>
+          <tr jhiSort [(sortState)]="sortState" (sortChange)="loadAll()">
+            <th scope="col" jhiSortBy="id"><span>ID</span></th>
+            <th scope="col" jhiSortBy="name"><span>Tên sản phẩm</span></th>
+            <th scope="col" jhiSortBy="description"><span>Mô tả</span></th>
+            <th scope="col" jhiSortBy="price"><span>Giá</span></th>
+            <th scope="col" jhiSortBy="quantity"><span>Tồn kho</span></th>
+            <th scope="col" jhiSortBy="imageUrl"><span>Hình ảnh</span></th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (product of products(); track trackIdentity(product)) {
+            <tr [class.table-info]="product.isFeatured">
+              <td>
+                <a [routerLink]="['/admin/product-management', product.id, 'view']">{{ product.id }}</a>
+              </td>
+              <td>{{ product.name }}</td>
+              <td>{{ product.description }}</td>
+              <td>{{ product.price | currency: 'VND' }}</td>
+              <td>{{ product.quantity }}</td>
+              <td>
+                @if (product.imageUrl) {
+                  <img [src]="product.imageUrl" alt="Product Image" style="max-height: 50px" />
+                }
+              </td>
+              <td class="text-end">
+                <div class="btn-group">
+                  <button class="btn btn-success btn-sm rounded-pill me-1" (click)="toggleFeatured(product)">
+                    <span>{{ product.isFeatured ? 'Bỏ ghim' : 'Ghim' }}</span>
+                  </button>
+
+                  <button
+                    type="submit"
+                    [routerLink]="['/admin/product-management', product.id, 'view']"
+                    class="btn btn-info btn-sm rounded-pill me-1"
+                  >
+                    <span>Chi tiết</span>
+                  </button>
+
+                  <button type="button" (click)="deleteProduct(product)" class="btn btn-danger btn-sm rounded-pill">
+                    <span>Xóa</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-flex justify-content-center" *ngIf="products()?.length === 0">
+      <div class="alert alert-warning">Không có sản phẩm nào được tìm thấy.</div>
+    </div>
+  }
+</div>

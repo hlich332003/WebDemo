@@ -10,13 +10,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class SpaWebFilter extends OncePerRequestFilter {
 
     /**
-     * Forwards any unmapped paths (except those containing a period) to the client {@code index.html}.
+     * Forwards any unmapped paths (except for static assets) to the client {@code index.html}.
      */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException {
-        // Request URI includes the contextPath if any, removed it.
-        String path = request.getRequestURI().substring(request.getContextPath().length());
+        // Request we are processing
+        String path = request.getRequestURI();
+        // If the path does not start with /api, /management, /v3/api-docs, /h2-console or does not contain a . (e.g. .js, .css)
+        // then it is a page refresh, so we redirect to index.html
         if (
             !path.startsWith("/api") &&
             !path.startsWith("/management") &&

@@ -1,4 +1,4 @@
-import { IUser } from './user.model';
+import { IUser } from './user.model'; // Đã khôi phục import IUser
 
 export const sampleWithRequiredData: IUser = {
   id: 24814,
