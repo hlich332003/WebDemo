@@ -41,7 +41,7 @@
           @for (product of products(); track trackIdentity(product)) {
             <tr [class.table-info]="product.isFeatured">
               <td>
-                <a [routerLink]="['/admin/product-management', product.id, 'view']">{{ product.id }}</a>
+                <a [routerLink]="['/admin/product-management', product.id, 'edit']">{{ product.id }}</a>
               </td>
               <td>{{ product.name }}</td>
               <td>{{ product.description }}</td>
@@ -60,7 +60,7 @@
 
                   <button
                     type="submit"
-                    [routerLink]="['/admin/product-management', product.id, 'view']"
+                    [routerLink]="['/admin/product-management', product.id, 'edit']"
                     class="btn btn-info btn-sm rounded-pill me-1"
                   >
                     <span>Chi tiết</span>
@@ -80,5 +80,23 @@
     <div class="d-flex justify-content-center" *ngIf="products()?.length === 0">
       <div class="alert alert-warning">Không có sản phẩm nào được tìm thấy.</div>
     </div>
+
+    <!-- Pagination controls -->
+    @if (products()) {
+      <div class="d-flex justify-content-end">
+        <jhi-item-count [params]="{ page: page, totalItems: totalItems(), itemsPerPage: itemsPerPage }"></jhi-item-count>
+      </div>
+      <div class="d-flex justify-content-center">
+        <ngb-pagination
+          [collectionSize]="totalItems()"
+          [page]="page"
+          [pageSize]="itemsPerPage"
+          [maxSize]="5"
+          [rotate]="true"
+          [boundaryLinks]="true"
+          (pageChange)="pageChange($event)"
+        ></ngb-pagination>
+      </div>
+    }
   }
 </div>

@@ -4,6 +4,7 @@ import { Injectable } from '@angular/core';
 export class StateStorageService {
   private readonly previousUrlKey = 'previousUrl';
   private readonly authenticationKey = 'jhi-authenticationToken';
+  private readonly reloadingTabKey = 'jhi-reloadingTab'; // New key for tracking tab reload
 
   storeUrl(url: string): void {
     sessionStorage.setItem(this.previousUrlKey, JSON.stringify(url));
@@ -19,22 +20,32 @@ export class StateStorageService {
   }
 
   storeAuthenticationToken(authenticationToken: string, rememberMe: boolean): void {
-    authenticationToken = JSON.stringify(authenticationToken);
     this.clearAuthenticationToken();
-    if (rememberMe) {
-      localStorage.setItem(this.authenticationKey, authenticationToken);
-    } else {
-      sessionStorage.setItem(this.authenticationKey, authenticationToken);
-    }
+    // Lưu vào localStorage để chia sẻ giữa các tab
+    localStorage.setItem(this.authenticationKey, authenticationToken);
+    // Đánh dấu có ít nhất 1 tab đang mở
+    sessionStorage.setItem('tab-active', 'true');
   }
 
   getAuthenticationToken(): string | null {
-    const authenticationToken = localStorage.getItem(this.authenticationKey) ?? sessionStorage.getItem(this.authenticationKey);
-    return authenticationToken ? (JSON.parse(authenticationToken) as string | null) : authenticationToken;
+    return localStorage.getItem(this.authenticationKey) ?? sessionStorage.getItem(this.authenticationKey);
   }
 
   clearAuthenticationToken(): void {
     sessionStorage.removeItem(this.authenticationKey);
     localStorage.removeItem(this.authenticationKey);
+  }
+
+  // New methods to manage the reloadingTabKey
+  setReloadingFlag(): void {
+    sessionStorage.setItem(this.reloadingTabKey, 'true');
+  }
+
+  clearReloadingFlag(): void {
+    sessionStorage.removeItem(this.reloadingTabKey);
+  }
+
+  isReloading(): boolean {
+    return sessionStorage.getItem(this.reloadingTabKey) === 'true';
   }
 }

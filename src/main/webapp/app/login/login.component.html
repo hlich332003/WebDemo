@@ -4,7 +4,7 @@
     @if (authenticationError()) {
       <div class="alert alert-danger" data-cy="loginError"><strong>Đăng nhập thất bại!</strong> Vui lòng kiểm tra lại thông tin.</div>
     }
-    <form class="form" [formGroup]="loginForm" (ngSubmit)="login()">
+    <form class="form" [formGroup]="loginForm" (ngSubmit)="login($event)">
       <div class="mb-3">
         <label class="form-label" for="username">Email hoặc Số điện thoại</label>
         <input

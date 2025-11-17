@@ -2,6 +2,7 @@ package com.mycompany.myapp.web.rest;
 
 import com.mycompany.myapp.security.AuthoritiesConstants;
 import com.mycompany.myapp.service.FileImportService;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -23,14 +24,14 @@ public class FileImportResource {
 
     @PostMapping("/products")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public ResponseEntity<Void> importProducts(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> importProducts(@RequestParam("file") MultipartFile file) {
         log.debug("REST request to import products from file : {}", file.getOriginalFilename());
         try {
             fileImportService.importProducts(file);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
-            log.error("Error importing products from file", e);
-            return ResponseEntity.badRequest().build();
+            log.error("Error importing products from file: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 

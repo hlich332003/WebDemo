@@ -1,6 +1,33 @@
 <h1>💳 Thanh toán</h1>
 
-<div class="checkout-container">
+<div *ngIf="orderSuccess" class="order-success-message">
+  <div class="success-card">
+    <h2>✅ Đặt hàng thành công!</h2>
+    <div class="order-info">
+      <p>
+        <strong>Mã đơn hàng:</strong> <span class="order-code">{{ orderDetails.orderCode }}</span>
+      </p>
+      <p><strong>Tổng tiền:</strong> {{ formatPrice(orderDetails.totalAmount) }}</p>
+      <p><strong>Khách hàng:</strong> {{ orderDetails.customerName }}</p>
+      <p><strong>Số điện thoại:</strong> {{ orderDetails.customerInfo.phone }}</p>
+      <p><strong>Email:</strong> {{ orderDetails.customerInfo.email }}</p>
+      <p><strong>Địa chỉ:</strong> {{ orderDetails.customerInfo.address }}</p>
+      <p>
+        <strong>Phương thức thanh toán:</strong>
+        {{ orderDetails.customerInfo.paymentMethod === 'cod' ? 'Thanh toán khi nhận hàng' : 'Chuyển khoản ngân hàng' }}
+      </p>
+    </div>
+    <div class="alert alert-warning mt-3"><strong>⚠️ Lưu ý:</strong> Vui lòng lưu lại mã đơn hàng để tra cứu sau này!</div>
+    <div class="action-buttons">
+      <button type="button" (click)="goToHome()" class="btn btn-primary"><fa-icon icon="home"></fa-icon>&nbsp;Về trang chủ</button>
+      <button type="button" (click)="continueShopping()" class="btn btn-success">
+        <fa-icon icon="shopping-cart"></fa-icon>&nbsp;Tiếp tục mua sắm
+      </button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="!orderSuccess" class="checkout-container">
   <div class="order-summary">
     <h3>Đơn hàng của bạn</h3>
 
@@ -67,6 +94,11 @@
           <option value="cod">Thanh toán khi nhận hàng</option>
           <option value="bank">Chuyển khoản ngân hàng</option>
         </select>
+      </div>
+
+      <div class="form-group">
+        <label for="notes">Ghi chú (không bắt buộc)</label>
+        <textarea id="notes" formControlName="notes" placeholder="Ghi chú cho đơn hàng..." rows="3"></textarea>
       </div>
 
       <button type="submit" class="btn btn-primary btn-payment">Xác nhận thanh toán</button>

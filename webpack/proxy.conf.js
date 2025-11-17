@@ -7,6 +7,13 @@ function setupProxy({ tls }) {
       secure: false,
       changeOrigin: tls,
     },
+    {
+      context: ['/ws'],
+      target: 'http://localhost:8080',
+      secure: false,
+      changeOrigin: false,
+      ws: true,
+    },
   ];
 }
 

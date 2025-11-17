@@ -7,7 +7,14 @@ import jakarta.validation.constraints.*;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "jhi_product")
+@Table(
+    name = "jhi_product",
+    indexes = {
+        @Index(name = "idx_product_category", columnList = "category_id"),
+        @Index(name = "idx_product_featured", columnList = "is_featured"),
+        @Index(name = "idx_product_name", columnList = "name"),
+    }
+)
 public class Product extends AbstractAuditingEntity<Long> implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -22,7 +29,7 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
     private String name;
 
     @Size(max = 500)
-    @Column(name = "description", length = 500)
+    @Column(name = "description", length = 500, columnDefinition = "NVARCHAR(500)")
     private String description;
 
     @NotNull
@@ -41,8 +48,9 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
     @Column(name = "is_featured", nullable = false) // Đảm bảo không null ở DB
     private Boolean isFeatured = false; // Khởi tạo là false
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false) // Đặt optional = false để yêu cầu category
-    @JsonIgnoreProperties(value = { "products" }, allowSetters = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
+    @JsonIgnoreProperties(value = { "products", "hibernateLazyInitializer", "handler" }, allowSetters = true)
     private Category category;
 
     // Getters and setters

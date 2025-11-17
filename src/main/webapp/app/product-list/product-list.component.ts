@@ -40,6 +40,10 @@ export class ProductListComponent implements OnInit {
   page!: number;
   sortState = sortStateSignal({});
 
+  // Cache
+  private cache = new Map<string, { data: IProduct[]; timestamp: number }>();
+  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
   private productService = inject(ProductService);
   private categoryService = inject(CategoryService);
   private utils = inject(UtilsService);
@@ -54,6 +58,15 @@ export class ProductListComponent implements OnInit {
   }
 
   loadAll(): void {
+    const cacheKey = `${this.page}-${this.selectedCategorySlug}-${this.searchTerm}`;
+    const cached = this.cache.get(cacheKey);
+
+    // Check cache
+    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+      this.filteredProducts = cached.data;
+      return;
+    }
+
     this.isLoading = true;
     forkJoin([
       this.categoryService.query().pipe(map(res => res.body ?? [])),
@@ -79,6 +92,11 @@ export class ProductListComponent implements OnInit {
         this.allProducts = products;
         this.featuredProducts = featuredProds;
         this.filteredProducts = this.allProducts;
+
+        // Save to cache
+        const cacheKey = `${this.page}-${this.selectedCategorySlug}-${this.searchTerm}`;
+        this.cache.set(cacheKey, { data: this.allProducts, timestamp: Date.now() });
+
         this.isLoading = false;
       },
       error: () => {
@@ -150,5 +168,16 @@ export class ProductListComponent implements OnInit {
     });
   }
 
-  protected onSearchTermChange($event: any) {}
+  protected onSearchTermChange($event: any) {
+    // Debounce search - chờ 500ms sau khi user ngừng gõ
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    this.searchTimeout = setTimeout(() => {
+      this.page = 1;
+      this.transition();
+    }, 500);
+  }
+
+  private searchTimeout: any;
 }

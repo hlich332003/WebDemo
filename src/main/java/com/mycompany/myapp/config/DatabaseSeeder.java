@@ -117,7 +117,7 @@ public class DatabaseSeeder implements CommandLineRunner {
 
         // Create sample products if not exists
         Optional<Category> electronicsCategory = categoryRepository.findByName("Electronics");
-        if (electronicsCategory.isPresent() && productRepository.findByName("Laptop").isEmpty()) {
+        if (electronicsCategory.isPresent() && productRepository.findFirstByName("Laptop").isEmpty()) {
             Product laptop = new Product();
             laptop.setName("Laptop");
             laptop.setDescription("Powerful laptop for work and gaming.");
@@ -131,7 +131,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         }
 
         Optional<Category> booksCategory = categoryRepository.findByName("Books");
-        if (booksCategory.isPresent() && productRepository.findByName("The Great Gatsby").isEmpty()) {
+        if (booksCategory.isPresent() && productRepository.findFirstByName("The Great Gatsby").isEmpty()) {
             Product book = new Product();
             book.setName("The Great Gatsby");
             book.setDescription("A classic novel by F. Scott Fitzgerald.");

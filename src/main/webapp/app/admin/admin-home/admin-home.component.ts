@@ -1,8 +1,8 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 
 import { AccountService } from 'app/core/auth/account.service';
 import { Account } from 'app/core/auth/account.model';
@@ -13,6 +13,7 @@ export interface DashboardStats {
   totalRevenue: number;
   totalOrders: number;
   totalCustomers: number;
+  totalProducts: number;
 }
 
 @Component({
@@ -22,7 +23,7 @@ export interface DashboardStats {
   styleUrls: ['./admin-home.component.scss'],
   imports: [CommonModule, RouterModule, SharedModule],
 })
-export default class AdminHomeComponent implements OnInit {
+export default class AdminHomeComponent implements OnInit, OnDestroy {
   account = signal<Account | null>(null);
   stats = signal<DashboardStats | null>(null);
 
@@ -37,9 +38,17 @@ export default class AdminHomeComponent implements OnInit {
     this.loadStats();
   }
 
+  ngOnDestroy(): void {
+    // No-op
+  }
+
   loadStats(): void {
-    this.getDashboardStats().subscribe(stats => {
-      this.stats.set(stats);
+    this.getDashboardStats().subscribe({
+      next: stats => this.stats.set(stats),
+      error: () => {
+        // Set default stats if API fails
+        this.stats.set({ totalRevenue: 0, totalOrders: 0, totalCustomers: 0, totalProducts: 0 });
+      },
     });
   }
 

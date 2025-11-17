@@ -168,9 +168,27 @@ public class ProductResource {
     // @CacheEvict(value = "products", allEntries = true) // Tạm thời vô hiệu hóa
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         log.debug("REST request to delete Product : {}", id);
-        productService.delete(id);
-        return ResponseEntity.noContent()
-            .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
-            .build();
+
+        // Kiểm tra sản phẩm có tồn tại không
+        if (!productRepository.existsById(id)) {
+            throw new BadRequestAlertException("Sản phẩm không tồn tại", ENTITY_NAME, "idnotfound");
+        }
+
+        try {
+            productService.delete(id);
+            return ResponseEntity.noContent()
+                .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
+                .build();
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            log.error("Cannot delete product due to foreign key constraint: {}", e.getMessage());
+            throw new BadRequestAlertException(
+                "Không thể xóa sản phẩm. Sản phẩm đang được sử dụng trong đơn hàng.",
+                ENTITY_NAME,
+                "productinuse"
+            );
+        } catch (Exception e) {
+            log.error("Unexpected error deleting product: {}", e.getMessage(), e);
+            throw new BadRequestAlertException("Lỗi khi xóa sản phẩm: " + e.getMessage(), ENTITY_NAME, "deleteerror");
+        }
     }
 }

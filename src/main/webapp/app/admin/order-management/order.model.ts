@@ -4,6 +4,7 @@ import { IOrderItem } from './order-item.model';
 
 export interface IOrder {
   id?: number;
+  orderCode?: string | null;
   orderDate?: Date | null; // Đã sửa kiểu thành Date | null
   totalAmount?: number | null;
   status?: string | null;
@@ -12,6 +13,7 @@ export interface IOrder {
   customerPhone?: string | null; // Thêm trường này
   deliveryAddress?: string | null;
   paymentMethod?: string | null;
+  notes?: string | null;
   customer?: Account | null;
   items?: IOrderItem[] | null;
 }

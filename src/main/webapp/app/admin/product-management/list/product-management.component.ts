@@ -2,25 +2,25 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpHeaders, HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { combineLatest } from 'rxjs';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap'; // Import NgbPaginationModule
 import { HttpClient } from '@angular/common/http';
 
 import SharedModule from 'app/shared/shared.module';
 import { SortByDirective, SortDirective, SortService, SortState, sortStateSignal } from 'app/shared/sort';
 import { ITEMS_PER_PAGE } from 'app/config/pagination.constants';
 import { SORT } from 'app/config/navigation.constants';
-import { ItemCountComponent } from 'app/shared/pagination';
 import { ProductService } from 'app/entities/product/product.service';
 import { IProduct } from 'app/entities/product/product.model';
 import ProductDeleteDialogComponent from '../delete/product-delete-dialog.component';
 import { NotificationService } from 'app/shared/notification/notification.service';
 import { ApplicationConfigService } from 'app/core/config/application-config.service';
+import { ItemCountComponent } from 'app/shared/pagination'; // Import ItemCountComponent
 
 @Component({
   selector: 'jhi-product-management',
   standalone: true,
   templateUrl: './product-management.component.html',
-  imports: [RouterModule, SharedModule, SortDirective, SortByDirective, ItemCountComponent],
+  imports: [RouterModule, SharedModule, SortDirective, SortByDirective, NgbPaginationModule, ItemCountComponent], // Add NgbPaginationModule and ItemCountComponent
 })
 export default class ProductManagementComponent implements OnInit {
   products = signal<IProduct[] | null>(null);
@@ -70,7 +70,11 @@ export default class ProductManagementComponent implements OnInit {
           this.isLoading.set(false);
           this.onSuccess(res.body, res.headers);
         },
-        error: () => this.isLoading.set(false),
+        error: error => {
+          console.error('Failed to load products:', error);
+          this.isLoading.set(false);
+          this.notify.error('Không thể tải danh sách sản phẩm.');
+        },
       });
   }
 
@@ -84,80 +88,77 @@ export default class ProductManagementComponent implements OnInit {
     });
   }
 
+  pageChange(page: number): void {
+    this.page = page;
+    this.transition();
+  }
+
   toggleFeatured(product: IProduct): void {
-    if (product.id) {
-      this.productService.toggleFeatured(product.id).subscribe({
-        next: () => {
-          this.loadAll();
-          this.notify.success(`Sản phẩm '${product.name}' đã được cập nhật.`);
-        },
-        error: () => this.notify.error('Cập nhật trạng thái nổi bật thất bại!'),
-      });
+    if (!product.id) {
+      this.notify.error('ID sản phẩm không hợp lệ.');
+      return;
     }
+    this.productService.toggleFeatured(product.id).subscribe({
+      next: () => {
+        this.loadAll();
+        this.notify.success('Sản phẩm đã được cập nhật.');
+      },
+      error: error => {
+        console.error('Failed to toggle featured status:', error);
+        this.notify.error('Cập nhật trạng thái nổi bật thất bại!');
+      },
+    });
   }
 
   exportProducts(): void {
     this.http.get(this.applicationConfigService.getEndpointFor('api/admin/export/products'), { responseType: 'blob' }).subscribe({
       next: (data: Blob) => {
-        const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'products.xlsx';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        this.downloadFile(data, 'products.xlsx');
         this.notify.success('Export sản phẩm thành công!');
       },
-      error: () => {
+      error: error => {
+        console.error('Failed to export products:', error);
         this.notify.error('Export sản phẩm thất bại!');
       },
     });
   }
 
-  importProducts(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-      const formData = new FormData();
-      formData.append('file', file, file.name);
-
-      this.http.post(this.applicationConfigService.getEndpointFor('api/admin/import/products'), formData).subscribe({
-        next: () => {
-          this.notify.success('Import sản phẩm thành công!');
-          this.loadAll(); // Tải lại danh sách sau khi import
-          input.value = ''; // Clear file input
-        },
-        error: (error: HttpErrorResponse) => {
-          const errorMessage = error.error?.detail || error.message || 'Import sản phẩm thất bại.';
-          this.notify.error(errorMessage);
-          input.value = ''; // Clear file input
-        },
-      });
-    }
+  private downloadFile(data: Blob, filename: string): void {
+    const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   }
 
-  // importUsers(event: Event): void { // Đã xóa phương thức này
-  //   const input = event.target as HTMLInputElement;
-  //   if (input.files && input.files.length > 0) {
-  //     const file = input.files[0];
-  //     const formData = new FormData();
-  //     formData.append('file', file, file.name);
+  importProducts(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) {
+      return;
+    }
 
-  //     this.http.post(this.applicationConfigService.getEndpointFor('api/admin/import/users'), formData).subscribe({
-  //       next: () => {
-  //         this.notify.success('Import người dùng thành công!');
-  //         input.value = ''; // Clear file input
-  //       },
-  //       error: (error: HttpErrorResponse) => {
-  //         const errorMessage = error.error?.detail || error.message || 'Import người dùng thất bại.';
-  //         this.notify.error(errorMessage);
-  //         input.value = ''; // Clear file input
-  //       },
-  //     });
-  //   }
-  // }
+    const file = input.files[0];
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+
+    this.http.post(this.applicationConfigService.getEndpointFor('api/admin/import/products'), formData).subscribe({
+      next: () => {
+        this.notify.success('Import sản phẩm thành công!');
+        this.loadAll();
+        input.value = '';
+      },
+      error: (error: HttpErrorResponse) => {
+        console.error('Failed to import products');
+        const errorMessage = error.error?.message || error.error?.detail || 'Import sản phẩm thất bại.';
+        this.notify.error(errorMessage);
+        input.value = '';
+      },
+    });
+  }
 
   private handleNavigation(): void {
     combineLatest([this.activatedRoute.data, this.activatedRoute.queryParamMap]).subscribe(([data, params]) => {
@@ -170,8 +171,11 @@ export default class ProductManagementComponent implements OnInit {
 
   private onSuccess(products: IProduct[] | null, headers: HttpHeaders): void {
     this.totalItems.set(Number(headers.get('X-Total-Count')));
-    // Sắp xếp sản phẩm: isFeatured = true lên đầu
-    const sortedProducts = products?.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
-    this.products.set(sortedProducts ?? null);
+    if (products) {
+      const sortedProducts = [...products].sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
+      this.products.set(sortedProducts);
+    } else {
+      this.products.set(null);
+    }
   }
 }

@@ -1,19 +1,23 @@
 package com.mycompany.myapp.repository;
 
-import com.mycompany.myapp.domain.Order; // Import Order để JpaRepository có thể hoạt động
-import com.mycompany.myapp.service.dto.DashboardStatsDTO;
+import com.mycompany.myapp.domain.Order;
+import java.math.BigDecimal;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface DashboardStatsRepository extends JpaRepository<Order, Long> { // JpaRepository cần một Entity và kiểu ID
-    @Query(
-        nativeQuery = true,
-        value = "SELECT " +
-        "   (SELECT SUM(total_amount) FROM jhi_order WHERE status = 'DELIVERED') as totalRevenue, " +
-        "   (SELECT COUNT(*) FROM jhi_order) as totalOrders, " +
-        "   (SELECT COUNT(DISTINCT user_id) FROM jhi_order) as totalCustomers"
-    )
-    DashboardStatsDTO getDashboardStats();
+public interface DashboardStatsRepository extends JpaRepository<Order, Long> {
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.status = 'DELIVERED'")
+    BigDecimal getTotalRevenue();
+
+    @Query("SELECT COUNT(o) FROM Order o")
+    Long getTotalOrders();
+
+    @Query("SELECT COUNT(DISTINCT o.customer.id) FROM Order o WHERE o.customer IS NOT NULL")
+    Long getTotalCustomers();
+
+    @Query("SELECT COUNT(p) FROM Product p")
+    Long getTotalProducts();
 }

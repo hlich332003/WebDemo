@@ -1,8 +1,8 @@
 <section class="hero-section">
+  <div class="hero-overlay"></div>
   <div class="hero-content">
     <h1>Chào mừng đến với WebDemo</h1>
     <p>Nơi mua sắm tin cậy cho mọi người</p>
-    <!-- Nút "Mua sắm ngay" chỉ hiển thị nếu người dùng không phải là admin -->
     @if (!isAdmin()) {
       <a routerLink="/products" class="btn btn-primary">Mua sắm ngay</a>
     }

@@ -28,8 +28,9 @@ export class OrderManagementComponent implements OnInit {
   itemsPerPage = ITEMS_PER_PAGE;
   page!: number;
   sortState = sortStateSignal({});
+  selectedOrder = signal<IOrder | null>(null);
 
-  private orderManagementService = inject(OrderManagementService);
+  private orderService = inject(OrderManagementService);
   private notify = inject(NotificationService);
   private activatedRoute = inject(ActivatedRoute);
   private router = inject(Router);
@@ -41,19 +42,21 @@ export class OrderManagementComponent implements OnInit {
 
   loadAll(): void {
     this.isLoading.set(true);
-    this.orderManagementService
+    this.orderService
       .query({
         page: this.page - 1,
         size: this.itemsPerPage,
-        sort: this.sortService.buildSortParam(this.sortState(), 'orderDate,desc'),
+        sort: ['id,desc'],
       })
       .subscribe({
         next: (res: HttpResponse<IOrder[]>) => {
           this.isLoading.set(false);
           this.onSuccess(res.body, res.headers);
         },
-        error: () => {
+        error: error => {
+          console.error('Failed to load orders:', error);
           this.isLoading.set(false);
+          this.orders.set([]);
           this.notify.error('Không thể tải danh sách đơn hàng.');
         },
       });
@@ -71,33 +74,55 @@ export class OrderManagementComponent implements OnInit {
     return new Date(date).toLocaleDateString('vi-VN', options);
   }
 
+  getStatusText(status: string | null | undefined): string {
+    const statusMap: { [key: string]: string } = {
+      PENDING: 'Chờ xác nhận',
+      PROCESSING: 'Đang xử lý',
+      SHIPPED: 'Đang giao',
+      COMPLETED: 'Đã hoàn thành',
+      CANCELLED: 'Đã hủy',
+    };
+    return statusMap[status || ''] || status || 'N/A';
+  }
+
   updateStatus(order: IOrder, newStatus: string): void {
     if (!order.id) {
+      this.notify.error('ID đơn hàng không hợp lệ.');
       return;
     }
-    if (confirm(`Bạn có chắc chắn muốn cập nhật trạng thái đơn hàng #${order.id} thành ${newStatus} không?`)) {
-      this.orderManagementService.updateStatus(order.id, newStatus).subscribe({
+    if (confirm(`Bạn có chắc chắn muốn cập nhật trạng thái đơn hàng #${order.id} thành ${this.getStatusText(newStatus)} không?`)) {
+      this.orderService.updateStatus(order.id, newStatus).subscribe({
         next: (res: HttpResponse<IOrder>) => {
           if (res.body) {
-            this.loadAll(); // Tải lại danh sách sau khi cập nhật
+            this.loadAll();
             this.notify.success(`Trạng thái đơn hàng #${res.body.id} đã được cập nhật.`);
           }
         },
-        error: () => {
+        error: error => {
+          console.error('Failed to update order status:', error);
           this.notify.error('Cập nhật trạng thái đơn hàng thất bại.');
         },
       });
     }
   }
 
+  toggleOrderDetail(order: IOrder): void {
+    if (this.selectedOrder()?.id === order.id) {
+      this.selectedOrder.set(null);
+    } else {
+      this.selectedOrder.set(order);
+    }
+  }
+
   deleteOrder(orderId: number): void {
     if (confirm(`Bạn có chắc chắn muốn xóa đơn hàng #${orderId} không?`)) {
-      this.orderManagementService.delete(orderId).subscribe({
+      this.orderService.delete(orderId).subscribe({
         next: () => {
-          this.loadAll(); // Tải lại danh sách sau khi xóa
+          this.loadAll();
           this.notify.success(`Đơn hàng #${orderId} đã được xóa.`);
         },
-        error: () => {
+        error: error => {
+          console.error('Failed to delete order:', error);
           this.notify.error('Xóa đơn hàng thất bại.');
         },
       });

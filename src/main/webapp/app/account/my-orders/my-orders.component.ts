@@ -6,6 +6,8 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import { IOrder } from 'app/admin/order-management/order.model';
 import { MyOrdersService } from './my-orders.service';
+import { OrderService } from 'app/entities/order/order.service';
+import { NotificationService } from 'app/shared/notification/notification.service';
 
 @Component({
   selector: 'jhi-my-orders',
@@ -19,6 +21,8 @@ export class MyOrdersComponent implements OnInit {
   isLoading = false;
 
   private myOrdersService = inject(MyOrdersService);
+  private orderService = inject(OrderService);
+  private notify = inject(NotificationService);
 
   ngOnInit(): void {
     this.loadAll();
@@ -31,9 +35,10 @@ export class MyOrdersComponent implements OnInit {
         this.orders = res.body ?? [];
         this.isLoading = false;
       },
-      error: () => {
+      error: error => {
+        console.error('Failed to load orders:', error);
         this.isLoading = false;
-        // Xử lý lỗi
+        this.orders = [];
       },
     });
   }
@@ -48,5 +53,30 @@ export class MyOrdersComponent implements OnInit {
     }
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
     return new Date(date).toLocaleDateString('vi-VN', options);
+  }
+
+  cancelOrder(orderId: number): void {
+    if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?')) {
+      this.orderService.cancelOrder(orderId).subscribe({
+        next: () => {
+          this.notify.success('Đơn hàng đã được hủy thành công.');
+          this.loadAll();
+        },
+        error: () => {
+          this.notify.error('Không thể hủy đơn hàng.');
+        },
+      });
+    }
+  }
+
+  getStatusText(status: string | null | undefined): string {
+    const statusMap: { [key: string]: string } = {
+      PENDING: 'Chờ xử lý',
+      PROCESSING: 'Đang xử lý',
+      SHIPPED: 'Đang giao',
+      DELIVERED: 'Đã giao',
+      CANCELLED: 'Đã hủy',
+    };
+    return statusMap[status || ''] || status || 'N/A';
   }
 }

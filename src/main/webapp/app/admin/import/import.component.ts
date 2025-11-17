@@ -61,41 +61,54 @@ export class ImportComponent {
   }
 
   onUrlImport(type: 'products' | 'users'): void {
-    let urlToImport: string;
-    let loadingSignal: (value: boolean) => void;
-    let endpoint: string;
+    const urlToImport = type === 'products' ? this.productImportUrl : this.userImportUrl;
 
-    if (type === 'products') {
-      urlToImport = this.productImportUrl;
-      loadingSignal = this.isImportingProductsFromUrl.set;
-      endpoint = '/api/admin/import/products-from-url';
-    } else {
-      urlToImport = this.userImportUrl;
-      loadingSignal = this.isImportingUsersFromUrl.set;
-      endpoint = '/api/admin/import/users-from-url';
-    }
-
-    if (!urlToImport) {
-      this.notify.error('URL không được để trống!');
+    if (!this.validateUrl(urlToImport)) {
       return;
     }
 
-    loadingSignal(true);
+    const endpoint = type === 'products' ? '/api/admin/import/products-from-url' : '/api/admin/import/users-from-url';
+    const loadingSignal = type === 'products' ? this.isImportingProductsFromUrl : this.isImportingUsersFromUrl;
+
+    loadingSignal.set(true);
     this.http.post(endpoint, urlToImport, { headers: { 'Content-Type': 'text/plain' } }).subscribe({
       next: () => {
         this.notify.success(`Import ${type} từ URL thành công!`);
-        loadingSignal(false);
-        if (type === 'products') {
-          this.productImportUrl = '';
-        } else {
-          this.userImportUrl = '';
-        }
+        this.resetImportState(type, loadingSignal);
       },
       error: (error: HttpErrorResponse) => {
         const errorMessage = error.error?.detail || error.message || `Import ${type} từ URL thất bại.`;
         this.notify.error(errorMessage);
-        loadingSignal(false);
+        loadingSignal.set(false);
       },
     });
+  }
+
+  private validateUrl(url: string): boolean {
+    if (!url) {
+      this.notify.error('URL không được để trống!');
+      return false;
+    }
+
+    try {
+      const urlObj = new URL(url);
+      if (!['http:', 'https:'].includes(urlObj.protocol)) {
+        this.notify.error('URL phải sử dụng giao thức HTTP hoặc HTTPS!');
+        return false;
+      }
+      return true;
+    } catch {
+      this.notify.error('URL không hợp lệ!');
+      return false;
+    }
+  }
+
+  private resetImportState(type: 'products' | 'users', loadingSignal: any): void {
+    loadingSignal.set(false);
+    if (type === 'products') {
+      this.productImportUrl = '';
+    } else {
+      this.userImportUrl = '';
+    }
   }
 }

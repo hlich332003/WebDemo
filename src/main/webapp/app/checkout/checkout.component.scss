@@ -90,8 +90,77 @@ h1 {
   font-size: 1.1rem;
 }
 
+.alert {
+  padding: 1rem;
+  border-radius: $border-radius;
+  margin-bottom: 1rem;
+
+  &.alert-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffc107;
+    color: #856404;
+  }
+}
+
+.order-success-message {
+  max-width: 800px;
+  margin: 0 auto;
+
+  .success-card {
+    background: $card-bg;
+    padding: 2rem;
+    border-radius: $card-border-radius;
+    box-shadow: $card-box-shadow;
+    text-align: center;
+
+    h2 {
+      color: $success;
+      margin-bottom: 2rem;
+    }
+
+    .order-info {
+      text-align: left;
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: $border-radius;
+      margin-bottom: 1.5rem;
+
+      p {
+        margin: 0.75rem 0;
+        font-size: 1rem;
+
+        strong {
+          display: inline-block;
+          width: 180px;
+        }
+      }
+
+      .order-code {
+        color: $primary;
+        font-weight: bold;
+        font-size: 1.2rem;
+      }
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 1.5rem;
+
+      button {
+        padding: 0.75rem 2rem;
+      }
+    }
+  }
+}
+
 @media (max-width: 768px) {
   .checkout-container {
     grid-template-columns: 1fr;
+  }
+
+  .order-success-message .success-card .action-buttons {
+    flex-direction: column;
   }
 }

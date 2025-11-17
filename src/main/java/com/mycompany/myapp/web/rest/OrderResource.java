@@ -32,7 +32,7 @@ import tech.jhipster.web.util.ResponseUtil;
  * REST controller for managing {@link com.mycompany.myapp.domain.Order}.
  */
 @RestController
-@RequestMapping("/api")
+@RequestMapping(value = "/api", produces = "application/json; charset=UTF-8")
 public class OrderResource {
 
     private final Logger log = LoggerFactory.getLogger(OrderResource.class);
@@ -45,19 +45,35 @@ public class OrderResource {
     private final OrderService orderService;
     private final OrderRepository orderRepository;
 
-    public OrderResource(OrderService orderService, OrderRepository orderRepository) {
+    // private final com.mycompany.myapp.service.NotificationService notificationService; // Removed
+
+    public OrderResource(
+        OrderService orderService,
+        OrderRepository orderRepository/*, com.mycompany.myapp.service.NotificationService notificationService*/
+    ) { // Removed parameter
         this.orderService = orderService;
         this.orderRepository = orderRepository;
+        // this.notificationService = notificationService; // Removed
     }
 
-    @PostMapping("/orders")
+    @PostMapping(value = "/orders", consumes = "application/json; charset=UTF-8", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Order> createOrder(@RequestBody OrderDTO orderDTO) throws URISyntaxException {
-        log.debug("REST request to save Order : {}", orderDTO);
+        log.info("REST request to save Order : {}", orderDTO);
+        log.info("CustomerInfo: {}", orderDTO.getCustomerInfo());
+        log.info("Items: {}", orderDTO.getItems());
+        log.info("TotalAmount: {}", orderDTO.getTotalAmount());
+
         if (orderDTO.getCustomerInfo() == null || orderDTO.getItems() == null || orderDTO.getItems().isEmpty()) {
+            log.error("Invalid order data - customerInfo: {}, items: {}", orderDTO.getCustomerInfo(), orderDTO.getItems());
             throw new BadRequestAlertException("Invalid order data", ENTITY_NAME, "orderInvalidData");
         }
 
         Order result = orderService.create(orderDTO);
+
+        // Gửi thông báo WebSocket cho admin // Removed
+        // String customerName = orderDTO.getCustomerInfo() != null ? orderDTO.getCustomerInfo().getFullName() : "Khách hàng";
+        // notificationService.notifyNewOrder(result.getId(), customerName);
+
         return ResponseEntity.created(new URI("/api/orders/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -84,6 +100,10 @@ public class OrderResource {
         }
         order.setStatus(newStatus);
         Order result = orderService.save(order);
+
+        // Gửi thông báo WebSocket // Removed
+        // notificationService.notifyOrderStatusChange(result.getId(), newStatus.name());
+
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -111,7 +131,11 @@ public class OrderResource {
             .body(result);
     }
 
-    @PatchMapping("/orders/{id}/address")
+    @PatchMapping(
+        value = "/orders/{id}/address",
+        consumes = "application/json; charset=UTF-8",
+        produces = "application/json; charset=UTF-8"
+    )
     @PreAuthorize("hasAnyAuthority(\"" + AuthoritiesConstants.ADMIN + "\", \"" + AuthoritiesConstants.USER + "\")")
     public ResponseEntity<Order> updateOrderAddress(@PathVariable Long id, @RequestBody Map<String, String> payload) {
         log.debug("REST request to update address for Order : {} to {}", id, payload.get("address"));

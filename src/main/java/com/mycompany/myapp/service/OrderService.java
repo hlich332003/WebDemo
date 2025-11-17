@@ -3,7 +3,7 @@ package com.mycompany.myapp.service;
 import com.mycompany.myapp.domain.Order;
 import com.mycompany.myapp.domain.OrderItem;
 import com.mycompany.myapp.domain.Product;
-import com.mycompany.myapp.domain.User;
+//import com.mycompany.myapp.domain.User;
 import com.mycompany.myapp.domain.enumeration.OrderStatus; // Import OrderStatus
 import com.mycompany.myapp.repository.OrderItemRepository;
 import com.mycompany.myapp.repository.OrderRepository;
@@ -11,6 +11,7 @@ import com.mycompany.myapp.repository.ProductRepository;
 import com.mycompany.myapp.repository.UserRepository;
 import com.mycompany.myapp.security.SecurityUtils;
 import com.mycompany.myapp.service.dto.OrderDTO;
+import com.mycompany.myapp.service.dto.OrderEventDTO;
 import com.mycompany.myapp.service.dto.OrderItemDTO;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
 import java.time.Instant;
@@ -18,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -35,17 +37,23 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    // private final NotificationService notificationService; // Removed
+    private final MessageProducer messageProducer;
 
     public OrderService(
         OrderRepository orderRepository,
         OrderItemRepository orderItemRepository,
         ProductRepository productRepository,
-        UserRepository userRepository
+        UserRepository userRepository,
+        // NotificationService notificationService, // Removed
+        MessageProducer messageProducer
     ) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        // this.notificationService = notificationService; // Removed
+        this.messageProducer = messageProducer;
     }
 
     /**
@@ -64,6 +72,8 @@ public class OrderService {
         order.setOrderDate(Instant.now());
         order.setTotalAmount(orderDTO.getTotalAmount());
         order.setStatus(OrderStatus.PENDING); // Đặt trạng thái ban đầu bằng Enum
+        order.setOrderCode("ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        order.setNotes(orderDTO.getNotes());
 
         // Lấy thông tin người dùng hiện tại và thiết lập cho đơn hàng nếu có
         SecurityUtils.getCurrentUserLogin().flatMap(userRepository::findOneByLogin).ifPresent(order::setCustomer);
@@ -82,10 +92,10 @@ public class OrderService {
 
         Set<OrderItem> orderItems = new HashSet<>();
         for (OrderItemDTO itemDTO : orderDTO.getItems()) {
-            // Kiểm tra sản phẩm và số lượng tồn kho
             Optional<Product> productOptional = productRepository.findById(itemDTO.getProductId());
             if (productOptional.isEmpty()) {
-                throw new BadRequestAlertException("Product with ID " + itemDTO.getProductId() + " not found", "order", "productNotFound");
+                log.warn("Product with ID {} not found, skipping", itemDTO.getProductId());
+                continue;
             }
             Product product = productOptional.get();
 
@@ -105,12 +115,24 @@ public class OrderService {
             orderItem.setOrder(savedOrder);
             orderItems.add(orderItem);
 
-            // Cập nhật số lượng tồn kho sản phẩm
             product.setQuantity(product.getQuantity() - itemDTO.getQuantity());
             productRepository.save(product);
         }
         orderItemRepository.saveAll(orderItems);
         savedOrder.setItems(orderItems);
+
+        // Define customerName here for use in OrderEventDTO
+        String customerName = savedOrder.getCustomerFullName() != null ? savedOrder.getCustomerFullName() : "Khách hàng";
+
+        // Gửi message vào RabbitMQ để gửi email bất đồng bộ
+        OrderEventDTO orderEvent = new OrderEventDTO(
+            savedOrder.getId(),
+            savedOrder.getOrderCode(),
+            savedOrder.getCustomerEmail(),
+            customerName,
+            savedOrder.getTotalAmount()
+        );
+        messageProducer.sendOrderCreatedEvent(orderEvent);
 
         return savedOrder;
     }
@@ -131,6 +153,6 @@ public class OrderService {
 
     public List<Order> findOrdersByCurrentUser() {
         Optional<String> userLogin = SecurityUtils.getCurrentUserLogin();
-        return userLogin.map(orderRepository::findByCustomer_Login).orElse(List.of());
+        return userLogin.map(orderRepository::findByCustomer_LoginOrderByOrderDateDesc).orElse(List.of());
     }
 }

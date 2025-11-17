@@ -1,10 +1,11 @@
 <div class="order-detail-container">
-  <h1>Chi tiết đơn hàng #{{ order?.id }}</h1>
+  <h1>Chi tiết đơn hàng {{ order?.orderCode }}</h1>
 
   @if (isLoading) {
     <p>Đang tải chi tiết đơn hàng...</p>
   } @else if (order) {
     <div class="order-summary-card">
+      <div class="summary-item"><strong>Mã đơn hàng:</strong> {{ order.orderCode }}</div>
       <div class="summary-item"><strong>Ngày đặt hàng:</strong> {{ formatOrderDate(order.orderDate) }}</div>
       <div class="summary-item"><strong>Tổng tiền:</strong> {{ formatPrice(order.totalAmount) }}</div>
       <div class="summary-item">

@@ -59,9 +59,14 @@ export class NavbarComponent implements OnInit {
 
   ngOnInit(): void {
     this.entitiesNavbarItems = EntityNavbarItems;
-    this.profileService.getProfileInfo().subscribe(profileInfo => {
-      this.inProduction = profileInfo.inProduction;
-      this.openAPIEnabled = profileInfo.openAPIEnabled;
+    this.profileService.getProfileInfo().subscribe({
+      next: profileInfo => {
+        this.inProduction = profileInfo.inProduction;
+        this.openAPIEnabled = profileInfo.openAPIEnabled;
+      },
+      error: () => {
+        // Ignore info endpoint error
+      },
     });
 
     // Theo dõi sự thay đổi của giỏ hàng và cập nhật cartItemCount

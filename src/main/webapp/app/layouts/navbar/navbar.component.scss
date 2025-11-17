@@ -20,12 +20,73 @@ Navbar
 
   .container-fluid {
     display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .top-row {
+    display: flex;
     align-items: center;
-    flex-wrap: nowrap; /* Ngăn các item xuống dòng */
+    flex-wrap: nowrap;
+    width: 100%;
   }
 
   a.nav-link {
     font-weight: 400;
+  }
+
+  .navbar-collapse {
+    @media (min-width: 992px) {
+      display: flex !important;
+      flex-basis: auto;
+    }
+
+    @media (max-width: 991px) {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background-color: #343a40;
+      z-index: 1000;
+
+      .navbar-nav {
+        width: 100%;
+
+        .nav-item {
+          width: 100%;
+
+          .nav-link {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          }
+        }
+
+        .dropdown-menu {
+          position: static !important;
+          transform: none !important;
+          width: 100%;
+          border: none;
+          background-color: #2c3034;
+          margin: 0;
+          padding: 0;
+
+          .dropdown-item {
+            padding: 0.75rem 2rem;
+            color: rgba(255, 255, 255, 0.75);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+            &:hover {
+              background-color: #343a40;
+              color: #fff;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .navbar-toggler {
+    margin-left: 0.5rem;
   }
 }
 
@@ -48,6 +109,11 @@ Search form styles
   width: 50%;
   max-width: 600px;
   margin: 0 1.5rem;
+
+  @media (max-width: 991px) {
+    flex: 1;
+    margin: 0 1rem;
+  }
 }
 
 .search-form {

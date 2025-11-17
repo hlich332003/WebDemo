@@ -9,6 +9,7 @@ import com.mycompany.myapp.security.AuthoritiesConstants;
 import com.mycompany.myapp.security.SecurityUtils;
 import com.mycompany.myapp.service.dto.AdminUserDTO;
 import com.mycompany.myapp.service.dto.UserDTO;
+import com.mycompany.myapp.service.dto.UserRegistrationEventDTO;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -31,11 +32,18 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthorityRepository authorityRepository;
+    private final MessageProducer messageProducer;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthorityRepository authorityRepository) {
+    public UserService(
+        UserRepository userRepository,
+        PasswordEncoder passwordEncoder,
+        AuthorityRepository authorityRepository,
+        MessageProducer messageProducer
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authorityRepository = authorityRepository;
+        this.messageProducer = messageProducer;
     }
 
     public Optional<User> activateRegistration(String key) {
@@ -103,13 +111,24 @@ public class UserService {
         newUser.setPhone(userDTO.getPhone());
         newUser.setImageUrl(userDTO.getImageUrl());
         newUser.setLangKey(userDTO.getLangKey());
-        newUser.setActivated(false);
-        newUser.setActivationKey(RandomUtil.generateActivationKey());
+        newUser.setActivated(true);
+        newUser.setActivationKey(null);
         Set<Authority> authorities = new HashSet<>();
         authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
         newUser.setAuthorities(authorities);
         userRepository.save(newUser);
         log.debug("Created Information for User: {}", newUser);
+
+        // Gửi message vào RabbitMQ để gửi email xác thực
+        UserRegistrationEventDTO registrationEvent = new UserRegistrationEventDTO(
+            newUser.getEmail(),
+            newUser.getFirstName(),
+            newUser.getLastName(),
+            newUser.getLogin(),
+            newUser.getActivationKey()
+        );
+        messageProducer.sendUserRegisteredEvent(registrationEvent);
+
         return newUser;
     }
 

@@ -10,7 +10,7 @@
       <table class="table table-striped" aria-describedby="my-orders">
         <thead>
           <tr>
-            <th scope="col"><span>ID</span></th>
+            <th scope="col"><span>Mã đơn</span></th>
             <th scope="col"><span>Ngày đặt</span></th>
             <th scope="col"><span>Tổng tiền</span></th>
             <th scope="col"><span>Trạng thái</span></th>
@@ -20,16 +20,36 @@
         <tbody>
           @for (order of orders; track trackId($index, order)) {
             <tr>
-              <td>{{ order.id }}</td>
+              <td>
+                <strong>{{ order.orderCode }}</strong>
+              </td>
               <td>{{ formatOrderDate(order.orderDate) }}</td>
               <td>{{ order.totalAmount | currency: 'VND' : 'symbol' : '1.0-0' }}</td>
-              <td>{{ order.status }}</td>
+              <td>
+                <span
+                  class="badge"
+                  [ngClass]="{
+                    'bg-warning': order.status === 'PENDING',
+                    'bg-info': order.status === 'PROCESSING',
+                    'bg-primary': order.status === 'SHIPPED',
+                    'bg-success': order.status === 'DELIVERED',
+                    'bg-danger': order.status === 'CANCELLED',
+                  }"
+                  >{{ getStatusText(order.status) }}</span
+                >
+              </td>
               <td class="text-end">
                 <div class="btn-group">
-                  <button type="submit" [routerLink]="['/order', order.id]" class="btn btn-info btn-sm">
+                  <button type="submit" [routerLink]="['/order', order.id]" class="btn btn-info btn-sm rounded-pill me-1">
                     <fa-icon icon="eye"></fa-icon>
                     <span class="d-none d-md-inline">Xem chi tiết</span>
                   </button>
+                  @if (order.status === 'PENDING') {
+                    <button type="button" (click)="cancelOrder(order.id!)" class="btn btn-danger btn-sm rounded-pill">
+                      <fa-icon icon="times"></fa-icon>
+                      <span class="d-none d-md-inline">Hủy</span>
+                    </button>
+                  }
                 </div>
               </td>
             </tr>

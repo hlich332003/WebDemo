@@ -48,6 +48,12 @@ public class Order implements Serializable {
     @Column(name = "payment_method")
     private String paymentMethod;
 
+    @Column(name = "order_code", unique = true, nullable = false)
+    private String orderCode;
+
+    @Column(name = "notes", length = 500)
+    private String notes;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "user_id") // Explicitly map to user_id column
     @JsonIgnoreProperties(value = { "authorities" }, allowSetters = true)
@@ -149,6 +155,22 @@ public class Order implements Serializable {
 
     public void setPaymentMethod(String paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+
+    public String getOrderCode() {
+        return this.orderCode;
+    }
+
+    public void setOrderCode(String orderCode) {
+        this.orderCode = orderCode;
+    }
+
+    public String getNotes() {
+        return this.notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 
     public User getCustomer() {

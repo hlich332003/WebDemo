@@ -1,39 +1,49 @@
 <div class="admin-home-container">
-  <h1>Chào mừng, {{ account()?.login }}!</h1>
-  <p>Đây là trang chủ quản trị của bạn.</p>
+  <div class="text-center mb-4">
+    <h1>Chào mừng, {{ account()?.login }}! 👋</h1>
+    <p>Đây là trang chủ quản trị của bạn</p>
+  </div>
 
-  <!-- Phần thống kê -->
+  <!-- Thống kê -->
   @if (stats()) {
-    <div class="stats-grid">
-      <div class="stat-card">
-        <fa-icon icon="dollar-sign"></fa-icon>
-        <div class="stat-info">
-          <h4>Tổng doanh thu</h4>
-          <p>{{ stats()?.totalRevenue | currency: 'VND' : 'symbol' : '1.0-0' }}</p>
-        </div>
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><fa-icon icon="chart-bar"></fa-icon> Tổng quan cửa hàng</h5>
       </div>
-      <div class="stat-card">
-        <fa-icon icon="cart-shopping"></fa-icon>
-        <div class="stat-info">
-          <h4>Tổng đơn hàng</h4>
-          <p>{{ stats()?.totalOrders }}</p>
-        </div>
-      </div>
-      <div class="stat-card">
-        <fa-icon icon="users"></fa-icon>
-        <div class="stat-info">
-          <h4>Tổng khách hàng</h4>
-          <p>{{ stats()?.totalCustomers }}</p>
-        </div>
+      <div class="card-body p-0">
+        <table class="table table-bordered mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="text-center"><fa-icon icon="cart-shopping" class="text-primary"></fa-icon> Đơn hàng</th>
+              <th class="text-center"><fa-icon icon="box-open" class="text-warning"></fa-icon> Sản phẩm</th>
+              <th class="text-center"><fa-icon icon="dollar-sign" class="text-success"></fa-icon> Doanh thu</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-center fs-5 fw-bold">{{ stats()?.totalOrders }}</td>
+              <td class="text-center fs-5 fw-bold">{{ stats()?.totalProducts }}</td>
+              <td class="text-center fs-5 fw-bold text-success">{{ stats()?.totalRevenue | currency: 'VND' : 'symbol' : '1.0-0' }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   } @else {
-    <p>Đang tải thống kê...</p>
+    <div class="text-center my-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Đang tải...</span>
+      </div>
+      <p class="mt-3 text-muted">Đang tải thống kê...</p>
+    </div>
   }
 
   <hr class="my-4" />
 
-  <h2>Quản lý các mục</h2>
+  <!-- Thông báo real-time -->
+  <!-- Removed WebSocket notification section -->
+
+  <h2>Quản lý</h2>
   <div class="admin-dashboard-links">
     <a routerLink="/admin/user-management" class="dashboard-link">
       <fa-icon icon="users"></fa-icon>
@@ -47,10 +57,5 @@
       <fa-icon icon="receipt"></fa-icon>
       <span>Quản lý đơn hàng</span>
     </a>
-    <a routerLink="/authority" class="dashboard-link">
-      <fa-icon icon="asterisk"></fa-icon>
-      <span>Quản lý quyền hạn</span>
-    </a>
-    <!-- Thêm các liên kết quản trị khác tại đây -->
   </div>
 </div>

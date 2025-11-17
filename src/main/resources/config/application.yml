@@ -1,6 +1,4 @@
-# ===================================================================
 # Spring Boot configuration.
-# ===================================================================
 
 spring:
   application:
@@ -8,7 +6,7 @@ spring:
   docker:
     compose:
       enabled: false
-  # === OTHER CONFIGURATIONS ===
+  # OTHER CONFIGURATIONS
   messages:
     basename: i18n/messages
   main:
@@ -21,11 +19,9 @@ spring:
           authorities-claim-name: auth
 
   cache: # Thêm cấu hình cache
-    type: redis # Bật Redis làm cache chính
+    type: redis # Bật Redis cache
 
-# ===================================================================
 # JHipster specific properties
-# ===================================================================
 
 jhipster:
   clientApp:
@@ -41,24 +37,30 @@ jhipster:
   security:
     content-security-policy: "default-src 'self'; frame-src 'self' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://storage.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:"
 
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+      enabled: true
+
 ---
-# ===================================================================
 # Profile-specific configuration: dev
-# ===================================================================
 
 spring:
   config:
     activate:
       on-profile: dev
 
-  # === DATASOURCE CONFIGURATION (dev) ===
+  # DATASOURCE CONFIGURATION (dev)
   datasource:
-    url: jdbc:sqlserver://localhost:1433;databaseName=jhipster_db;encrypt=true;trustServerCertificate=true
+    url: jdbc:sqlserver://localhost:1433;databaseName=jhipster_db;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true
     username: jhipster_user
     password: Jhip@123
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
 
-  # === JPA & HIBERNATE CONFIGURATION (dev) ===
+  # JPA & HIBERNATE CONFIGURATION (dev)
   jpa:
     properties:
       hibernate.dialect: org.hibernate.dialect.SQLServerDialect
@@ -71,30 +73,42 @@ spring:
         implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
     show-sql: true
 
-  # === REDIS CONFIGURATION (dev) ===
-  redis:
+  # REDIS CONFIGURATION (dev)
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  # RABBITMQ CONFIGURATION (dev)
+  rabbitmq:
     host: localhost
-    port: 6379
+    port: 5672
+    username: guest
+    password: guest
 
   # Mail dev để Spring tạo JavaMailSender
   mail:
-    host: localhost
-    port: 25
+    host: smtp.gmail.com # Thay thế bằng SMTP server của bạn (ví dụ: smtp.office365.com)
+    port: 587 # Cổng SMTP, thường là 587 cho TLS hoặc 465 cho SSL
+    username: catbamaytongdai@gmail.com
+    password: twck ojbt wfcr kawl
     properties:
-      mail.smtp.auth: false
-      mail.smtp.starttls.enable: false
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true # Bật STARTTLS để mã hóa kết nối
+      mail.smtp.starttls.required: true # Yêu cầu STARTTLS
+      mail.smtp.ssl.trust: '*' # Tin tưởng tất cả các chứng chỉ SSL (chỉ dùng cho dev, không khuyến khích cho production)
 
 management:
   endpoints:
     web:
       exposure:
-        include: 'info,health' # Bật endpoint info và health
+        include: 'health' # Chỉ bật health, tắt info
   health:
     mail:
       enabled: false # Disable mail health check in dev
-
-server:
-  port: 8080 # Đã đặt lại cổng về 8080
+  info:
+    env:
+      enabled: false # Tắt info endpoint
 
 jhipster:
   security:

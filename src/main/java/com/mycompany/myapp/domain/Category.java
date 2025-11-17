@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "jhi_category")
+@Table(name = "jhi_category", indexes = { @Index(name = "idx_category_slug", columnList = "slug", unique = true) })
 public class Category extends AbstractAuditingEntity<Long> implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -32,7 +32,7 @@ public class Category extends AbstractAuditingEntity<Long> implements Serializab
     private Boolean isFeatured = false; // Mặc định là false
 
     @OneToMany(mappedBy = "category")
-    @JsonIgnoreProperties(value = { "category" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "category", "hibernateLazyInitializer", "handler" }, allowSetters = true)
     private Set<Product> products = new HashSet<>();
 
     // Getters and setters

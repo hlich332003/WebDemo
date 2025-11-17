@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,7 @@ public class ProductService {
      * @param product the entity to save.
      * @return the persisted entity.
      */
+    @CacheEvict(value = { "products", "featuredProducts" }, allEntries = true)
     public Product save(Product product) {
         log.debug("Request to save Product : {}", product);
         return productRepository.save(product);
@@ -43,6 +46,7 @@ public class ProductService {
      * @param product the entity to save.
      * @return the persisted entity.
      */
+    @CacheEvict(value = { "products", "featuredProducts" }, allEntries = true)
     public Product update(Product product) {
         log.debug("Request to update Product : {}", product);
         return productRepository.save(product);
@@ -54,6 +58,7 @@ public class ProductService {
      * @param product the entity to update partially.
      * @return the persisted entity.
      */
+    @CacheEvict(value = { "products", "featuredProducts" }, allEntries = true)
     public Optional<Product> partialUpdate(Product product) {
         log.debug("Request to partially update Product : {}", product);
 
@@ -78,7 +83,7 @@ public class ProductService {
                 if (product.getIsFeatured() != null) {
                     existingProduct.setIsFeatured(product.getIsFeatured());
                 }
-                if (product.getCategory() != null) { // Cập nhật category
+                if (product.getCategory() != null) {
                     existingProduct.setCategory(product.getCategory());
                 }
 
@@ -127,6 +132,7 @@ public class ProductService {
      * @return the list of featured entities.
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "featuredProducts")
     public List<Product> findAllFeatured() {
         log.debug("Request to get all featured Products");
         return productRepository.findByIsFeaturedTrue();
@@ -149,6 +155,7 @@ public class ProductService {
      *
      * @param id the id of the entity.
      */
+    @CacheEvict(value = { "products", "featuredProducts" }, allEntries = true)
     public void delete(Long id) {
         log.debug("Request to delete Product : {}", id);
         productRepository.deleteById(id);

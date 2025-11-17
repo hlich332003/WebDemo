@@ -12,6 +12,7 @@ public class OrderDTO implements Serializable {
     private Double totalAmount;
     private Instant orderDate;
     private String status;
+    private String notes;
 
     public CustomerInfoDTO getCustomerInfo() {
         return customerInfo;
@@ -53,6 +54,14 @@ public class OrderDTO implements Serializable {
         this.status = status;
     }
 
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -63,13 +72,14 @@ public class OrderDTO implements Serializable {
             Objects.equals(items, orderDTO.items) &&
             Objects.equals(totalAmount, orderDTO.totalAmount) &&
             Objects.equals(orderDate, orderDTO.orderDate) &&
-            Objects.equals(status, orderDTO.status)
+            Objects.equals(status, orderDTO.status) &&
+            Objects.equals(notes, orderDTO.notes)
         );
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(customerInfo, items, totalAmount, orderDate, status);
+        return Objects.hash(customerInfo, items, totalAmount, orderDate, status, notes);
     }
 
     @Override
@@ -86,6 +96,8 @@ public class OrderDTO implements Serializable {
             orderDate +
             ", status='" +
             status +
+            "', notes='" +
+            notes +
             "\'}"
         );
     }

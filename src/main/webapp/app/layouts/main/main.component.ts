@@ -20,6 +20,10 @@ export default class MainComponent implements OnInit {
 
   ngOnInit(): void {
     // try to log in automatically
-    this.accountService.identity().subscribe();
+    this.accountService.identity().subscribe({
+      error: () => {
+        // Ignore 401 error when not logged in
+      },
+    });
   }
 }

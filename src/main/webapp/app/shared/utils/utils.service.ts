@@ -8,10 +8,17 @@ export class UtilsService {
 
   // ✅ Định dạng giá tiền
   formatPrice(price: string | number): string {
+    let numPrice: number;
     if (typeof price === 'string') {
-      price = parseInt(price.replace(/\./g, ''));
+      numPrice = parseFloat(price);
+    } else {
+      numPrice = price;
     }
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + 'đ';
+    return (
+      Math.round(numPrice)
+        .toString()
+        .replace(/\B(?=(\d{3})+(?!\d))/g, '.') + 'đ'
+    );
   }
 
   // ✅ Lấy tham số từ URL

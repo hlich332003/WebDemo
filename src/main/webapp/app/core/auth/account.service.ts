@@ -46,13 +46,15 @@ export class AccountService {
     return userIdentity.authorities.some((authority: string) => authorities.includes(authority));
   }
 
-  identity(force?: boolean): Observable<Account | null> {
+  identity(force?: boolean, skipNavigation?: boolean): Observable<Account | null> {
     if (!this.accountCache$ || force) {
       this.accountCache$ = this.fetch().pipe(
         tap((account: Account) => {
           this.authenticate(account);
 
-          this.navigateToStoredUrl();
+          if (!skipNavigation) {
+            this.navigateToStoredUrl();
+          }
         }),
         shareReplay(),
       );
@@ -76,7 +78,7 @@ export class AccountService {
     // previousState can be set in the authExpiredInterceptor and in the userRouteAccessService
     // if login is successful, go to stored previousState and clear previousState
     const previousUrl = this.stateStorageService.getUrl();
-    if (previousUrl) {
+    if (previousUrl && previousUrl !== '/login') {
       this.stateStorageService.clearUrl();
       this.router.navigateByUrl(previousUrl);
     }

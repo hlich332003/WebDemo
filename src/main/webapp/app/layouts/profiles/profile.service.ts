@@ -19,24 +19,16 @@ export class ProfileService {
       return this.profileInfo$;
     }
 
-    this.profileInfo$ = this.http.get<InfoResponse>(this.infoUrl).pipe(
-      map((response: InfoResponse) => {
-        const profileInfo: ProfileInfo = {
-          activeProfiles: response.activeProfiles,
-          inProduction: response.activeProfiles?.includes('prod'),
-          openAPIEnabled: response.activeProfiles?.includes('api-docs'),
-        };
-        if (response.activeProfiles && response['display-ribbon-on-profiles']) {
-          const displayRibbonOnProfiles = response['display-ribbon-on-profiles'].split(',');
-          const ribbonProfiles = displayRibbonOnProfiles.filter(profile => response.activeProfiles?.includes(profile));
-          if (ribbonProfiles.length > 0) {
-            profileInfo.ribbonEnv = ribbonProfiles[0];
-          }
-        }
-        return profileInfo;
-      }),
-      shareReplay(),
-    );
+    // Return default profile info without calling /management/info
+    this.profileInfo$ = new Observable<ProfileInfo>(observer => {
+      observer.next({
+        activeProfiles: ['dev'],
+        inProduction: false,
+        openAPIEnabled: false,
+      });
+      observer.complete();
+    }).pipe(shareReplay());
+
     return this.profileInfo$;
   }
 }

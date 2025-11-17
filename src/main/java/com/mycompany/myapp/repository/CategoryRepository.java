@@ -13,5 +13,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
     Optional<Category> findByName(String name);
-    List<Category> findByIsFeaturedTrue(); // Thêm phương thức này
+    Optional<Category> findBySlug(String slug);
+    List<Category> findByIsFeaturedTrue();
 }

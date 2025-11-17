@@ -1,4 +1,4 @@
-<form *ngIf="product" name="deleteForm" (ngSubmit)="confirmDelete(product.id!)">
+<div *ngIf="product">
   <div class="modal-header">
     <h4 class="modal-title" data-cy="productDeleteDialogHeading">Xác nhận thao tác xóa</h4>
 
@@ -7,16 +7,36 @@
 
   <div class="modal-body">
     <jhi-alert-error></jhi-alert-error>
-    <p id="jhi-delete-product-heading">Bạn có chắc chắn muốn xóa sản phẩm {{ product.name }}?</p>
+
+    @if (errorMessage()) {
+      <div class="alert alert-danger" role="alert"><strong>Lỗi!</strong> {{ errorMessage() }}</div>
+    }
+
+    <p id="jhi-delete-product-heading">
+      Bạn có chắc chắn muốn xóa sản phẩm <strong>{{ product.name }}</strong
+      >?
+    </p>
   </div>
 
   <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-dismiss="modal" (click)="cancel()">
+    <button type="button" class="btn btn-secondary" data-dismiss="modal" (click)="cancel()" [disabled]="isDeleting()">
       <fa-icon icon="ban"></fa-icon>&nbsp;<span>Hủy</span>
     </button>
 
-    <button id="jhi-confirm-delete-product" data-cy="entityConfirmDeleteButton" type="submit" class="btn btn-danger">
-      <fa-icon icon="times"></fa-icon>&nbsp;<span>Xóa</span>
+    <button
+      id="jhi-confirm-delete-product"
+      data-cy="entityConfirmDeleteButton"
+      type="button"
+      class="btn btn-danger"
+      (click)="confirmDelete(product.id!)"
+      [disabled]="isDeleting()"
+    >
+      @if (isDeleting()) {
+        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+      } @else {
+        <fa-icon icon="times"></fa-icon>
+      }
+      &nbsp;<span>{{ isDeleting() ? 'Đang xóa...' : 'Xóa' }}</span>
     </button>
   </div>
-</form>
+</div>

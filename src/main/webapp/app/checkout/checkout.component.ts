@@ -22,6 +22,8 @@ export class CheckoutComponent implements OnInit {
   cart: ICartItem[] = [];
   total = 0;
   account: Account | null = null;
+  orderSuccess = false;
+  orderDetails: any = null;
 
   vietnamesePhonePattern = /^(0[35789])+([0-9]{8})$/;
 
@@ -31,6 +33,7 @@ export class CheckoutComponent implements OnInit {
     email: new FormControl('', [Validators.required, Validators.email]),
     address: new FormControl('', [Validators.required, Validators.minLength(10)]),
     paymentMethod: new FormControl('cod', [Validators.required]),
+    notes: new FormControl(''),
   });
 
   public cartService = inject(CartService);
@@ -41,6 +44,10 @@ export class CheckoutComponent implements OnInit {
   private orderService = inject(OrderService); // Inject OrderService
 
   ngOnInit(): void {
+    this.loadCartAndAccount();
+  }
+
+  private loadCartAndAccount(): void {
     this.cartService.cartItems$.subscribe(items => {
       this.cart = items;
       this.updateTotal();
@@ -67,9 +74,7 @@ export class CheckoutComponent implements OnInit {
   confirmPayment(): void {
     if (this.checkoutForm.invalid) {
       this.notify.error('Vui lòng kiểm tra lại thông tin khách hàng!');
-      Object.values(this.checkoutForm.controls).forEach(control => {
-        control.markAsTouched();
-      });
+      this.markFormAsTouched();
       return;
     }
 
@@ -79,8 +84,26 @@ export class CheckoutComponent implements OnInit {
       return;
     }
 
-    const orderData = {
-      customerInfo: this.checkoutForm.value,
+    const orderData = this.buildOrderData(cartItems);
+    this.submitOrder(orderData);
+  }
+
+  private markFormAsTouched(): void {
+    Object.values(this.checkoutForm.controls).forEach(control => {
+      control.markAsTouched();
+    });
+  }
+
+  private buildOrderData(cartItems: ICartItem[]): any {
+    const formValue = this.checkoutForm.value;
+    return {
+      customerInfo: {
+        fullName: formValue.fullName || '',
+        email: formValue.email || '',
+        phone: formValue.phone || '',
+        address: formValue.address || '',
+        paymentMethod: formValue.paymentMethod || 'cod',
+      },
       items: cartItems.map(item => ({
         productId: item.product.id,
         productName: item.product.name,
@@ -88,20 +111,26 @@ export class CheckoutComponent implements OnInit {
         price: item.product.price,
       })),
       totalAmount: this.cartService.getTotalPrice(),
+      notes: formValue.notes || null,
     };
+  }
 
+  private submitOrder(orderData: any): void {
     this.orderService.create(orderData).subscribe({
-      next: () => {
-        this.notify.success('✅ Thanh toán thành công! Đơn hàng của bạn đã được tạo.');
+      next: (response: any) => {
         this.cartService.clearCart();
-
-        setTimeout(() => {
-          this.router.navigate(['/account/my-orders']);
-        }, 2000);
+        this.orderSuccess = true;
+        this.orderDetails = {
+          orderCode: response.body?.orderCode,
+          orderId: response.body?.id,
+          customerName: orderData.customerInfo.fullName,
+          totalAmount: orderData.totalAmount,
+          customerInfo: orderData.customerInfo,
+        };
+        this.notify.success('✅ Đặt hàng thành công!');
       },
       error: (error: any) => {
-        // Đã thêm kiểu 'any' cho tham số error
-        console.error('Lỗi khi tạo đơn hàng:', error);
+        console.error('Order creation failed');
         this.notify.error('❌ Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.');
       },
     });
@@ -113,5 +142,13 @@ export class CheckoutComponent implements OnInit {
 
   previousState(): void {
     window.history.back();
+  }
+
+  goToHome(): void {
+    this.router.navigate(['/']);
+  }
+
+  continueShopping(): void {
+    this.router.navigate(['/products']);
   }
 }

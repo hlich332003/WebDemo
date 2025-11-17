@@ -50,7 +50,7 @@ export default class ProductUpdateComponent implements OnInit {
     price: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
     quantity: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
     imageUrl: new FormControl(null as IProduct['imageUrl']),
-    category: new FormControl(null as IProduct['category']), // Khởi tạo FormControl cho category
+    category: new FormControl(null as IProduct['category'], { validators: [Validators.required] }), // Khởi tạo FormControl cho category
   });
 
   ngOnInit(): void {
@@ -99,7 +99,10 @@ export default class ProductUpdateComponent implements OnInit {
   protected subscribeToSaveResponse(result: Observable<HttpResponse<IProduct>>): void {
     result.pipe(finalize(() => this.onSaveFinalize())).subscribe({
       next: () => this.onSaveSuccess(),
-      error: (error: HttpErrorResponse) => this.onSaveError(error),
+      error: (error: HttpErrorResponse) => {
+        console.error('Error saving product:', error);
+        this.onSaveError(error);
+      },
     });
   }
 

@@ -7,11 +7,15 @@ public class DashboardStatsDTO implements Serializable {
     private Double totalRevenue;
     private Long totalOrders;
     private Long totalCustomers;
+    private Long totalProducts;
 
-    public DashboardStatsDTO(Double totalRevenue, Long totalOrders, Long totalCustomers) {
+    public DashboardStatsDTO() {}
+
+    public DashboardStatsDTO(Double totalRevenue, Long totalOrders, Long totalCustomers, Long totalProducts) {
         this.totalRevenue = totalRevenue;
         this.totalOrders = totalOrders;
         this.totalCustomers = totalCustomers;
+        this.totalProducts = totalProducts;
     }
 
     public Double getTotalRevenue() {
@@ -36,5 +40,13 @@ public class DashboardStatsDTO implements Serializable {
 
     public void setTotalCustomers(Long totalCustomers) {
         this.totalCustomers = totalCustomers;
+    }
+
+    public Long getTotalProducts() {
+        return totalProducts;
+    }
+
+    public void setTotalProducts(Long totalProducts) {
+        this.totalProducts = totalProducts;
     }
 }

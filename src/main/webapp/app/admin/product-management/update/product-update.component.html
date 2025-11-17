@@ -102,12 +102,20 @@
             formControlName="category"
             [compareWith]="compareCategory"
           >
+            <option [ngValue]="null">-- Chọn danh mục --</option>
             @if (categories) {
               @for (category of categories; track category.id) {
                 <option [ngValue]="category">{{ category.name }}</option>
               }
             }
           </select>
+          @if (editForm.controls.category.invalid && (editForm.controls.category.dirty || editForm.controls.category.touched)) {
+            <div>
+              @if (editForm.controls.category.errors?.required) {
+                <small class="form-text text-danger">Danh mục không được để trống.</small>
+              }
+            </div>
+          }
         </div>
       </div>
 

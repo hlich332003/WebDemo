@@ -3,6 +3,11 @@ import { Routes } from '@angular/router';
 
 const routes: Routes = [
   {
+    path: '',
+    loadComponent: () => import('./admin-home/admin-home.component'),
+    title: 'Trang quản trị',
+  },
+  {
     path: 'user-management',
     loadChildren: () => import('./user-management/user-management.route'),
     title: 'userManagement.home.title',

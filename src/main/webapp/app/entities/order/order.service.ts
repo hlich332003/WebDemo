@@ -21,7 +21,10 @@ export class OrderService {
   protected myOrdersUrl = this.applicationConfigService.getEndpointFor('api/my-orders');
 
   create(orderData: any): Observable<EntityResponseType> {
-    return this.http.post<any>(this.resourceUrl, orderData, { observe: 'response' });
+    return this.http.post<any>(this.resourceUrl, orderData, {
+      observe: 'response',
+      headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+    });
   }
 
   query(req?: any): Observable<EntityArrayResponseType> {
@@ -48,7 +51,17 @@ export class OrderService {
   }
 
   updateDeliveryAddress(id: number, address: string): Observable<EntityResponseType> {
-    return this.http.patch<any>(`${this.resourceUrl}/${id}/address`, { address: address }, { observe: 'response' }); // Sửa payload
+    return this.http.patch<any>(`${this.resourceUrl}/${id}/address`, { address: address }, { observe: 'response' });
+  }
+
+  updateStatus(id: number, status: string): Observable<EntityResponseType> {
+    return this.http
+      .patch<any>(`${this.resourceUrl}/${id}/status`, { status: status }, { observe: 'response' })
+      .pipe(map((res: EntityResponseType) => this.convertDateFromServer(res)));
+  }
+
+  delete(id: number): Observable<HttpResponse<{}>> {
+    return this.http.delete(`${this.resourceUrl}/${id}`, { observe: 'response' });
   }
 
   protected convertDateFromServer(res: EntityResponseType): EntityResponseType {

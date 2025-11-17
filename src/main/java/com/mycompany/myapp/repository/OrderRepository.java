@@ -11,5 +11,5 @@ import org.springframework.stereotype.Repository;
 @SuppressWarnings("unused")
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    List<Order> findByCustomer_Login(String login);
+    List<Order> findByCustomer_LoginOrderByOrderDateDesc(String login);
 }

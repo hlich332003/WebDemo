@@ -17,15 +17,29 @@ export class CartService {
   constructor() {}
 
   private getCartFromLocalStorage(): ICartItem[] {
-    const cart = localStorage.getItem('cart');
-    return cart ? JSON.parse(cart) : [];
+    try {
+      const cart = localStorage.getItem('cart');
+      return cart ? JSON.parse(cart) : [];
+    } catch (error) {
+      console.error('Failed to load cart from localStorage:', error);
+      return [];
+    }
   }
 
   private saveCartToLocalStorage(cart: ICartItem[]): void {
-    localStorage.setItem('cart', JSON.stringify(cart));
+    try {
+      localStorage.setItem('cart', JSON.stringify(cart));
+    } catch (error) {
+      console.error('Failed to save cart to localStorage:', error);
+    }
   }
 
   addToCart(product: IProduct, quantity: number = 1): void {
+    if (!product?.id || quantity <= 0) {
+      console.error('Invalid product or quantity');
+      return;
+    }
+
     const currentCart = this.cartItemsSubject.value;
     const existingItem = currentCart.find(item => item.product.id === product.id);
 
@@ -64,8 +78,12 @@ export class CartService {
   }
 
   clearCart(): void {
-    this.cartItemsSubject.next([]);
-    localStorage.removeItem('cart');
+    try {
+      this.cartItemsSubject.next([]);
+      localStorage.removeItem('cart');
+    } catch (error) {
+      console.error('Failed to clear cart:', error);
+    }
   }
 
   getCartItems(): ICartItem[] {

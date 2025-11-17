@@ -35,7 +35,7 @@ module.exports = async (config, options, targetOptions) => {
           https: tls,
           proxy: {
             target: `http${tls ? 's' : ''}://localhost:${targetOptions.target === 'serve' ? '4200' : '8080'}`,
-            ws: true,
+            ws: false,
             proxyOptions: {
               changeOrigin: false, //pass the Host header to the backend unchanged https://github.com/Browsersync/browser-sync/issues/430
             },
@@ -44,6 +44,18 @@ module.exports = async (config, options, targetOptions) => {
                 // URI that will be retrieved by the ForwardedHeaderFilter on the server side
                 proxyReq.setHeader('X-Forwarded-Host', 'localhost:9000');
                 proxyReq.setHeader('X-Forwarded-Proto', `http${tls ? 's' : ''}`);
+                // Handle socket errors to prevent ECONNRESET crash
+                proxyReq.on('error', err => {
+                  console.error('Proxy request error:', err.message);
+                });
+              },
+            ],
+            proxyRes: [
+              function (proxyRes) {
+                // Handle socket errors on response
+                proxyRes.on('error', err => {
+                  console.error('Proxy response error:', err.message);
+                });
               },
             ],
           },
@@ -52,6 +64,8 @@ module.exports = async (config, options, targetOptions) => {
               heartbeatTimeout: 60000,
             },
           },
+          open: false,
+          notify: false,
           /*
           ghostMode: { // uncomment this part to disable BrowserSync ghostMode; https://github.com/jhipster/generator-jhipster/issues/11116
             clicks: false,

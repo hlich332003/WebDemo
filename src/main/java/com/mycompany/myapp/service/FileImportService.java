@@ -97,38 +97,122 @@ public class FileImportService {
                 }
 
                 try {
-                    product.setName(getCellValue(currentRow.getCell(1)));
-                    product.setDescription(getCellValue(currentRow.getCell(2)));
-                    product.setPrice(getNumericCellValue(currentRow.getCell(3)));
-                    product.setQuantity((int) getNumericCellValue(currentRow.getCell(4)));
-                    product.setImageUrl(getCellValue(currentRow.getCell(5)));
-                    product.setIsFeatured(getBooleanCellValue(currentRow.getCell(6))); // Đọc isFeatured
-
-                    String categoryName = getCellValue(currentRow.getCell(7)); // Đọc tên danh mục từ cột 7
-                    if (categoryName != null && !categoryName.isEmpty()) {
-                        categoryRepository.findByName(categoryName).ifPresent(product::setCategory);
-                    } else {
-                        throw new BadRequestAlertException(
-                            "Danh mục không được để trống tại dòng " + (rowNumber + 1),
-                            "fileImport",
-                            "categoryRequired"
-                        );
+                    // Tên sản phẩm (BẮT BUỘC)
+                    String name = getCellValue(currentRow.getCell(1));
+                    if (name == null || name.trim().isEmpty()) {
+                        throw new IllegalArgumentException("Tên sản phẩm không được để trống");
                     }
+                    product.setName(name.trim());
+
+                    // Mô tả (KHÔNG BẮT BUỘC - mặc định "Chưa có mô tả")
+                    String description = getCellValue(currentRow.getCell(2));
+                    product.setDescription((description == null || description.trim().isEmpty()) ? "Chưa có mô tả" : description.trim());
+
+                    // Giá (BẮT BUỘC)
+                    Cell priceCell = currentRow.getCell(3);
+                    if (priceCell == null || priceCell.getCellType() != CellType.NUMERIC) {
+                        throw new IllegalArgumentException("Giá sản phẩm không được để trống và phải là số");
+                    }
+                    product.setPrice(priceCell.getNumericCellValue());
+
+                    // Số lượng (KHÔNG BẮT BUỘC - mặc định 0)
+                    Cell quantityCell = currentRow.getCell(4);
+                    if (quantityCell != null && quantityCell.getCellType() == CellType.NUMERIC) {
+                        product.setQuantity((int) quantityCell.getNumericCellValue());
+                    } else {
+                        product.setQuantity(0);
+                    }
+
+                    // Link ảnh (KHÔNG BẮT BUỘC - mặc định ảnh placeholder)
+                    String imageUrl = getCellValue(currentRow.getCell(5));
+                    product.setImageUrl(
+                        (imageUrl == null || imageUrl.trim().isEmpty())
+                            ? "https://via.placeholder.com/300x300?text=No+Image"
+                            : imageUrl.trim()
+                    );
+
+                    // Nổi bật (KHÔNG BẮT BUỘC - mặc định false)
+                    product.setIsFeatured(getBooleanCellValue(currentRow.getCell(6)));
+
+                    // Danh mục (KHÔNG BẮT BUỘC - mặc định "Chưa phân loại")
+                    String categoryInput = getCellValue(currentRow.getCell(7));
+                    Category category;
+
+                    if (categoryInput == null || categoryInput.trim().isEmpty()) {
+                        // Không điền danh mục → Tìm hoặc tạo "Chưa phân loại"
+                        category = categoryRepository
+                            .findBySlug("chua-phan-loai")
+                            .orElseGet(() -> {
+                                Category defaultCategory = new Category();
+                                defaultCategory.setName("Chưa phân loại");
+                                defaultCategory.setSlug("chua-phan-loai");
+                                defaultCategory.setIsFeatured(false);
+                                return categoryRepository.save(defaultCategory);
+                            });
+                    } else {
+                        // Có điền danh mục → Tìm theo tên hoặc slug
+                        category = categoryRepository
+                            .findByName(categoryInput.trim())
+                            .or(() -> categoryRepository.findBySlug(categoryInput.trim()))
+                            .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                    "Không tìm thấy danh mục '" +
+                                    categoryInput +
+                                    "'. Vui lòng kiểm tra lại tên danh mục hoặc tạo danh mục mới."
+                                )
+                            );
+                    }
+                    product.setCategory(category);
+                } catch (BadRequestAlertException e) {
+                    throw e;
                 } catch (Exception e) {
                     throw new BadRequestAlertException(
-                        "Lỗi đọc dữ liệu sản phẩm tại dòng " + (rowNumber + 1) + ": " + e.getMessage(),
+                        "Lỗi tại dòng " + (rowNumber + 1) + ": " + e.getMessage(),
                         "fileImport",
                         "dataReadError"
                     );
                 }
 
+                // Validation: Kiểm tra ID và tên sản phẩm
                 if (product.getId() != null) {
-                    productRepository
-                        .findById(product.getId())
-                        .ifPresent(existingProduct -> {
-                            product.setCreatedBy(existingProduct.getCreatedBy());
-                            product.setCreatedDate(existingProduct.getCreatedDate());
-                        });
+                    // Có ID → Cập nhật sản phẩm
+                    Optional<Product> existingProductOpt = productRepository.findById(product.getId());
+                    if (existingProductOpt.isEmpty()) {
+                        throw new IllegalArgumentException(
+                            "Không tìm thấy sản phẩm với ID=" + product.getId() + ". Vui lòng kiểm tra lại hoặc để trống cột ID để tạo mới."
+                        );
+                    }
+
+                    Product existingProduct = existingProductOpt.get();
+
+                    // Cảnh báo nếu đổi tên
+                    if (!existingProduct.getName().equals(product.getName())) {
+                        log.warn(
+                            "Cảnh báo: Sản phẩm ID={} đang đổi tên từ '{}' thành '{}'",
+                            product.getId(),
+                            existingProduct.getName(),
+                            product.getName()
+                        );
+                    }
+
+                    // Giữ lại thông tin audit
+                    product.setCreatedBy(existingProduct.getCreatedBy());
+                    product.setCreatedDate(existingProduct.getCreatedDate());
+                } else {
+                    // Không có ID → Tạo mới → Kiểm tra trùng tên
+                    Optional<Product> duplicateProduct = productRepository.findFirstByName(product.getName());
+                    if (duplicateProduct.isPresent()) {
+                        throw new IllegalArgumentException(
+                            "Sản phẩm '" +
+                            product.getName() +
+                            "' đã tồn tại (ID=" +
+                            duplicateProduct.get().getId() +
+                            "). " +
+                            "Nếu muốn cập nhật, vui lòng điền ID=" +
+                            duplicateProduct.get().getId() +
+                            " vào cột A."
+                        );
+                    }
                 }
                 productsToSave.add(product);
                 rowNumber++;
@@ -262,5 +346,19 @@ public class FileImportService {
             return cell.getNumericCellValue() == 1; // Coi 1 là true, 0 là false
         }
         return false;
+    }
+
+    private String generateSlug(String text) {
+        String slug = text.toLowerCase();
+        slug = slug.replaceAll("[àáạảãâầấậẩẫăằắặẳẵ]", "a");
+        slug = slug.replaceAll("[èéẹẻẽêềếệểễ]", "e");
+        slug = slug.replaceAll("[ìíịỉĩ]", "i");
+        slug = slug.replaceAll("[òóọỏõôồốộổỗơờớợởỡ]", "o");
+        slug = slug.replaceAll("[ùúụủũưừứựửữ]", "u");
+        slug = slug.replaceAll("[ỳýỵỷỹ]", "y");
+        slug = slug.replaceAll("đ", "d");
+        slug = slug.replaceAll("[^a-z0-9\\s-]", "");
+        slug = slug.trim().replaceAll("\\s+", "-");
+        return slug;
     }
 }
