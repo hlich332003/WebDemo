@@ -6,7 +6,7 @@ export interface MockProduct {
   name: string;
   price: string;
   image: string;
-  stock: number;
+  quantity: number;
 }
 
 export interface MockCategory {
@@ -36,35 +36,35 @@ export class MockProductService {
             name: 'MSI G274QPF',
             price: '6.990.000',
             image: 'https://via.placeholder.com/200x150/004080/ffffff?text=MSI',
-            stock: 15,
+            quantity: 15,
           },
           {
             id: 102,
             name: 'LG 27GN800-B',
             price: '7.500.000',
             image: 'https://via.placeholder.com/200x150/008000/ffffff?text=LG',
-            stock: 8,
+            quantity: 8,
           },
           {
             id: 103,
             name: 'ASUS TUF Gaming',
             price: '8.200.000',
             image: 'https://via.placeholder.com/200x150/ff0000/ffffff?text=ASUS',
-            stock: 12,
+            quantity: 12,
           },
           {
             id: 104,
             name: 'Dell UltraSharp',
             price: '9.500.000',
             image: 'https://via.placeholder.com/200x150/007acc/ffffff?text=Dell',
-            stock: 6,
+            quantity: 6,
           },
           {
             id: 105, // Sản phẩm mới
             name: 'ViewSonic VX2780J',
             price: '5.800.000',
             image: 'https://via.placeholder.com/200x150/f0ad4e/ffffff?text=ViewSonic',
-            stock: 10,
+            quantity: 10,
           },
         ],
       },
@@ -78,28 +78,28 @@ export class MockProductService {
             name: 'Akko 3068B Plus',
             price: '1.290.000',
             image: 'https://via.placeholder.com/200x150/ff00ff/ffffff?text=Akko',
-            stock: 20,
+            quantity: 20,
           },
           {
             id: 202,
             name: 'Keychron K8 Pro',
             price: '1.650.000',
             image: 'https://via.placeholder.com/200x150/ffff00/000000?text=Keychron',
-            stock: 15,
+            quantity: 15,
           },
           {
             id: 203,
             name: 'Razer BlackWidow',
             price: '2.800.000',
             image: 'https://via.placeholder.com/200x150/00ff00/ffffff?text=Razer',
-            stock: 10,
+            quantity: 10,
           },
           {
             id: 204,
             name: 'Logitech MX Keys',
             price: '2.200.000',
             image: 'https://via.placeholder.com/200x150/000000/ffffff?text=Logitech',
-            stock: 18,
+            quantity: 18,
           },
         ],
       },
@@ -113,21 +113,21 @@ export class MockProductService {
             name: 'Ghế Gaming DXRacer',
             price: '4.990.000',
             image: 'https://via.placeholder.com/200x150/ff6b35/ffffff?text=Ghế',
-            stock: 7,
+            quantity: 7,
           },
           {
             id: 302,
             name: 'Bàn Gaming L-shaped',
             price: '3.500.000',
             image: 'https://via.placeholder.com/200x150/4ecdc4/ffffff?text=Bàn',
-            stock: 5,
+            quantity: 5,
           },
           {
             id: 303,
             name: 'Ghế Văn Phòng',
             price: '2.800.000',
             image: 'https://via.placeholder.com/200x150/45b7d1/ffffff?text=Ghế2',
-            stock: 12,
+            quantity: 12,
           },
         ],
       },
@@ -141,14 +141,14 @@ export class MockProductService {
             name: 'Logitech G Pro X Superlight',
             price: '2.990.000',
             image: 'https://via.placeholder.com/200x150/d9534f/ffffff?text=LogitechG',
-            stock: 25,
+            quantity: 25,
           },
           {
             id: 402,
             name: 'Razer Viper Ultimate',
             price: '2.500.000',
             image: 'https://via.placeholder.com/200x150/5cb85c/ffffff?text=RazerViper',
-            stock: 18,
+            quantity: 18,
           },
         ],
       },
@@ -191,10 +191,10 @@ export class MockProductService {
     return null;
   }
 
-  updateStock(productId: number, newStock: number): void {
+  updateStock(productId: number, newQuantity: number): void {
     const product = this.findById(productId);
     if (product) {
-      product.stock = newStock;
+      product.quantity = newQuantity;
       this.saveProductsData();
     }
   }

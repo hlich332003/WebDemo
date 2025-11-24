@@ -29,6 +29,20 @@ export class AuthServerProvider {
   }
 
   logout(): Observable<void> {
+    const token = this.getToken();
+
+    // Nếu có token, gọi API backend để blacklist
+    if (token) {
+      return this.http.post<void>(this.applicationConfigService.getEndpointFor('api/account/logout'), {}).pipe(
+        tap(() => {
+          console.log('✅ Token đã được blacklist trên server');
+          this.stateStorageService.clearAuthenticationToken();
+        }),
+        map(() => undefined),
+      );
+    }
+
+    // Nếu không có token, chỉ clear local storage
     return new Observable(observer => {
       this.stateStorageService.clearAuthenticationToken();
       observer.complete();

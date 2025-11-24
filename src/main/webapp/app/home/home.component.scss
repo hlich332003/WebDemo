@@ -88,6 +88,7 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    position: relative;
 
     &:hover {
       transform: translateY(-5px);
@@ -128,6 +129,25 @@
         margin-bottom: 1rem;
       }
 
+      .stock {
+        font-size: 0.85rem;
+        margin-bottom: 0.8rem;
+        font-weight: 600;
+
+        &.text-danger {
+          color: #dc3545;
+        }
+
+        &.text-warning {
+          color: #ff6b6b;
+        }
+
+        &.text-muted {
+          color: #6c757d;
+          font-weight: 500;
+        }
+      }
+
       .btn-success {
         width: 100%;
         padding: 0.6rem;
@@ -139,8 +159,271 @@
         &:hover {
           transform: scale(1.02);
         }
+
+        &:disabled {
+          background: #6c757d;
+          cursor: not-allowed;
+          opacity: 0.6;
+
+          &:hover {
+            transform: none;
+          }
+        }
       }
     }
+  }
+}
+
+// Section sản phẩm mới nhất
+.new-products {
+  margin-bottom: 4rem;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 3rem 1rem;
+  border-radius: $card-border-radius;
+
+  .section-title {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 3rem;
+    color: #333;
+  }
+
+  .product-grid-large {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .product-card-sm {
+    background: white;
+    border-radius: $card-border-radius;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+
+    .badge-new {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    }
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    img {
+      width: 100%;
+      height: 140px;
+      object-fit: contain;
+      margin-bottom: 1rem;
+      background: #f8f9fa;
+      padding: 0.5rem;
+      border-radius: 8px;
+    }
+
+    .product-info {
+      .product-name {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #333;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 2.8em;
+      }
+
+      .product-price {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: $primary;
+        margin-bottom: 0.8rem;
+      }
+
+      .stock {
+        font-size: 0.85rem;
+        margin-bottom: 0.8rem;
+        font-weight: 600;
+
+        &.text-danger {
+          color: #dc3545;
+        }
+
+        &.text-warning {
+          color: #ff6b6b;
+        }
+
+        &.text-muted {
+          color: #6c757d;
+          font-weight: 500;
+        }
+      }
+
+      .btn-success {
+        width: 100%;
+        padding: 0.6rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-radius: 8px;
+
+        &:disabled {
+          background: #6c757d;
+          cursor: not-allowed;
+          opacity: 0.6;
+        }
+      }
+    }
+  }
+}
+
+// Section sản phẩm bán chạy
+.best-sellers {
+  margin-bottom: 4rem;
+
+  .section-title {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 3rem;
+    color: #d32f2f;
+  }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    padding: 0 1rem;
+  }
+
+  .product-card-sm {
+    background: $card-bg;
+    border-radius: $card-border-radius;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 2px solid transparent;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+
+    .badge-hot {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(245, 87, 108, 0.4);
+      animation: pulse 2s infinite;
+    }
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 16px rgba(211, 47, 47, 0.2);
+      border-color: #d32f2f;
+    }
+
+    img {
+      width: 100%;
+      height: 150px;
+      object-fit: contain;
+      margin-bottom: 1rem;
+      background: white;
+      padding: 0.5rem;
+      border-radius: 8px;
+    }
+
+    .product-info {
+      .product-name {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #333;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 2.8em;
+      }
+
+      .product-price {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #d32f2f;
+        margin-bottom: 0.5rem;
+      }
+
+      .stock {
+        font-size: 0.85rem;
+        margin-bottom: 0.8rem;
+        font-weight: 600;
+
+        &.text-danger {
+          color: #dc3545;
+        }
+
+        &.text-warning {
+          color: #ff6b6b;
+        }
+
+        &.text-muted {
+          color: #6c757d;
+          font-weight: 500;
+        }
+      }
+
+      .btn-success {
+        width: 100%;
+        padding: 0.6rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        border: none;
+
+        &:hover {
+          transform: scale(1.02);
+          box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
+        }
+
+        &:disabled {
+          background: #6c757d;
+          cursor: not-allowed;
+          opacity: 0.6;
+
+          &:hover {
+            transform: none;
+            box-shadow: none;
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
   }
 }
 
@@ -181,7 +464,7 @@
 
     .product-preview-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
       gap: 1.5rem;
       margin-bottom: 1.5rem;
     }
@@ -195,14 +478,21 @@
       box-shadow: $box-shadow-sm;
       display: flex;
       flex-direction: column;
-      min-height: 300px;
+      min-height: 320px;
+      position: relative;
+
+      &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
 
       img {
         width: 100%;
         height: 150px;
         object-fit: contain;
-        padding: 5px;
+        padding: 0.8rem;
         flex-shrink: 0;
+        background: white;
       }
 
       .product-info {
@@ -213,18 +503,54 @@
         justify-content: space-between;
 
         .product-name {
-          font-size: 1rem;
+          font-size: 0.95rem;
           font-weight: 600;
           margin-bottom: 0.5rem;
-          white-space: nowrap;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
           overflow: hidden;
-          text-overflow: ellipsis;
+          min-height: 2.8em;
         }
 
         .product-price {
           font-size: 1rem;
           font-weight: 700;
           color: $primary;
+          margin-bottom: 0.8rem;
+        }
+
+        .stock {
+          font-size: 0.8rem;
+          margin-bottom: 0.8rem;
+          font-weight: 600;
+
+          &.text-danger {
+            color: #dc3545;
+          }
+
+          &.text-warning {
+            color: #ff6b6b;
+          }
+
+          &.text-muted {
+            color: #6c757d;
+            font-weight: 500;
+          }
+        }
+
+        .btn-success {
+          width: 100%;
+          padding: 0.5rem;
+          font-size: 0.85rem;
+          font-weight: 600;
+          border-radius: 6px;
+
+          &:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+          }
         }
       }
     }
@@ -235,9 +561,12 @@
       color: $primary;
       text-decoration: none;
       font-weight: 600;
+      font-size: 1.1rem;
+      transition: all 0.2s ease;
 
       &:hover {
         text-decoration: underline;
+        transform: translateX(5px);
       }
     }
   }

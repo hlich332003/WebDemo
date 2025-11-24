@@ -35,8 +35,8 @@
               <span>
                 <fa-icon icon="cart-shopping"></fa-icon>
                 <span>Giỏ hàng</span>
-                @if (cartItemCount() > 0) {
-                  <span class="badge bg-danger rounded-pill">{{ cartItemCount() }}</span>
+                @if (((cartItemCount$ | async) ?? 0) > 0) {
+                  <span class="badge bg-danger rounded-pill">{{ cartItemCount$ | async }}</span>
                 }
               </span>
             </a>

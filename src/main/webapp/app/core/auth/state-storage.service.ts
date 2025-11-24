@@ -4,7 +4,48 @@ import { Injectable } from '@angular/core';
 export class StateStorageService {
   private readonly previousUrlKey = 'previousUrl';
   private readonly authenticationKey = 'jhi-authenticationToken';
-  private readonly reloadingTabKey = 'jhi-reloadingTab'; // New key for tracking tab reload
+  private readonly reloadingTabKey = 'jhi-reloadingTab';
+  private readonly tabCountKey = 'jhi-tab-count'; // Đếm số tab đang mở
+
+  constructor() {
+    this.initTabTracking();
+  }
+
+  /**
+   * Khởi tạo tab tracking:
+   * - Tăng counter khi mở tab mới
+   * - Giảm counter khi đóng tab
+   * - Clear localStorage khi đóng tab cuối cùng
+   */
+  private initTabTracking(): void {
+    // Tăng tab counter khi mở tab
+    const currentCount = this.getTabCount();
+    this.setTabCount(currentCount + 1);
+
+    // Lắng nghe sự kiện đóng tab/browser
+    window.addEventListener('beforeunload', () => {
+      const newCount = this.getTabCount() - 1;
+
+      if (newCount <= 0) {
+        // Đóng tab cuối cùng → Clear localStorage
+        console.log('🚪 Đóng tab cuối cùng, xóa token khỏi localStorage');
+        localStorage.removeItem(this.authenticationKey);
+        localStorage.removeItem(this.tabCountKey);
+      } else {
+        // Còn tab khác đang mở
+        this.setTabCount(newCount);
+      }
+    });
+  }
+
+  private getTabCount(): number {
+    const count = localStorage.getItem(this.tabCountKey);
+    return count ? parseInt(count, 10) : 0;
+  }
+
+  private setTabCount(count: number): void {
+    localStorage.setItem(this.tabCountKey, count.toString());
+  }
 
   storeUrl(url: string): void {
     sessionStorage.setItem(this.previousUrlKey, JSON.stringify(url));

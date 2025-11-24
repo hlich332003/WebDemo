@@ -9,20 +9,38 @@
   </div>
 </section>
 
-<!-- Phần sản phẩm nổi bật -->
-<section class="featured-products">
-  <h2 class="section-title">✨ Sản Phẩm Nổi Bật</h2>
+<!-- Phần sản phẩm bán chạy (HOT) - ƯU TIÊN HÀNG ĐẦU -->
+<section class="best-sellers">
+  <h2 class="section-title">🔥 Sản Phẩm Bán Chạy</h2>
   <div class="product-grid">
-    @if (featuredProducts.length === 0) {
-      <p>Không có sản phẩm nổi bật nào.</p>
+    @if (bestSellerProducts.length === 0) {
+      <p>Đang cập nhật...</p>
     } @else {
-      @for (product of featuredProducts; track product.id) {
+      @for (product of bestSellerProducts; track product.id) {
         <div class="product-card-sm">
-          <img [src]="product.imageUrl" [alt]="product.name" loading="lazy" (click)="viewProductDetail(product.id)" />
+          <div class="badge-hot">HOT</div>
+          <img
+            [src]="product.imageUrl || 'content/images/default-product.svg'"
+            [alt]="product.name"
+            loading="lazy"
+            (click)="viewProductDetail(product.id)"
+            (error)="onImageError($event)"
+          />
           <div class="product-info">
             <h4 class="product-name" (click)="viewProductDetail(product.id)">{{ product.name }}</h4>
             <p class="product-price">{{ formatPrice(product.price) }}</p>
-            <button class="btn btn-sm btn-success" (click)="addToCart(product)">Thêm vào giỏ</button>
+            @if (product.quantity !== null && product.quantity !== undefined) {
+              @if (product.quantity === 0) {
+                <p class="stock text-danger fw-bold">❌ Hết hàng</p>
+              } @else if (product.quantity < 10) {
+                <p class="stock text-warning">⚠️ Chỉ còn {{ product.quantity }} sản phẩm</p>
+              } @else {
+                <p class="stock text-muted">Còn {{ product.quantity }} sản phẩm</p>
+              }
+            }
+            <button class="btn btn-sm btn-success" (click)="addToCart(product)" [disabled]="product.quantity === 0">
+              {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm vào giỏ' }}
+            </button>
           </div>
         </div>
       }
@@ -30,6 +48,46 @@
   </div>
 </section>
 
+<!-- Phần sản phẩm mới nhất -->
+<section class="new-products">
+  <h2 class="section-title">✨ Sản Phẩm Mới</h2>
+  <div class="product-grid-large">
+    @if (newProducts.length === 0) {
+      <p>Đang cập nhật sản phẩm mới...</p>
+    } @else {
+      @for (product of newProducts; track product.id) {
+        <div class="product-card-sm">
+          <div class="badge-new">NEW</div>
+          <img
+            [src]="product.imageUrl || 'content/images/default-product.svg'"
+            [alt]="product.name"
+            loading="lazy"
+            (click)="viewProductDetail(product.id)"
+            (error)="onImageError($event)"
+          />
+          <div class="product-info">
+            <h4 class="product-name" (click)="viewProductDetail(product.id)">{{ product.name }}</h4>
+            <p class="product-price">{{ formatPrice(product.price) }}</p>
+            @if (product.quantity !== null && product.quantity !== undefined) {
+              @if (product.quantity === 0) {
+                <p class="stock text-danger fw-bold">❌ Hết hàng</p>
+              } @else if (product.quantity < 10) {
+                <p class="stock text-warning">⚠️ Chỉ còn {{ product.quantity }} sản phẩm</p>
+              } @else {
+                <p class="stock text-muted">Còn {{ product.quantity }} sản phẩm</p>
+              }
+            }
+            <button class="btn btn-sm btn-success" (click)="addToCart(product)" [disabled]="product.quantity === 0">
+              {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm vào giỏ' }}
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</section>
+
+<!-- Phần danh mục nổi bật -->
 <section class="featured-categories">
   <div class="category-grid">
     @if (isLoading) {
@@ -41,13 +99,30 @@
         <div class="category-card">
           <h3 class="category-title">{{ category.name }}</h3>
           <div class="product-preview-grid">
-            @for (product of category.products?.slice(0, 4); track product.id) {
+            @for (product of category.products?.slice(0, 8); track product.id) {
               <div class="product-card-sm">
-                <img [src]="product.imageUrl" [alt]="product.name" loading="lazy" (click)="viewProductDetail(product.id)" />
+                <img
+                  [src]="product.imageUrl || 'content/images/default-product.svg'"
+                  [alt]="product.name"
+                  loading="lazy"
+                  (click)="viewProductDetail(product.id)"
+                  (error)="onImageError($event)"
+                />
                 <div class="product-info">
                   <h4 class="product-name" (click)="viewProductDetail(product.id)">{{ product.name }}</h4>
                   <p class="product-price">{{ formatPrice(product.price) }}</p>
-                  <button class="btn btn-sm btn-success" (click)="addToCart(product)">Thêm vào giỏ</button>
+                  @if (product.quantity !== null && product.quantity !== undefined) {
+                    @if (product.quantity === 0) {
+                      <p class="stock text-danger fw-bold">❌ Hết hàng</p>
+                    } @else if (product.quantity < 10) {
+                      <p class="stock text-warning">⚠️ Còn {{ product.quantity }}</p>
+                    } @else {
+                      <p class="stock text-muted">Còn {{ product.quantity }}</p>
+                    }
+                  }
+                  <button class="btn btn-sm btn-success" (click)="addToCart(product)" [disabled]="product.quantity === 0">
+                    {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm vào giỏ' }}
+                  </button>
                 </div>
               </div>
             }

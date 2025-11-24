@@ -4,10 +4,10 @@ export interface IProduct {
   id: number;
   name: string;
   description: string | null;
-  price?: number | null; // Đã thay đổi kiểu
-  quantity?: number | null; // Đã thay đổi kiểu
-  imageUrl: string | null; // Đổi từ 'image' sang 'imageUrl'
-  isFeatured?: boolean | null; // Thêm trường isFeatured
+  price?: number | null;
+  quantity?: number | null; // Số lượng tồn kho (khớp backend Product.java)
+  imageUrl: string | null;
+  isFeatured?: boolean | null;
   category?: ICategory | null;
 }
 

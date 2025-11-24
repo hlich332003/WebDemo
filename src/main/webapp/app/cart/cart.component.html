@@ -1,65 +1,87 @@
 <div class="cart-container">
   <h1>Giỏ hàng của bạn</h1>
 
-  @if (cart.length === 0) {
-    <div class="alert alert-warning">Giỏ hàng của bạn đang trống.</div>
-  } @else {
-    <div class="cart-items">
-      <!-- Header cho các cột -->
-      <div class="cart-item cart-header">
-        <div class="item-image"></div>
-        <div class="item-details">Sản phẩm</div>
-        <div class="item-quantity-controls">Số lượng</div>
-        <div class="item-total-price">Tổng tiền</div>
-        <div class="item-actions"></div>
+  <ng-container *ngIf="cartService.cartItems$ | async as cartItems">
+    @if (cartItems.length === 0) {
+      <div class="alert alert-warning">Giỏ hàng của bạn đang trống.</div>
+    } @else {
+      <div class="cart-items">
+        <!-- Header cho các cột -->
+        <div class="cart-item cart-header">
+          <div class="item-image">Ảnh</div>
+          <div class="item-details">Sản phẩm</div>
+          <div class="item-quantity-controls">Số lượng</div>
+          <div class="item-total-price">Tổng tiền</div>
+          <div class="item-actions">Hành động</div>
+        </div>
+
+        @for (item of cartItems; track item.product.id) {
+          <div class="cart-item">
+            <img
+              [src]="item.product.imageUrl || 'content/images/default-product.svg'"
+              [alt]="item.product.name"
+              class="item-image"
+              loading="lazy"
+              (error)="onImageError($event)"
+            />
+            <div class="item-details">
+              <h4 class="item-name">{{ item.product.name }}</h4>
+              <p class="item-price">{{ formatPrice(item.product.price) }}</p>
+              @if (item.product.quantity !== null && item.product.quantity !== undefined) {
+                @if (item.product.quantity === 0) {
+                  <p class="text-danger fw-bold">❌ Hết hàng</p>
+                } @else if (item.product.quantity < 10) {
+                  <p class="text-warning">⚠️ Chỉ còn {{ item.product.quantity }} sản phẩm</p>
+                } @else {
+                  <p class="text-success">✓ Còn {{ item.product.quantity }} sản phẩm</p>
+                }
+              } @else {
+                <p class="text-muted">Còn hàng</p>
+              }
+            </div>
+            <div class="item-quantity-controls">
+              <button
+                (click)="decreaseQuantity(item.product.id, item.quantity)"
+                class="btn btn-sm btn-secondary"
+                [disabled]="item.quantity <= 1 || (item.product.quantity !== null && item.product.quantity === 0)"
+              >
+                -
+              </button>
+              <input
+                type="number"
+                [ngModel]="item.quantity"
+                (ngModelChange)="updateQuantity(item.product.id, $event)"
+                min="1"
+                [max]="item.product.quantity ?? 999"
+                [disabled]="item.product.quantity !== null && item.product.quantity === 0"
+                class="quantity-input"
+              />
+              <button
+                (click)="increaseQuantity(item.product.id, item.quantity)"
+                class="btn btn-sm btn-secondary"
+                [disabled]="
+                  item.quantity >= (item.product.quantity ?? 999) || (item.product.quantity !== null && item.product.quantity === 0)
+                "
+              >
+                +
+              </button>
+            </div>
+            <div class="item-total-price">
+              <span>{{ formatPrice((item.product.price ?? 0) * item.quantity) }}</span>
+            </div>
+            <div class="item-actions">
+              <button (click)="remove(item.product.id)" class="btn btn-danger btn-sm">Xóa</button>
+            </div>
+          </div>
+        }
       </div>
 
-      @for (item of cart; track item.product.id) {
-        <div class="cart-item">
-          <img [src]="item.product.imageUrl" alt="{{ item.product.name }}" class="item-image" />
-          <div class="item-details">
-            <h4 class="item-name">{{ item.product.name }}</h4>
-            <p class="item-price">{{ formatPrice(item.product.price) }}</p>
-          </div>
-          <div class="item-quantity-controls">
-            <button
-              (click)="decreaseQuantity(item.product.id, item.quantity)"
-              class="btn btn-sm btn-secondary"
-              [disabled]="item.quantity <= 1"
-            >
-              -
-            </button>
-            <input
-              type="number"
-              [ngModel]="item.quantity"
-              (ngModelChange)="updateQuantity(item.product.id, $event)"
-              min="1"
-              [max]="item.product.quantity ?? 999"
-              class="quantity-input"
-            />
-            <button
-              (click)="increaseQuantity(item.product.id, item.quantity)"
-              class="btn btn-sm btn-secondary"
-              [disabled]="item.quantity >= (item.product.quantity ?? 999)"
-            >
-              +
-            </button>
-          </div>
-          <div class="item-total-price">
-            <span>{{ formatPrice((item.product.price ?? 0) * item.quantity) }}</span>
-          </div>
-          <div class="item-actions">
-            <button (click)="remove(item.product.id)" class="btn btn-danger btn-sm">Xóa</button>
-          </div>
-        </div>
-      }
-    </div>
-
-    <div class="cart-summary">
-      <h3>
-        Tổng cộng: <span class="total-price">{{ formatPrice(total) }}</span>
-      </h3>
-      <a routerLink="/checkout" class="btn btn-primary btn-lg">Tiến hành thanh toán</a>
-    </div>
-  }
+      <div class="cart-summary">
+        <h3>
+          Tổng cộng: <span class="total-price">{{ formatPrice((cartService.totalPrice$ | async) ?? 0) }}</span>
+        </h3>
+        <a routerLink="/checkout" class="btn btn-primary btn-lg">Tiến hành thanh toán</a>
+      </div>
+    }
+  </ng-container>
 </div>

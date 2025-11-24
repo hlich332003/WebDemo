@@ -4,6 +4,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
 
 import com.mycompany.myapp.security.*;
+import com.mycompany.myapp.security.jwt.JwtBlacklistFilter;
 import com.mycompany.myapp.web.filter.SpaWebFilter; // Import SpaWebFilter
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,9 +35,12 @@ public class SecurityConfiguration {
 
     private final JHipsterProperties jHipsterProperties;
 
-    public SecurityConfiguration(Environment env, JHipsterProperties jHipsterProperties) {
+    private final JwtBlacklistFilter jwtBlacklistFilter;
+
+    public SecurityConfiguration(Environment env, JHipsterProperties jHipsterProperties, JwtBlacklistFilter jwtBlacklistFilter) {
         this.env = env;
         this.jHipsterProperties = jHipsterProperties;
+        this.jwtBlacklistFilter = jwtBlacklistFilter;
     }
 
     @Bean
@@ -50,6 +54,7 @@ public class SecurityConfiguration {
             .cors(withDefaults())
             .csrf(csrf -> csrf.disable())
             .addFilterAfter(new SpaWebFilter(), BasicAuthenticationFilter.class) // Thêm lại SpaWebFilter
+            .addFilterAfter(jwtBlacklistFilter, BasicAuthenticationFilter.class) // Thêm JWT Blacklist Filter
             .headers(headers ->
                 headers
                     .contentSecurityPolicy(csp -> csp.policyDirectives(jHipsterProperties.getSecurity().getContentSecurityPolicy()))

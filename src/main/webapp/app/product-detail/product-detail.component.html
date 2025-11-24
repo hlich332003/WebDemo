@@ -3,7 +3,14 @@
     <div class="product-detail-card">
       <div class="product-image-section">
         @if (product.imageUrl) {
-          <img [src]="product.imageUrl" [alt]="product.name" />
+          <img
+            [src]="product.imageUrl || 'content/images/default-product.svg'"
+            [alt]="product.name"
+            loading="lazy"
+            (error)="onImageError($event)"
+          />
+        } @else {
+          <img src="content/images/default-product.svg" [alt]="product.name" />
         }
       </div>
       <div class="product-info-section">

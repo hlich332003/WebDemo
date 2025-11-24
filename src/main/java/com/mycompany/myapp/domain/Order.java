@@ -2,17 +2,35 @@ package com.mycompany.myapp.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.mycompany.myapp.domain.enumeration.OrderStatus; // Import OrderStatus enum
+import com.mycompany.myapp.web.rest.dto.OrderSearchDTO;
 import jakarta.persistence.*;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
  * A Order.
+ *
+ * SqlResultSetMapping cho native query search
+ * Theo chuẩn Baeldung: https://www.baeldung.com/jpa-sql-resultset-mapping
  */
 @Entity
 @Table(name = "jhi_order")
+@SqlResultSetMapping(
+    name = "OrderSearchDTOMapping",
+    classes = @ConstructorResult(
+        targetClass = OrderSearchDTO.class,
+        columns = {
+            @ColumnResult(name = "id", type = Long.class),
+            @ColumnResult(name = "customerLogin", type = String.class),
+            @ColumnResult(name = "orderDate", type = Instant.class),
+            @ColumnResult(name = "totalAmount", type = Double.class),
+            @ColumnResult(name = "status", type = String.class),
+        }
+    )
+)
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class Order implements Serializable {
 

@@ -4,6 +4,8 @@ import com.mycompany.myapp.domain.User;
 import com.mycompany.myapp.repository.UserRepository;
 import com.mycompany.myapp.security.SecurityUtils;
 import com.mycompany.myapp.service.MailService;
+import com.mycompany.myapp.service.RefreshTokenService;
+import com.mycompany.myapp.service.TokenBlacklistService;
 import com.mycompany.myapp.service.UserService;
 import com.mycompany.myapp.service.dto.AdminUserDTO;
 import com.mycompany.myapp.service.dto.PasswordChangeDTO;
@@ -11,11 +13,14 @@ import com.mycompany.myapp.web.rest.errors.*;
 import com.mycompany.myapp.web.rest.vm.KeyAndPasswordVM;
 import com.mycompany.myapp.web.rest.vm.ManagedUserVM;
 import jakarta.validation.Valid;
+import java.time.Instant;
 import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -40,10 +45,26 @@ public class AccountResource {
 
     private final MailService mailService;
 
-    public AccountResource(UserRepository userRepository, UserService userService, MailService mailService) {
+    private final TokenBlacklistService tokenBlacklistService;
+
+    private final RefreshTokenService refreshTokenService;
+
+    private final JwtDecoder jwtDecoder;
+
+    public AccountResource(
+        UserRepository userRepository,
+        UserService userService,
+        MailService mailService,
+        TokenBlacklistService tokenBlacklistService,
+        RefreshTokenService refreshTokenService,
+        JwtDecoder jwtDecoder
+    ) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.mailService = mailService;
+        this.tokenBlacklistService = tokenBlacklistService;
+        this.refreshTokenService = refreshTokenService;
+        this.jwtDecoder = jwtDecoder;
     }
 
     /**
@@ -176,5 +197,42 @@ public class AccountResource {
             password.length() < ManagedUserVM.PASSWORD_MIN_LENGTH ||
             password.length() > ManagedUserVM.PASSWORD_MAX_LENGTH
         );
+    }
+
+    /**
+     * {@code POST /account/logout} : Logout user và vô hiệu hóa token.
+     * Token sẽ được thêm vào blacklist trong Redis.
+     *
+     * @param authHeader Authorization header chứa JWT token
+     */
+    @PostMapping("/account/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+
+            try {
+                // Parse JWT để lấy expiry date
+                Jwt jwt = jwtDecoder.decode(token);
+                Instant expiryDate = jwt.getExpiresAt();
+
+                // Thêm token vào blacklist
+                if (expiryDate != null) {
+                    tokenBlacklistService.blacklistToken(token, expiryDate);
+                    LOG.debug("Token blacklisted successfully");
+                }
+
+                // Xóa refresh token của user (nếu có)
+                SecurityUtils.getCurrentUserLogin()
+                    .flatMap(userRepository::findOneByLogin)
+                    .ifPresent(user -> {
+                        refreshTokenService.deleteByUserId(user.getId());
+                        LOG.debug("Refresh token deleted for user: {}", user.getLogin());
+                    });
+            } catch (Exception e) {
+                LOG.error("Error during logout: {}", e.getMessage());
+                // Vẫn trả về 204 để client xóa token ở localStorage
+            }
+        }
     }
 }

@@ -58,7 +58,6 @@ export class ProductDetailComponent implements OnInit {
     const productToAdd: IProduct = {
       ...product,
       price: product.price ?? 0,
-      quantity: product.quantity ?? 0,
     };
     this.cartService.addToCart(productToAdd);
     this.notify.success('Đã thêm sản phẩm vào giỏ hàng!');
@@ -69,6 +68,11 @@ export class ProductDetailComponent implements OnInit {
       return this.utils.formatPrice(0);
     }
     return this.utils.formatPrice(price);
+  }
+
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.src = 'content/images/default-product.svg';
   }
 
   previousState(): void {

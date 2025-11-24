@@ -9,7 +9,7 @@
     "clientTestFrameworks": [],
     "clientTheme": "none",
     "creationTimestamp": 1761971362003,
-    "databaseType": "sql",
+    "databaseType": "no",
     "devDatabaseType": "h2Disk",
     "enableHibernateCache": true,
     "enableTranslation": false,

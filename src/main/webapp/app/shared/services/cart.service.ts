@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, map, shareReplay } from 'rxjs';
 import { IProduct } from 'app/entities/product/product.model';
 
 export interface ICartItem {
@@ -14,7 +14,23 @@ export class CartService {
   private cartItemsSubject: BehaviorSubject<ICartItem[]> = new BehaviorSubject<ICartItem[]>(this.getCartFromLocalStorage());
   public cartItems$: Observable<ICartItem[]> = this.cartItemsSubject.asObservable();
 
-  constructor() {}
+  // Tối ưu: Tạo các Observable cho dữ liệu được tính toán
+  public totalQuantity$: Observable<number>;
+  public totalPrice$: Observable<number>;
+
+  constructor() {
+    // Tính toán tổng số lượng
+    this.totalQuantity$ = this.cartItems$.pipe(
+      map(items => items.reduce((total, item) => total + item.quantity, 0)),
+      shareReplay(1), // Cache lại kết quả cuối cùng
+    );
+
+    // Tính toán tổng giá tiền
+    this.totalPrice$ = this.cartItems$.pipe(
+      map(items => items.reduce((total, item) => total + (item.product.price ?? 0) * item.quantity, 0)),
+      shareReplay(1), // Cache lại kết quả cuối cùng
+    );
+  }
 
   private getCartFromLocalStorage(): ICartItem[] {
     try {
@@ -34,14 +50,30 @@ export class CartService {
     }
   }
 
-  addToCart(product: IProduct, quantity: number = 1): void {
+  addToCart(product: IProduct, quantity: number = 1): boolean {
     if (!product?.id || quantity <= 0) {
       console.error('Invalid product or quantity');
-      return;
+      return false;
     }
 
-    const currentCart = this.cartItemsSubject.value;
+    const availableStock = product.quantity ?? 0;
+    if (availableStock <= 0) {
+      console.warn('Product out of stock:', product.name);
+      return false;
+    }
+
+    const currentCart = this.getCartItems(); // Lấy giá trị hiện tại
     const existingItem = currentCart.find(item => item.product.id === product.id);
+
+    const currentQuantityInCart = existingItem ? existingItem.quantity : 0;
+    const newTotalQuantity = currentQuantityInCart + quantity;
+
+    if (newTotalQuantity > availableStock) {
+      console.warn(
+        `Cannot add ${quantity} items. Only ${availableStock - currentQuantityInCart} available (${currentQuantityInCart} already in cart)`,
+      );
+      return false;
+    }
 
     if (existingItem) {
       existingItem.quantity += quantity;
@@ -51,27 +83,37 @@ export class CartService {
 
     this.cartItemsSubject.next(currentCart);
     this.saveCartToLocalStorage(currentCart);
+    return true;
   }
 
-  updateQuantity(productId: number, quantity: number): void {
-    const currentCart = this.cartItemsSubject.value;
+  updateQuantity(productId: number, quantity: number): boolean {
+    const currentCart = this.getCartItems();
     const item = currentCart.find(i => i.product.id === productId);
 
-    if (item) {
-      if (quantity > 0) {
-        item.quantity = quantity;
-      } else {
-        this.removeFromCart(productId);
-        return;
-      }
+    if (!item) {
+      return false;
     }
 
+    const availableStock = item.product.quantity ?? 0;
+
+    if (quantity <= 0) {
+      this.removeFromCart(productId);
+      return true;
+    }
+
+    if (quantity > availableStock) {
+      console.warn(`Cannot set quantity to ${quantity}. Only ${availableStock} available in stock`);
+      return false;
+    }
+
+    item.quantity = quantity;
     this.cartItemsSubject.next(currentCart);
     this.saveCartToLocalStorage(currentCart);
+    return true;
   }
 
   removeFromCart(productId: number): void {
-    let currentCart = this.cartItemsSubject.value;
+    let currentCart = this.getCartItems();
     currentCart = currentCart.filter(item => item.product.id !== productId);
     this.cartItemsSubject.next(currentCart);
     this.saveCartToLocalStorage(currentCart);
@@ -86,15 +128,8 @@ export class CartService {
     }
   }
 
+  // Phương thức này vẫn hữu ích để lấy giá trị tức thời nếu cần
   getCartItems(): ICartItem[] {
     return this.cartItemsSubject.value;
-  }
-
-  getTotalQuantity(): number {
-    return this.cartItemsSubject.value.reduce((total, item) => total + item.quantity, 0);
-  }
-
-  getTotalPrice(): number {
-    return this.cartItemsSubject.value.reduce((total, item) => total + (item.product.price ?? 0) * item.quantity, 0);
   }
 }

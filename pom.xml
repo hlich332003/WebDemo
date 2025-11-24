@@ -64,6 +64,7 @@
         <nohttp-checkstyle.version>0.0.11</nohttp-checkstyle.version>
         <profile.api-docs/>
         <profile.e2e/>
+        <profile.no-liquibase/>
         <profile.test/>
         <profile.tls/>
         <properties-maven-plugin.version>1.2.1</properties-maven-plugin.version>
@@ -85,6 +86,16 @@
                 <enabled>true</enabled>
             </releases>
         </repository>
+        <repository>
+            <id>maven-central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
     </repositories>
 
     <pluginRepositories>
@@ -93,6 +104,16 @@
             <url>https://maven.pkg.github.com/GoogleContainerTools/jib</url>
             <snapshots>
                 <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </pluginRepository>
+        <pluginRepository>
+            <id>maven-central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <snapshots>
+                <enabled>false</enabled>
             </snapshots>
             <releases>
                 <enabled>true</enabled>
@@ -116,6 +137,17 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-text</artifactId>
                 <version>1.12.0</version>
+            </dependency>
+            <!-- Managed dependencies for Checkstyle and Jib extension -->
+            <dependency>
+                <groupId>com.puppycrawl.tools</groupId>
+                <artifactId>checkstyle</artifactId>
+                <version>${checkstyle.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.spring.nohttp</groupId>
+                <artifactId>nohttp-checkstyle</artifactId>
+                <version>${nohttp-checkstyle.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

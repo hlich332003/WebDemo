@@ -64,7 +64,77 @@
   align-items: center;
 }
 
-.filter-section input,
+// Search wrapper với clear button
+.search-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 250px;
+  max-width: 400px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 0.75rem; // Padding phải để chừa chỗ cho clear button
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.3s;
+
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  }
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 2.2rem; // Cách loading spinner 1 chút
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #999;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  transition: color 0.3s;
+
+  &:hover {
+    color: #dc3545;
+  }
+}
+
+.search-loading {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: translateY(-50%) rotate(0deg);
+  }
+  to {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}
+
+// Result count
+.result-count {
+  margin: 0.5rem 0 1.5rem;
+  color: #666;
+  font-size: 0.95rem;
+
+  strong {
+    color: #333;
+    font-weight: 600;
+  }
+}
+
 .filter-section select {
   padding: 0.75rem;
   border: 1px solid #ddd;
@@ -72,12 +142,7 @@
   font-size: 1rem;
   min-width: 200px;
   transition: border-color 0.3s;
-}
-
-.filter-section input:focus,
-.filter-section select:focus {
-  outline: none;
-  border-color: #007bff;
+  cursor: pointer;
 }
 
 .no-products {

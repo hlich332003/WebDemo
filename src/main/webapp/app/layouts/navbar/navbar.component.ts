@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
 
 import SharedModule from 'app/shared/shared.module';
 import HasAnyAuthorityDirective from 'app/shared/auth/has-any-authority.directive';
@@ -28,8 +29,8 @@ export class NavbarComponent implements OnInit {
   entitiesNavbarItems: NavbarItem[] = [];
   searchTerm = '';
 
-  // Signal để theo dõi số lượng sản phẩm trong giỏ hàng
-  cartItemCount = signal(0);
+  // Tối ưu: Sử dụng Observable trực tiếp từ service
+  cartItemCount$: Observable<number>;
 
   /**
    * Computed signal to determine if the cart should be shown.
@@ -55,6 +56,8 @@ export class NavbarComponent implements OnInit {
     if (VERSION) {
       this.version = VERSION.toLowerCase().startsWith('v') ? VERSION : `v${VERSION}`;
     }
+    // Gán Observable từ service
+    this.cartItemCount$ = this.cartService.totalQuantity$;
   }
 
   ngOnInit(): void {
@@ -67,11 +70,6 @@ export class NavbarComponent implements OnInit {
       error: () => {
         // Ignore info endpoint error
       },
-    });
-
-    // Theo dõi sự thay đổi của giỏ hàng và cập nhật cartItemCount
-    this.cartService.cartItems$.subscribe(items => {
-      this.cartItemCount.set(this.cartService.getTotalQuantity());
     });
   }
 

@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject, signal, computed } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { Subject, forkJoin, Observable } from 'rxjs';
-import { takeUntil, map } from 'rxjs/operators';
+import { takeUntil, map, filter } from 'rxjs/operators';
 import { HttpResponse } from '@angular/common/http';
 
 import SharedModule from 'app/shared/shared.module';
@@ -27,7 +27,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   account = signal<Account | null>(null);
   featuredCategories: ICategory[] = [];
   products: IProduct[] = [];
-  featuredProducts: IProduct[] = [];
+  newProducts: IProduct[] = [];
+  bestSellerProducts: IProduct[] = [];
   isLoading = false;
 
   private readonly destroy$ = new Subject<void>();
@@ -51,20 +52,53 @@ export class HomeComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(account => this.account.set(account));
 
+    // Load dữ liệu lần đầu
     this.loadAllData();
+
+    // Reload dữ liệu mỗi khi navigate đến trang home (sau khi checkout chẳng hạn)
+    this.router.events
+      .pipe(
+        filter(event => event instanceof NavigationEnd),
+        filter((event: NavigationEnd) => event.url === '/' || event.url === '/home'),
+        takeUntil(this.destroy$),
+      )
+      .subscribe(() => {
+        this.loadAllData();
+      });
   }
 
   loadAllData(): void {
     this.isLoading = true;
     forkJoin([
-      this.productService.getFeaturedProducts().pipe(map((res: HttpResponse<IProduct[]>) => res.body ?? [])),
       this.categoryService.getFeaturedCategories().pipe(map((res: HttpResponse<ICategory[]>) => res.body ?? [])),
-      this.productService.query({ size: 1000 }).pipe(map((res: HttpResponse<IProduct[]>) => res.body ?? [])),
+      this.productService.query({ size: 1000, sort: ['id,desc'] }).pipe(map((res: HttpResponse<IProduct[]>) => res.body ?? [])),
     ]).subscribe({
-      next: ([featuredProds, featuredCats, allProducts]) => {
-        this.featuredProducts = featuredProds;
+      next: ([featuredCats, allProducts]) => {
+        console.log('🔍 DEBUG - Total products loaded:', allProducts.length);
+        console.log('🔍 DEBUG - First 3 products:', allProducts.slice(0, 3));
+        console.log('🔍 DEBUG - Products with imageUrl:', allProducts.filter(p => p.imageUrl).length);
+        console.log('🔍 DEBUG - Products with isFeatured=true:', allProducts.filter(p => p.isFeatured).length);
+
         this.featuredCategories = featuredCats;
         this.products = allProducts;
+
+        // Lấy 12 sản phẩm mới nhất (sắp xếp theo id giảm dần)
+        this.newProducts = allProducts.slice(0, 12);
+
+        // Best sellers: Ưu tiên sản phẩm GHIM (isFeatured = true)
+        const featuredProducts = allProducts.filter(p => p.isFeatured === true);
+        const lowStockProducts = allProducts
+          .filter(p => p.isFeatured !== true && p.quantity !== null && p.quantity !== undefined && p.quantity < 50)
+          .slice(0, 8 - featuredProducts.length);
+
+        // Ghép sản phẩm ghim + sản phẩm bán chạy (stock thấp)
+        this.bestSellerProducts = [...featuredProducts, ...lowStockProducts].slice(0, 8);
+
+        // Nếu vẫn không đủ 8, lấy thêm sản phẩm khác
+        if (this.bestSellerProducts.length < 8) {
+          const remaining = allProducts.filter(p => !this.bestSellerProducts.includes(p)).slice(0, 8 - this.bestSellerProducts.length);
+          this.bestSellerProducts = [...this.bestSellerProducts, ...remaining];
+        }
 
         this.featuredCategories.forEach(category => {
           category.products = this.products.filter(product => product.category?.id === category.id);
@@ -87,13 +121,24 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   addToCart(product: IProduct): void {
+    // Kiểm tra số lượng tồn kho
+    if (!product.quantity || product.quantity <= 0) {
+      this.notify.error('❌ Sản phẩm đã hết hàng!');
+      return;
+    }
+
     const productToAdd: IProduct = {
       ...product,
       price: product.price ?? 0,
-      quantity: product.quantity ?? 0,
     };
-    this.cartService.addToCart(productToAdd);
-    this.notify.success('Đã thêm sản phẩm vào giỏ hàng!');
+
+    const success = this.cartService.addToCart(productToAdd);
+
+    if (success) {
+      this.notify.success('✅ Đã thêm sản phẩm vào giỏ hàng!');
+    } else {
+      this.notify.error('⚠️ Không thể thêm sản phẩm vào giỏ hàng!');
+    }
   }
 
   formatPrice(price: number | null | undefined): string {
@@ -101,6 +146,12 @@ export class HomeComponent implements OnInit, OnDestroy {
       return this.utils.formatPrice(0);
     }
     return this.utils.formatPrice(price);
+  }
+
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    // Fallback to default image nếu load fail
+    img.src = 'content/images/default-product.svg';
   }
 
   ngOnDestroy(): void {

@@ -1,15 +1,17 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
-import { CartService, ICartItem } from 'app/shared/services/cart.service'; // Sửa đường dẫn và import ICartItem
+import { CartService, ICartItem } from 'app/shared/services/cart.service';
 import { UtilsService } from 'app/shared/utils/utils.service';
 import { NotificationService } from 'app/shared/notification/notification.service';
 import { AccountService } from 'app/core/auth/account.service';
 import { Account } from 'app/core/auth/account.model';
-import { OrderService } from 'app/entities/order/order.service'; // Import OrderService
+import { OrderService } from 'app/entities/order/order.service';
 
 @Component({
   selector: 'jhi-checkout',
@@ -18,12 +20,14 @@ import { OrderService } from 'app/entities/order/order.service'; // Import Order
   styleUrls: ['./checkout.component.scss'],
   imports: [CommonModule, RouterModule, ReactiveFormsModule, FontAwesomeModule],
 })
-export class CheckoutComponent implements OnInit {
+export class CheckoutComponent implements OnInit, OnDestroy {
   cart: ICartItem[] = [];
   total = 0;
   account: Account | null = null;
   orderSuccess = false;
   orderDetails: any = null;
+
+  private readonly destroy$ = new Subject<void>();
 
   vietnamesePhonePattern = /^(0[35789])+([0-9]{8})$/;
 
@@ -41,27 +45,39 @@ export class CheckoutComponent implements OnInit {
   private notify = inject(NotificationService);
   private router = inject(Router);
   private accountService = inject(AccountService);
-  private orderService = inject(OrderService); // Inject OrderService
+  private orderService = inject(OrderService);
 
   ngOnInit(): void {
     this.loadCartAndAccount();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   private loadCartAndAccount(): void {
-    this.cartService.cartItems$.subscribe(items => {
+    this.cartService.cartItems$.pipe(takeUntil(this.destroy$)).subscribe(items => {
       this.cart = items;
-      this.updateTotal();
     });
 
-    this.accountService.getAuthenticationState().subscribe(account => {
-      this.account = account;
-      if (this.account) {
-        this.checkoutForm.patchValue({
-          fullName: `${this.account.firstName ?? ''} ${this.account.lastName ?? ''}`.trim(),
-          email: this.account.email,
-        });
-      }
+    // Tối ưu: Lắng nghe totalPrice$
+    this.cartService.totalPrice$.pipe(takeUntil(this.destroy$)).subscribe(total => {
+      this.total = total;
     });
+
+    this.accountService
+      .getAuthenticationState()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(account => {
+        this.account = account;
+        if (this.account) {
+          this.checkoutForm.patchValue({
+            fullName: `${this.account.firstName ?? ''} ${this.account.lastName ?? ''}`.trim(),
+            email: this.account.email,
+          });
+        }
+      });
   }
 
   formatPrice(price: number | null | undefined): string {
@@ -110,7 +126,8 @@ export class CheckoutComponent implements OnInit {
         quantity: item.quantity,
         price: item.product.price,
       })),
-      totalAmount: this.cartService.getTotalPrice(),
+      // Tối ưu: Sử dụng giá trị đã được cập nhật
+      totalAmount: this.total,
       notes: formValue.notes || null,
     };
   }
@@ -129,15 +146,11 @@ export class CheckoutComponent implements OnInit {
         };
         this.notify.success('✅ Đặt hàng thành công!');
       },
-      error: (error: any) => {
+      error: (_error: any) => {
         console.error('Order creation failed');
         this.notify.error('❌ Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.');
       },
     });
-  }
-
-  updateTotal(): void {
-    this.total = this.cartService.getTotalPrice();
   }
 
   previousState(): void {
@@ -145,10 +158,12 @@ export class CheckoutComponent implements OnInit {
   }
 
   goToHome(): void {
-    this.router.navigate(['/']);
+    // Thêm query param để force reload dữ liệu sau khi checkout
+    this.router.navigate(['/'], { queryParams: { reload: Date.now() } });
   }
 
   continueShopping(): void {
-    this.router.navigate(['/products']);
+    // Thêm query param để force reload dữ liệu sau khi checkout
+    this.router.navigate(['/products'], { queryParams: { reload: Date.now() } });
   }
 }

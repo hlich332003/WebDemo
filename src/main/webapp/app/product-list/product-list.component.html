@@ -1,14 +1,46 @@
 <h1>🛍️ Tất cả Sản phẩm</h1>
 
 <div class="filter-section">
-  <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearchTermChange($event)" placeholder="🔍 Tìm kiếm sản phẩm..." />
+  <!-- Search box với clear button -->
+  <div class="search-wrapper">
+    <input
+      type="text"
+      [(ngModel)]="searchTerm"
+      (ngModelChange)="onSearchTermChange($event)"
+      placeholder="🔍 Tìm kiếm sản phẩm..."
+      class="search-input"
+    />
+    @if (searchTerm) {
+      <button class="clear-search-btn" (click)="clearSearch()" title="Xóa tìm kiếm">✕</button>
+    }
+    @if (isSearching) {
+      <span class="search-loading">🔄</span>
+    }
+  </div>
+
+  <!-- Category filter -->
   <select [(ngModel)]="selectedCategorySlug" (change)="onCategoryChange()">
-    <option value="all">Tất cả sản phẩm</option>
+    <option value="all">Tất cả danh mục</option>
     @for (category of categories; track category.id) {
       <option [value]="category.slug">{{ category.name }}</option>
     }
   </select>
 </div>
+
+<!-- Hiển thị số kết quả -->
+@if (searchTerm || selectedCategorySlug !== 'all') {
+  <p class="result-count">
+    @if (isSearching) {
+      Đang tìm kiếm...
+    } @else {
+      Tìm thấy <strong>{{ totalItems }}</strong> sản phẩm
+      @if (searchTerm) {
+        cho "<strong>{{ searchTerm }}</strong
+        >"
+      }
+    }
+  </p>
+}
 
 <h2 class="section-title">Tất cả sản phẩm</h2>
 <div class="products-grid">
@@ -19,14 +51,27 @@
   } @else {
     @for (product of filteredProducts; track product.id) {
       <div class="product-card" (click)="viewProductDetail(product.id)">
-        <img [src]="product.imageUrl" [alt]="product.name" loading="lazy" />
+        <img
+          [src]="product.imageUrl || 'content/images/default-product.svg'"
+          [alt]="product.name"
+          loading="lazy"
+          (error)="onImageError($event)"
+        />
         <div class="product-info">
           <h3>{{ product.name }}</h3>
           <p class="price">{{ formatPrice(product.price) }}</p>
-          <p class="stock">Còn {{ product.quantity }} sản phẩm</p>
+          @if (product.quantity !== null && product.quantity !== undefined) {
+            @if (product.quantity === 0) {
+              <p class="stock text-danger fw-bold">❌ Hết hàng</p>
+            } @else if (product.quantity < 10) {
+              <p class="stock text-warning">⚠️ Chỉ còn {{ product.quantity }} sản phẩm</p>
+            } @else {
+              <p class="stock text-muted">Còn {{ product.quantity }} sản phẩm</p>
+            }
+          }
           <div class="product-buttons">
             <button (click)="addToCart(product); $event.stopPropagation()" [disabled]="product.quantity === 0" class="add-to-cart-btn">
-              Thêm vào giỏ
+              {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm vào giỏ' }}
             </button>
           </div>
         </div>

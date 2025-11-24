@@ -1,12 +1,11 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
 
-import { CartService, ICartItem } from 'app/shared/services/cart.service'; // Sửa đường dẫn và import ICartItem
+import { CartService } from 'app/shared/services/cart.service';
 import { UtilsService } from 'app/shared/utils/utils.service';
+import { NotificationService } from 'app/shared/notification/notification.service';
 
 @Component({
   selector: 'jhi-cart',
@@ -15,46 +14,64 @@ import { UtilsService } from 'app/shared/utils/utils.service';
   styleUrls: ['./cart.component.scss'],
   imports: [CommonModule, RouterModule, FormsModule],
 })
-export class CartComponent implements OnInit, OnDestroy {
-  cart: ICartItem[] = [];
-  total = 0;
-
-  private readonly destroy$ = new Subject<void>();
-
+export class CartComponent {
   public cartService = inject(CartService);
   private utils = inject(UtilsService);
-
-  ngOnInit(): void {
-    this.cartService.cartItems$.pipe(takeUntil(this.destroy$)).subscribe(items => {
-      this.cart = items;
-      this.updateTotal();
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
+  private notify = inject(NotificationService);
 
   updateQuantity(productId: number, quantity: number | string): void {
     const q = Number(quantity);
     if (!Number.isFinite(q) || q < 0) {
+      this.notify.error('❌ Số lượng không hợp lệ!');
       return;
     }
+
     if (q === 0) {
       this.cartService.removeFromCart(productId);
-    } else {
-      this.cartService.updateQuantity(productId, q);
+      return;
+    }
+
+    const item = this.cartService.getCartItems().find(i => i.product.id === productId);
+    if (!item) {
+      return;
+    }
+
+    const availableStock = item.product.quantity ?? 0;
+    if (q > availableStock) {
+      this.notify.error('⚠️ Đã đạt giới hạn số lượng!');
+      this.cartService.updateQuantity(productId, availableStock);
+      return;
+    }
+
+    const success = this.cartService.updateQuantity(productId, q);
+    if (!success) {
+      this.notify.error('❌ Không thể cập nhật số lượng!');
     }
   }
 
   increaseQuantity(productId: number, currentQuantity: number): void {
-    this.cartService.updateQuantity(productId, currentQuantity + 1);
+    const item = this.cartService.getCartItems().find(i => i.product.id === productId);
+    if (!item) {
+      return;
+    }
+
+    const availableStock = item.product.quantity ?? 0;
+    if (currentQuantity >= availableStock) {
+      this.notify.error('⚠️ Đã đạt giới hạn số lượng!');
+      return;
+    }
+
+    const success = this.cartService.updateQuantity(productId, currentQuantity + 1);
+    if (!success) {
+      this.notify.error('⚠️ Không thể tăng số lượng!');
+    }
   }
 
   decreaseQuantity(productId: number, currentQuantity: number): void {
     if (currentQuantity > 1) {
       this.cartService.updateQuantity(productId, currentQuantity - 1);
+    } else {
+      this.notify.info('💡 Số lượng tối thiểu là 1. Dùng nút xóa nếu muốn bỏ sản phẩm.');
     }
   }
 
@@ -62,14 +79,15 @@ export class CartComponent implements OnInit, OnDestroy {
     this.cartService.removeFromCart(productId);
   }
 
-  updateTotal(): void {
-    this.total = this.cartService.getTotalPrice(); // Sử dụng getTotalPrice từ CartService
-  }
-
   formatPrice(price: number | null | undefined): string {
     if (price === null || price === undefined) {
       return this.utils.formatPrice(0);
     }
     return this.utils.formatPrice(price);
+  }
+
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.src = 'content/images/default-product.svg';
   }
 }

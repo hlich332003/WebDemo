@@ -26,29 +26,42 @@ h1 {
 
 .cart-header {
   display: grid;
-  grid-template-columns: 50px 80px 2fr 120px 120px auto; /* Select, Image, Details, Quantity, Total, Actions */
+  grid-template-columns: 100px 2fr 150px 150px 120px;
   align-items: center;
   gap: 1rem;
-  padding: 0.5rem 1rem;
-  font-weight: 600;
-  color: #555;
-  border-bottom: 1px solid #eee;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  color: #333;
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
   margin-bottom: 0.5rem;
+  border-radius: 8px 8px 0 0;
+
+  div {
+    text-align: center;
+
+    &:first-child {
+      text-align: left;
+    }
+  }
 }
 
 .cart-item {
   display: grid;
-  grid-template-columns: 50px 80px 2fr 120px 120px auto; /* Select, Image, Details, Quantity, Total, Actions */
+  grid-template-columns: 100px 2fr 150px 150px 120px;
   align-items: center;
   gap: 1rem;
   padding: 1rem;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease-in-out;
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
 
   &:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   }
 
   .item-select {
@@ -61,13 +74,20 @@ h1 {
     }
   }
 
-  .item-image {
-    width: 80px;
-    height: 80px; /* Chiều cao cố định cho khung ảnh */
-    object-fit: contain; /* Đảm bảo hình ảnh thu nhỏ vừa khung */
-    border-radius: 4px;
-    border: 1px solid #eee;
-    padding: 5px; /* Thêm padding để hình ảnh không chạm viền khung */
+  /* Sửa lỗi: Chỉ áp dụng cho thẻ img */
+  img.item-image {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    padding: 4px;
+    background: #fff;
+    transition: transform 0.2s;
+
+    &:hover {
+      transform: scale(1.05);
+    }
   }
 
   .item-details {
@@ -169,20 +189,24 @@ h1 {
 }
 
 @media (max-width: 768px) {
-  .cart-item {
-    grid-template-columns: 50px 80px 1fr auto; /* Select, Image, Details, Actions */
-    grid-template-rows: auto auto auto; /* Details, Quantity, Total */
-    grid-template-areas:
-      'select image details actions'
-      'select image quantity .'
-      'select image total . ';
-    gap: 0.5rem;
+  .cart-header {
+    display: none; // Ẩn header trên mobile
+  }
 
-    .item-select {
-      grid-area: select;
-    }
+  .cart-item {
+    grid-template-columns: 80px 1fr;
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas:
+      'image details'
+      'image quantity'
+      'total total'
+      'actions actions';
+    gap: 0.75rem;
+    padding: 1rem;
+
     .item-image {
       grid-area: image;
+      align-self: start;
     }
     .item-details {
       grid-area: details;
@@ -194,14 +218,13 @@ h1 {
     .item-total-price {
       grid-area: total;
       text-align: left;
+      font-size: 1.2rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid #eee;
     }
     .item-actions {
       grid-area: actions;
-      justify-content: flex-end;
+      justify-content: flex-start;
     }
-  }
-
-  .cart-header {
-    display: none; /* Ẩn header trên mobile */
   }
 }

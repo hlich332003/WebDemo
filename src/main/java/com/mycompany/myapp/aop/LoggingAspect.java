@@ -1,66 +1,73 @@
 package com.mycompany.myapp.aop;
 
-import java.util.Arrays;
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+/**
+ * Aspect để log execution time của các method được đánh dấu @Loggable
+ * Đây là Custom Aspect theo yêu cầu lộ trình đào tạo
+ */
 @Aspect
 @Component
 public class LoggingAspect {
 
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private static final Logger log = LoggerFactory.getLogger(LoggingAspect.class);
 
-    // Áp dụng cho tất cả methods trong package service
-    @Pointcut("within(com.mycompany.myapp.service..*)")
-    public void servicePointcut() {}
+    /**
+     * Around advice cho các method có annotation @Loggable
+     * Log execution time và các exception nếu có
+     */
+    @Around("@annotation(com.mycompany.myapp.aop.Loggable)")
+    public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
+        long start = System.currentTimeMillis();
+        String methodName = joinPoint.getSignature().toShortString();
 
-    // Áp dụng cho tất cả methods trong package web.rest
-    @Pointcut("within(com.mycompany.myapp.web.rest..*)")
-    public void restPointcut() {}
+        log.debug("→ Executing: {}", methodName);
 
-    // Log khi có exception
-    @AfterThrowing(pointcut = "servicePointcut() || restPointcut()", throwing = "e")
-    public void logAfterThrowing(JoinPoint joinPoint, Throwable e) {
-        log.error(
-            "❌ Exception in {}.{}() with message: {}",
-            joinPoint.getSignature().getDeclaringTypeName(),
-            joinPoint.getSignature().getName(),
-            e.getMessage()
-        );
+        Object result;
+        try {
+            result = joinPoint.proceed();
+            long executionTime = System.currentTimeMillis() - start;
+            log.debug("← Completed: {} in {} ms", methodName, executionTime);
+
+            // Warning nếu method chạy quá lâu (> 1000ms)
+            if (executionTime > 1000) {
+                log.warn("⚠️ Slow method detected: {} took {} ms", methodName, executionTime);
+            }
+        } catch (Exception e) {
+            long executionTime = System.currentTimeMillis() - start;
+            log.error("❌ Failed: {} after {} ms - Error: {}", methodName, executionTime, e.getMessage());
+            throw e;
+        }
+
+        return result;
     }
 
-    // Log trước và sau khi method chạy
-    @Around("servicePointcut() || restPointcut()")
-    public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
-        String className = joinPoint.getSignature().getDeclaringTypeName();
+    /**
+     * Around advice cho tất cả các method trong Service layer
+     * Log performance của toàn bộ service methods
+     */
+    @Around("execution(* com.mycompany.myapp.service.*.*(..))")
+    public Object logServiceMethods(ProceedingJoinPoint joinPoint) throws Throwable {
+        long start = System.currentTimeMillis();
+        String className = joinPoint.getTarget().getClass().getSimpleName();
         String methodName = joinPoint.getSignature().getName();
 
-        // Log trước khi chạy
-        log.debug("🔵 Enter: {}.{}() with arguments: {}", className, methodName, Arrays.toString(joinPoint.getArgs()));
-
-        long startTime = System.currentTimeMillis();
-
         try {
-            Object result = joinPoint.proceed(); // Chạy method
-            long duration = System.currentTimeMillis() - startTime;
+            Object result = joinPoint.proceed();
+            long executionTime = System.currentTimeMillis() - start;
 
-            // Log sau khi chạy thành công
-            log.debug("✅ Exit: {}.{}() - Duration: {}ms", className, methodName, duration);
+            if (executionTime > 500) {
+                log.info("📊 [{}] {}.{}() executed in {} ms", executionTime > 1000 ? "SLOW" : "OK", className, methodName, executionTime);
+            }
 
             return result;
         } catch (Exception e) {
-            long duration = System.currentTimeMillis() - startTime;
-
-            // Log khi có lỗi
-            log.error("❌ Exception: {}.{}() - Duration: {}ms - Error: {}", className, methodName, duration, e.getMessage());
-
+            log.error("💥 [ERROR] {}.{}() failed: {}", className, methodName, e.getMessage());
             throw e;
         }
     }

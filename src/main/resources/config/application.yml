@@ -115,6 +115,13 @@ jhipster:
     authentication:
       jwt:
         # Dev-only secret. Có thể thay bằng biến môi trường JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET
-        base64-secret: YzBjZjNjN2VjM2IwYzRlYzJhNWI1NTc2ZWFjZTlmMjE0OTNiYjcwZjFlMjZkMWY3ZDI1Nzg1ZWM1MmUyMTU2ZGIzMTNlNDg4MTJmNDg5YWM2MDFlMmVmYTFiYTVmYTFmYjUzNDU4OWRlZjExY2ZlNWM0Njg3NWMzZTNlZGU=
+        base64-secret: YzBjZjNjN2VjM2IwYzRlYzJhNWI1NTc2ZWFjZTlmMjE0OTNiYjcwZjFlMjZkMWY3ZDI5Nzg5ZWM5MmUyMTU2ZGIzMTNlNDg4MTJmNDg5YWM2MDFlMmVmYTFiYTVmYTFmYjU3MjIzNDU4OWRlZjExY2ZlNWM4Njg3NWMzZTNlZGU=
         token-validity-in-seconds: 86400 # 24 hours
         token-validity-in-seconds-for-remember-me: 2592000 # 30 days
+  cors:
+    allowed-origins: 'http://localhost:9000,http://127.0.0.1:9000,http://localhost:9001,http://127.0.0.1:9001'
+    allowed-methods: '*'
+    allowed-headers: '*'
+    exposed-headers: 'Authorization,Link,X-Total-Count,X-${jhipster.clientApp.name}-alert,X-${jhipster.clientApp.name}-error,X-${jhipster.clientApp.name}-params'
+    allow-credentials: true
+    max-age: 1800
