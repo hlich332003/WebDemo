@@ -1,1 +1,55 @@
 /* Add custom styles for your component here */
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  table {
+    min-width: 800px;
+    margin-bottom: 0;
+    table-layout: auto;
+
+    th,
+    td {
+      padding: 12px;
+      vertical-align: middle;
+      white-space: nowrap;
+      min-width: 100px;
+      position: relative;
+      border-right: 1px solid #dee2e6;
+
+      &:last-child {
+        border-right: none;
+      }
+    }
+
+    thead th {
+      font-weight: 600;
+      background-color: #f8f9fa;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    tbody tr {
+      &:hover {
+        background-color: #f1f3f5;
+      }
+
+      &.table-info {
+        background-color: #cfe2ff !important;
+      }
+    }
+  }
+}
+
+.btn-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+
+  .btn {
+    white-space: nowrap;
+  }
+}

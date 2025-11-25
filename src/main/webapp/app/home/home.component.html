@@ -9,20 +9,19 @@
   </div>
 </section>
 
-<!-- Phần sản phẩm bán chạy (HOT) - ƯU TIÊN HÀNG ĐẦU -->
+<!-- Sản phẩm hot -->
 <section class="best-sellers">
   <h2 class="section-title">🔥 Sản Phẩm Bán Chạy</h2>
   <div class="product-grid">
     @if (bestSellerProducts.length === 0) {
       <p>Đang cập nhật...</p>
     } @else {
-      @for (product of bestSellerProducts; track product.id) {
-        <div class="product-card-sm">
-          <div class="badge-hot">HOT</div>
+      @for (product of bestSellerProducts; track product.id; let idx = $index) {
+        <div class="product-card">
           <img
-            [src]="product.imageUrl || 'content/images/default-product.svg'"
+            [src]="getProxiedImageUrl(product.imageUrl)"
             [alt]="product.name"
-            loading="lazy"
+            [loading]="idx < 4 ? 'eager' : 'lazy'"
             (click)="viewProductDetail(product.id)"
             (error)="onImageError($event)"
           />
@@ -48,7 +47,7 @@
   </div>
 </section>
 
-<!-- Phần sản phẩm mới nhất -->
+<!-- Sản phẩm mới -->
 <section class="new-products">
   <h2 class="section-title">✨ Sản Phẩm Mới</h2>
   <div class="product-grid-large">
@@ -59,7 +58,7 @@
         <div class="product-card-sm">
           <div class="badge-new">NEW</div>
           <img
-            [src]="product.imageUrl || 'content/images/default-product.svg'"
+            [src]="getProxiedImageUrl(product.imageUrl)"
             [alt]="product.name"
             loading="lazy"
             (click)="viewProductDetail(product.id)"
@@ -87,7 +86,7 @@
   </div>
 </section>
 
-<!-- Phần danh mục nổi bật -->
+<!-- Mục nổi bật-->
 <section class="featured-categories">
   <div class="category-grid">
     @if (isLoading) {
@@ -102,7 +101,7 @@
             @for (product of category.products?.slice(0, 8); track product.id) {
               <div class="product-card-sm">
                 <img
-                  [src]="product.imageUrl || 'content/images/default-product.svg'"
+                  [src]="getProxiedImageUrl(product.imageUrl)"
                   [alt]="product.name"
                   loading="lazy"
                   (click)="viewProductDetail(product.id)"

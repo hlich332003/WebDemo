@@ -1,45 +1,55 @@
 <h1>🛍️ Tất cả Sản phẩm</h1>
 
 <div class="filter-section">
-  <!-- Search box với clear button -->
+  <!-- Search box tối ưu với debounce -->
   <div class="search-wrapper">
     <input
       type="text"
       [(ngModel)]="searchTerm"
-      (ngModelChange)="onSearchTermChange($event)"
-      placeholder="🔍 Tìm kiếm sản phẩm..."
+      (input)="onSearchTermChange($event)"
+      placeholder="🔍 Tìm kiếm theo tên sản phẩm..."
       class="search-input"
     />
-    @if (searchTerm) {
-      <button class="clear-search-btn" (click)="clearSearch()" title="Xóa tìm kiếm">✕</button>
-    }
     @if (isSearching) {
-      <span class="search-loading">🔄</span>
+      <span class="search-loading" title="Đang tìm kiếm...">⏳</span>
+    }
+    @if (searchTerm) {
+      <button class="clear-search-btn" (click)="clearSearch()" type="button" title="Xóa tìm kiếm">✖️</button>
     }
   </div>
 
   <!-- Category filter -->
-  <select [(ngModel)]="selectedCategorySlug" (change)="onCategoryChange()">
-    <option value="all">Tất cả danh mục</option>
-    @for (category of categories; track category.id) {
-      <option [value]="category.slug">{{ category.name }}</option>
-    }
-  </select>
+  <div class="category-wrapper">
+    <select [(ngModel)]="selectedCategorySlug" (change)="onCategoryChange()" class="category-select">
+      <option value="all">🏷️ Tất cả danh mục</option>
+      @for (category of categories; track category.id) {
+        <option [value]="category.slug">{{ category.name }}</option>
+      }
+    </select>
+  </div>
 </div>
 
-<!-- Hiển thị số kết quả -->
+<!-- Hiển thị số kết quả tìm kiếm -->
 @if (searchTerm || selectedCategorySlug !== 'all') {
-  <p class="result-count">
-    @if (isSearching) {
-      Đang tìm kiếm...
+  <div class="result-info">
+    @if (isSearching || isLoading) {
+      <p class="searching-text">⏳ Đang tìm kiếm...</p>
     } @else {
-      Tìm thấy <strong>{{ totalItems }}</strong> sản phẩm
-      @if (searchTerm) {
-        cho "<strong>{{ searchTerm }}</strong
-        >"
-      }
+      <p class="result-count">
+        Tìm thấy <strong>{{ totalItems }}</strong> sản phẩm
+        @if (searchTerm) {
+          <span
+            >cho từ khóa "<strong>{{ searchTerm }}</strong
+            >"</span
+          >
+        }
+        @if (selectedCategorySlug !== 'all') {
+          <span class="category-badge">🏷️ {{ getCategoryName() }}</span>
+        }
+        <button class="btn-clear-all" (click)="clearAllFilters()" type="button">✖️ Xóa bộ lọc</button>
+      </p>
     }
-  </p>
+  </div>
 }
 
 <h2 class="section-title">Tất cả sản phẩm</h2>
@@ -51,12 +61,7 @@
   } @else {
     @for (product of filteredProducts; track product.id) {
       <div class="product-card" (click)="viewProductDetail(product.id)">
-        <img
-          [src]="product.imageUrl || 'content/images/default-product.svg'"
-          [alt]="product.name"
-          loading="lazy"
-          (error)="onImageError($event)"
-        />
+        <img [src]="getProxiedImageUrl(product.imageUrl)" [alt]="product.name" loading="lazy" (error)="onImageError($event)" />
         <div class="product-info">
           <h3>{{ product.name }}</h3>
           <p class="price">{{ formatPrice(product.price) }}</p>

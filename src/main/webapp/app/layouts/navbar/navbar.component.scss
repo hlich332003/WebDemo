@@ -119,16 +119,28 @@ Search form styles
 .search-form {
   display: flex;
   width: 100%;
+  position: relative;
 }
 
-.search-form input {
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
   width: 100%;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 2.5rem 0.5rem 1rem !important;
   border: 1px solid #495057;
   border-right: none;
   border-radius: 0.25rem 0 0 0.25rem;
   background-color: #343a40;
   color: #fff;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
 
   &:focus {
     outline: none;
@@ -137,7 +149,29 @@ Search form styles
   }
 }
 
-.search-form button {
+.search-spinner {
+  position: absolute;
+  right: 0.5rem;
+  color: #007bff;
+  pointer-events: none;
+}
+
+.btn-clear-search {
+  position: absolute;
+  right: 0.25rem;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #fff;
+  }
+}
+
+.btn-search {
   background-color: #007bff;
   border: 1px solid #007bff;
   color: #fff;
@@ -146,8 +180,13 @@ Search form styles
   cursor: pointer;
   transition: background-color 0.2s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background-color: #0056b3;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 }
 

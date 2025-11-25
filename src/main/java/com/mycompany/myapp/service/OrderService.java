@@ -139,7 +139,13 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public Page<Order> findAll(Pageable pageable) {
-        return orderRepository.findAll(pageable);
+        return orderRepository.findAllOrders(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Order> findByOrderCodeContaining(String orderCode, Pageable pageable) {
+        log.debug("Request to find Orders by orderCode containing: {}", orderCode);
+        return orderRepository.findByOrderCodeContainingIgnoreCase(orderCode, pageable);
     }
 
     public Optional<Order> findOne(Long id) {

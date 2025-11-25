@@ -74,11 +74,11 @@ public class Order implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "user_id") // Explicitly map to user_id column
-    @JsonIgnoreProperties(value = { "authorities" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "authorities", "orders" }, allowSetters = true)
     private User customer;
 
-    @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnoreProperties(value = { "order", "product" }, allowSetters = true)
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties(value = { "order" }, allowSetters = true)
     private Set<OrderItem> items = new HashSet<>();
 
     // jhipster-needle-entity-add-field - JHipster will add fields here

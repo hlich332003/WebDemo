@@ -1,7 +1,9 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import SharedModule from 'app/shared/shared.module';
 import HasAnyAuthorityDirective from 'app/shared/auth/has-any-authority.directive';
@@ -11,16 +13,16 @@ import { ProfileService } from 'app/layouts/profiles/profile.service';
 import { EntityNavbarItems } from 'app/entities/entity-navbar-items';
 import { environment } from 'environments/environment';
 import NavbarItem from './navbar-item.model';
-import { CartService } from 'app/shared/services/cart.service'; // Import CartService
+import { CartService } from 'app/shared/services/cart.service';
 
 @Component({
   selector: 'jhi-navbar',
   standalone: true,
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss'],
-  imports: [RouterModule, SharedModule, HasAnyAuthorityDirective, FormsModule],
+  imports: [RouterModule, SharedModule, HasAnyAuthorityDirective, FormsModule, FontAwesomeModule],
 })
-export class NavbarComponent implements OnInit {
+export class NavbarComponent implements OnInit, OnDestroy {
   inProduction?: boolean;
   isNavbarCollapsed = signal(true);
   openAPIEnabled?: boolean;
@@ -28,6 +30,11 @@ export class NavbarComponent implements OnInit {
   account = inject(AccountService).trackCurrentAccount();
   entitiesNavbarItems: NavbarItem[] = [];
   searchTerm = '';
+  isSearching = false;
+
+  // Debounce search
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
 
   // Tối ưu: Sử dụng Observable trực tiếp từ service
   cartItemCount$: Observable<number>;
@@ -71,6 +78,60 @@ export class NavbarComponent implements OnInit {
         // Ignore info endpoint error
       },
     });
+
+    // Setup debounce search
+    this.searchSubject
+      .pipe(
+        debounceTime(200), // Chờ 200ms sau khi user ngừng gõ
+        distinctUntilChanged(), // Chỉ trigger khi giá trị thay đổi
+        takeUntil(this.destroy$),
+      )
+      .subscribe(term => {
+        if (term.trim()) {
+          this.isSearching = true;
+          this.router.navigate(['/products'], { queryParams: { search: term.trim() } }).then(() => {
+            this.isSearching = false;
+          });
+        }
+      });
+  }
+
+  /**
+   * Được gọi khi user gõ vào ô search
+   */
+  onSearchInput(event: Event): void {
+    const term = (event.target as HTMLInputElement).value;
+    this.searchSubject.next(term);
+  }
+
+  /**
+   * Clear search
+   */
+  clearSearch(): void {
+    // Clear local search state
+    this.searchTerm = '';
+    this.isSearching = false;
+    // Emit empty to debounce stream to cancel pending searches
+    this.searchSubject.next('');
+    // Navigate to product list and remove the search param
+    this.router.navigate(['/products'], { queryParams: { search: null }, queryParamsHandling: 'merge' });
+  }
+
+  /**
+   * Submit search form
+   */
+  search(): void {
+    if (this.searchTerm.trim()) {
+      this.isSearching = true;
+      this.router.navigate(['/products'], { queryParams: { search: this.searchTerm.trim() } }).then(() => {
+        this.isSearching = false;
+      });
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   collapseNavbar(): void {
@@ -89,12 +150,5 @@ export class NavbarComponent implements OnInit {
 
   toggleNavbar(): void {
     this.isNavbarCollapsed.update(isNavbarCollapsed => !isNavbarCollapsed);
-  }
-
-  search(): void {
-    if (this.searchTerm.trim()) {
-      this.router.navigate(['/products'], { queryParams: { search: this.searchTerm.trim() } });
-      this.searchTerm = '';
-    }
   }
 }

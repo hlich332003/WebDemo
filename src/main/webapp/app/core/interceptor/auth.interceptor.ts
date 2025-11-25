@@ -13,10 +13,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         Authorization: `Bearer ${token}`,
       },
     });
+    console.log(`[HTTP] ${req.method} ${req.url} - Token attached ✅`);
+  } else {
+    console.log(`[HTTP] ${req.method} ${req.url} - No token ⚠️`);
   }
-
-  // Log request (để debug)
-  console.log(`[HTTP] ${req.method} ${req.url}`);
 
   return next(req);
 };

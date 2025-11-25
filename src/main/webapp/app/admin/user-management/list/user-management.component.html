@@ -1,13 +1,13 @@
-<div>
+<div class="user-management-container">
   <h2>
     <span id="user-management-page-heading" data-cy="userManagementPageHeading">Quản lý người dùng</span>
 
     <div class="d-flex justify-content-end">
-      <button class="btn btn-info me-2" (click)="loadAll()" [disabled]="isLoading()">
+      <button class="btn btn-info me-2 rounded-pill" (click)="loadAll()" [disabled]="isLoading()">
         <fa-icon icon="sync" [animation]="isLoading() ? 'spin' : undefined"></fa-icon>
         <span>Làm mới danh sách</span>
       </button>
-      <button class="btn btn-primary jh-create-entity" [routerLink]="['./new']">
+      <button class="btn btn-primary jh-create-entity rounded-pill" [routerLink]="['./new']">
         <fa-icon icon="plus"></fa-icon> <span>Tạo người dùng mới</span>
       </button>
     </div>
@@ -17,16 +17,34 @@
 
   <jhi-alert />
 
+  <!-- Thanh tìm kiếm -->
+  <div class="search-bar mb-3">
+    <div class="input-group">
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Tìm kiếm theo tên, email hoặc số điện thoại..."
+        [value]="searchTerm()"
+        (input)="onSearchInput($event)"
+      />
+      @if (searchTerm()) {
+        <button class="btn btn-outline-secondary" type="button" (click)="onClearSearch()">
+          <fa-icon icon="times"></fa-icon>
+        </button>
+      }
+    </div>
+  </div>
+
   @if (users()) {
-    <div class="table-responsive">
-      <table class="table table-striped" aria-describedby="user-management-page-heading">
-        <thead>
+    <div class="table-container" style="max-height: 70vh; overflow: auto; position: relative">
+      <table class="table table-striped table-hover table-bordered" aria-describedby="user-management-page-heading" style="min-width: 100%">
+        <thead class="sticky-top" style="background-color: #f8f9fa; z-index: 1">
           <tr jhiSort [(sortState)]="sortState" (sortChange)="loadAll()">
             <th scope="col" jhiSortBy="id"><span>ID</span> <fa-icon icon="sort"></fa-icon></th>
             <th scope="col" jhiSortBy="firstName"><span>Họ và Tên</span> <fa-icon icon="sort"></fa-icon></th>
             <th scope="col" jhiSortBy="email"><span>Email</span> <fa-icon icon="sort"></fa-icon></th>
             <th scope="col" jhiSortBy="phone"><span>Số điện thoại</span> <fa-icon icon="sort"></fa-icon></th>
-            <th scope="col"></th>
+            <th scope="col" jhiSortBy="activated"><span>Trạng thái</span> <fa-icon icon="sort"></fa-icon></th>
             <th scope="col"><span>Vai trò</span></th>
             <th scope="col" jhiSortBy="createdDate"><span>Ngày tạo</span> <fa-icon icon="sort"></fa-icon></th>
             <th scope="col" jhiSortBy="lastModifiedBy"><span>Người sửa</span> <fa-icon icon="sort"></fa-icon></th>
@@ -44,16 +62,10 @@
               <td>{{ user.email }}</td>
               <td>{{ user.phone }}</td>
               <td>
-                @if (!user.activated) {
-                  <button class="btn btn-danger btn-sm" (click)="setActive(user, true)">Vô hiệu hóa</button>
+                @if (user.activated) {
+                  <span class="badge bg-success">Hoạt động</span>
                 } @else {
-                  <button
-                    class="btn btn-success btn-sm"
-                    (click)="setActive(user, false)"
-                    [disabled]="!currentAccount() || currentAccount()?.login === user.login"
-                  >
-                    Đã kích hoạt
-                  </button>
+                  <span class="badge bg-danger">Đã khóa</span>
                 }
               </td>
               <td>
@@ -83,16 +95,23 @@
                     <fa-icon icon="pencil-alt"></fa-icon>
                     <span class="d-none d-md-inline">Sửa</span>
                   </button>
-                  <!-- Thêm disabled ở đây -->
-                  <button
-                    type="button"
-                    (click)="deleteUser(user)"
-                    class="btn btn-danger btn-sm"
-                    [disabled]="!currentAccount() || currentAccount()?.login === user.login"
-                  >
-                    <fa-icon icon="times"></fa-icon>
-                    <span class="d-none d-md-inline">Xóa</span>
-                  </button>
+
+                  @if (user.activated) {
+                    <button
+                      type="button"
+                      (click)="setActive(user, false)"
+                      class="btn btn-danger btn-sm"
+                      [disabled]="!currentAccount() || currentAccount()?.login === user.login"
+                    >
+                      <fa-icon icon="lock"></fa-icon>
+                      <span class="d-none d-md-inline">Khóa</span>
+                    </button>
+                  } @else {
+                    <button type="button" (click)="setActive(user, true)" class="btn btn-success btn-sm">
+                      <fa-icon icon="lock-open"></fa-icon>
+                      <span class="d-none d-md-inline">Mở khóa</span>
+                    </button>
+                  }
                 </div>
               </td>
             </tr>
@@ -100,5 +119,21 @@
         </tbody>
       </table>
     </div>
+
+    @if (totalItems()) {
+      <div class="d-flex justify-content-center mt-3">
+        <jhi-item-count [params]="{ page: page, totalItems: totalItems(), itemsPerPage: itemsPerPage }" />
+
+        <ngb-pagination
+          [collectionSize]="totalItems()"
+          [(page)]="page"
+          [pageSize]="itemsPerPage"
+          [maxSize]="5"
+          [rotate]="true"
+          [boundaryLinks]="true"
+          (pageChange)="transition()"
+        />
+      </div>
+    }
   }
 </div>

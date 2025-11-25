@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject, signal, computed } from '@angular/core';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
-import { Subject, forkJoin, Observable } from 'rxjs';
+import { Subject, forkJoin } from 'rxjs';
 import { takeUntil, map, filter } from 'rxjs/operators';
 import { HttpResponse } from '@angular/common/http';
 
@@ -148,9 +148,12 @@ export class HomeComponent implements OnInit, OnDestroy {
     return this.utils.formatPrice(price);
   }
 
+  getProxiedImageUrl(imageUrl: string | null | undefined): string {
+    return imageUrl || 'content/images/default-product.svg';
+  }
+
   onImageError(event: Event): void {
     const img = event.target as HTMLImageElement;
-    // Fallback to default image nếu load fail
     img.src = 'content/images/default-product.svg';
   }
 

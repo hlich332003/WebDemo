@@ -13,9 +13,26 @@
 
       <!-- Thanh tìm kiếm -->
       <div class="search-container flex-grow-1">
-        <form class="search-form" (ngSubmit)="search()">
-          <input type="text" [(ngModel)]="searchTerm" name="searchTerm" placeholder="🔍 Tìm kiếm sản phẩm..." />
-          <button type="submit"><fa-icon icon="search"></fa-icon></button>
+        <form class="search-form d-flex align-items-center" (ngSubmit)="search()">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            name="searchTerm"
+            placeholder="🔍 Tìm kiếm sản phẩm..."
+            class="search-input form-control me-2"
+            (input)="onSearchInput($event)"
+          />
+
+          <!-- Clear button -->
+          <button type="button" class="btn btn-outline-light me-2" *ngIf="searchTerm" (click)="clearSearch()" aria-label="Clear search">
+            <fa-icon icon="times"></fa-icon>
+          </button>
+
+          <!-- Spinner while searching -->
+          <button type="submit" class="btn btn-primary" [disabled]="isSearching" aria-label="Search">
+            <fa-icon *ngIf="!isSearching" icon="search"></fa-icon>
+            <span *ngIf="isSearching" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          </button>
         </form>
       </div>
 

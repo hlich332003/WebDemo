@@ -9,6 +9,26 @@
     </div>
   </h2>
 
+  <!-- Search Box -->
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Tìm kiếm theo mã đơn hàng..."
+          [(ngModel)]="searchOrderCode"
+          (ngModelChange)="onSearchChange()"
+        />
+        @if (searchOrderCode()) {
+          <button class="btn btn-outline-secondary" type="button" (click)="clearSearch()">
+            <span>✕</span>
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
   @if (orders()) {
     <div class="table-responsive">
       <table class="table table-striped" aria-describedby="order-management-page-heading">
@@ -42,7 +62,7 @@
                     'bg-warning': order.status === 'PENDING',
                     'bg-info': order.status === 'PROCESSING',
                     'bg-primary': order.status === 'SHIPPED',
-                    'bg-success': order.status === 'COMPLETED',
+                    'bg-success': order.status === 'DELIVERED' || order.status === 'COMPLETED',
                     'bg-danger': order.status === 'CANCELLED',
                   }"
                   >{{ getStatusText(order.status) }}</span

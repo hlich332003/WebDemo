@@ -5,6 +5,7 @@ import { HttpHeaders, HttpResponse } from '@angular/common/http';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { combineLatest } from 'rxjs';
 import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
+import { FormsModule } from '@angular/forms';
 
 import { IOrder } from './order.model';
 import { OrderManagementService } from './order-management.service';
@@ -17,7 +18,16 @@ import { SORT } from 'app/config/navigation.constants';
 @Component({
   selector: 'jhi-order-management',
   standalone: true,
-  imports: [CommonModule, RouterModule, FontAwesomeModule, SortDirective, SortByDirective, ItemCountComponent, NgbPaginationModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FontAwesomeModule,
+    FormsModule,
+    SortDirective,
+    SortByDirective,
+    ItemCountComponent,
+    NgbPaginationModule,
+  ],
   templateUrl: './order-management.component.html',
   styleUrls: ['./order-management.component.scss'],
 })
@@ -29,6 +39,8 @@ export class OrderManagementComponent implements OnInit {
   page!: number;
   sortState = sortStateSignal({});
   selectedOrder = signal<IOrder | null>(null);
+  searchOrderCode = signal<string>('');
+  private searchTimeout: any;
 
   private orderService = inject(OrderManagementService);
   private notify = inject(NotificationService);
@@ -42,24 +54,29 @@ export class OrderManagementComponent implements OnInit {
 
   loadAll(): void {
     this.isLoading.set(true);
-    this.orderService
-      .query({
-        page: this.page - 1,
-        size: this.itemsPerPage,
-        sort: ['id,desc'],
-      })
-      .subscribe({
-        next: (res: HttpResponse<IOrder[]>) => {
-          this.isLoading.set(false);
-          this.onSuccess(res.body, res.headers);
-        },
-        error: error => {
-          console.error('Failed to load orders:', error);
-          this.isLoading.set(false);
-          this.orders.set([]);
-          this.notify.error('Không thể tải danh sách đơn hàng.');
-        },
-      });
+    const queryParams: any = {
+      page: this.page - 1,
+      size: this.itemsPerPage,
+      sort: ['id,desc'],
+    };
+
+    // Thêm tìm kiếm theo mã đơn hàng nếu có
+    if (this.searchOrderCode()) {
+      queryParams.orderCode = this.searchOrderCode();
+    }
+
+    this.orderService.query(queryParams).subscribe({
+      next: (res: HttpResponse<IOrder[]>) => {
+        this.isLoading.set(false);
+        this.onSuccess(res.body, res.headers);
+      },
+      error: error => {
+        console.error('Failed to load orders:', error);
+        this.isLoading.set(false);
+        this.orders.set([]);
+        this.notify.error('Không thể tải danh sách đơn hàng.');
+      },
+    });
   }
 
   trackId(index: number, item: IOrder): number {
@@ -79,6 +96,7 @@ export class OrderManagementComponent implements OnInit {
       PENDING: 'Chờ xác nhận',
       PROCESSING: 'Đang xử lý',
       SHIPPED: 'Đang giao',
+      DELIVERED: 'Đã giao',
       COMPLETED: 'Đã hoàn thành',
       CANCELLED: 'Đã hủy',
     };
@@ -127,6 +145,22 @@ export class OrderManagementComponent implements OnInit {
         },
       });
     }
+  }
+
+  onSearchChange(): void {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    this.searchTimeout = setTimeout(() => {
+      this.page = 1;
+      this.loadAll();
+    }, 500);
+  }
+
+  clearSearch(): void {
+    this.searchOrderCode.set('');
+    this.page = 1;
+    this.loadAll();
   }
 
   transition(sortState?: SortState): void {

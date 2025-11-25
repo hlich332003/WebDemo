@@ -13,6 +13,7 @@ import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer; // ADDED
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -69,6 +70,7 @@ public class SecurityConfiguration {
             .authorizeHttpRequests(authz ->
                 // prettier-ignore
                 authz
+                    .requestMatchers(antMatcher("/api/public/**")).permitAll()
                     .requestMatchers(mvc.pattern("/index.html"), mvc.pattern("/*.js"), mvc.pattern("/*.txt"), mvc.pattern("/*.json"), mvc.pattern("/*.map"), mvc.pattern("/*.css")).permitAll()
                     .requestMatchers(mvc.pattern("/*.ico"), mvc.pattern("/*.png"), mvc.pattern("/*.svg"), mvc.pattern("/*.webapp")).permitAll()
                     .requestMatchers(mvc.pattern("/app/**")).permitAll()
@@ -83,11 +85,11 @@ public class SecurityConfiguration {
                     .requestMatchers(mvc.pattern("/api/account/reset-password/init")).permitAll()
                     .requestMatchers(mvc.pattern("/api/account/reset-password/finish")).permitAll()
                     .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/products")).permitAll()
-                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/products/*")).permitAll()
-                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/categories")).permitAll() // Cho phép truy cập công khai vào API danh mục
-                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/categories/*")).permitAll() // Cho phép truy cập công khai vào API chi tiết danh mục
-                    .requestMatchers(mvc.pattern(HttpMethod.POST, "/api/orders")).permitAll() // Cho phép người dùng không đăng nhập tạo đơn hàng
-                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/orders")).hasAuthority(AuthoritiesConstants.ADMIN) // CHỈ ADMIN MỚI CÓ THỂ XEM TẤT CẢ ĐƠN HÀNG
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/products/**")).permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/categories")).permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/categories/**")).permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.POST, "/api/orders")).permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/orders")).hasAuthority(AuthoritiesConstants.ADMIN)
                     .requestMatchers(mvc.pattern("/api/admin/**")).hasAuthority(AuthoritiesConstants.ADMIN)
                     .requestMatchers(mvc.pattern("/api/**")).authenticated()
                     .requestMatchers(mvc.pattern("/v3/api-docs/**")).hasAuthority(AuthoritiesConstants.ADMIN)
@@ -113,5 +115,11 @@ public class SecurityConfiguration {
     @Bean
     MvcRequestMatcher.Builder mvc(HandlerMappingIntrospector introspector) {
         return new MvcRequestMatcher.Builder(introspector);
+    }
+
+    // ADDED: completely ignore public API from Spring Security filter chain
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.ignoring().requestMatchers(antMatcher("/api/public/**"));
     }
 }

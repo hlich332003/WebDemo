@@ -163,9 +163,17 @@ public class OrderResource {
 
     @GetMapping("/orders")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public ResponseEntity<List<Order>> getAllOrders(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
-        log.debug("REST request to get a page of Orders");
-        Page<Order> page = orderService.findAll(pageable);
+    public ResponseEntity<List<Order>> getAllOrders(
+        @org.springdoc.core.annotations.ParameterObject Pageable pageable,
+        @RequestParam(value = "orderCode", required = false) String orderCode
+    ) {
+        log.debug("REST request to get a page of Orders with orderCode: {}", orderCode);
+        Page<Order> page;
+        if (orderCode != null && !orderCode.isEmpty()) {
+            page = orderService.findByOrderCodeContaining(orderCode, pageable);
+        } else {
+            page = orderService.findAll(pageable);
+        }
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }

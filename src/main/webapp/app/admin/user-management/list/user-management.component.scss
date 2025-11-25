@@ -1,0 +1,28 @@
+:host {
+  display: block;
+  width: 100%;
+  padding: 1.5rem;
+}
+
+h2 {
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.badge {
+  font-size: 0.875rem;
+  padding: 0.375em 0.75em;
+}
+
+.btn-group {
+  white-space: nowrap;
+}

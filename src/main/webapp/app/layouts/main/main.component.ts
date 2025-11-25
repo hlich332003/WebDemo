@@ -19,9 +19,17 @@ export default class MainComponent implements OnInit {
   private readonly accountService = inject(AccountService);
 
   ngOnInit(): void {
-    // try to log in automatically
+    // Try to log in automatically if token exists
     this.accountService.identity().subscribe({
-      error: () => {
+      next: account => {
+        if (account) {
+          console.log('✅ User authenticated on init:', account.login);
+        } else {
+          console.log('ℹ️ No user authenticated');
+        }
+      },
+      error: error => {
+        console.error('❌ Authentication failed on init:', error.status);
         // Ignore 401 error when not logged in
       },
     });

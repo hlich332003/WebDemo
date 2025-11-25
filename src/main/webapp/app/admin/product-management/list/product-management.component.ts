@@ -29,6 +29,8 @@ export default class ProductManagementComponent implements OnInit {
   itemsPerPage = ITEMS_PER_PAGE;
   page!: number;
   sortState = sortStateSignal({});
+  searchTerm = signal<string>('');
+  private searchTimeout: any;
 
   private readonly productService = inject(ProductService);
   private readonly activatedRoute = inject(ActivatedRoute);
@@ -59,23 +61,55 @@ export default class ProductManagementComponent implements OnInit {
 
   loadAll(): void {
     this.isLoading.set(true);
-    this.productService
-      .query({
-        page: this.page - 1,
-        size: this.itemsPerPage,
-        sort: this.sortService.buildSortParam(this.sortState(), 'id'),
-      })
-      .subscribe({
-        next: (res: HttpResponse<IProduct[]>) => {
-          this.isLoading.set(false);
-          this.onSuccess(res.body, res.headers);
-        },
-        error: error => {
-          console.error('Failed to load products:', error);
-          this.isLoading.set(false);
-          this.notify.error('Không thể tải danh sách sản phẩm.');
-        },
-      });
+    const params: any = {
+      page: this.page - 1,
+      size: this.itemsPerPage,
+      sort: this.sortService.buildSortParam(this.sortState(), 'id'),
+    };
+
+    // Thêm tham số tìm kiếm nếu có
+    if (this.searchTerm()) {
+      params.nameContains = this.searchTerm();
+    }
+
+    this.productService.query(params).subscribe({
+      next: (res: HttpResponse<IProduct[]>) => {
+        this.isLoading.set(false);
+        this.onSuccess(res.body, res.headers);
+      },
+      error: error => {
+        console.error('Failed to load products:', error);
+        this.isLoading.set(false);
+        this.notify.error('Không thể tải danh sách sản phẩm.');
+      },
+    });
+  }
+
+  onSearchChange(): void {
+    // Debounce search
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    this.searchTimeout = setTimeout(() => {
+      this.page = 1;
+      this.loadAll();
+    }, 300);
+  }
+
+  clearSearch(): void {
+    this.searchTerm.set('');
+    this.page = 1;
+    this.loadAll();
+  }
+
+  onSearchInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.searchTerm.set(value);
+    this.onSearchChange();
+  }
+
+  onClearSearch(): void {
+    this.clearSearch();
   }
 
   transition(sortState?: SortState): void {

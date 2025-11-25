@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -71,7 +72,7 @@ public class ProductResource {
     public ResponseEntity<Product> updateProduct(
         @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestBody Product product
-    ) throws URISyntaxException {
+    ) {
         log.debug("REST request to update Product : {}, {}", id, product);
         if (product.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
@@ -96,7 +97,7 @@ public class ProductResource {
     public ResponseEntity<Product> partialUpdateProduct(
         @PathVariable(value = "id", required = false) final Long id,
         @NotNull @RequestBody Product product
-    ) throws URISyntaxException {
+    ) {
         log.debug("REST request to partial update Product partially : {}, {}", id, product);
         if (product.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
@@ -139,10 +140,29 @@ public class ProductResource {
     public ResponseEntity<List<Product>> getAllProducts(
         @org.springdoc.core.annotations.ParameterObject Pageable pageable,
         @RequestParam(value = "categorySlug", required = false) String categorySlug,
-        @RequestParam(value = "nameContains", required = false) String nameContains
+        @RequestParam(value = "nameContains", required = false) String nameContains,
+        @RequestParam Map<String, String> allRequestParams
     ) {
         log.debug("REST request to get a page of Products with filters");
-        Page<Product> page = productService.findAllWithFilters(pageable, categorySlug, nameContains);
+        // Support multiple frontend query param names for backward compatibility:
+        // - nameContains (current)
+        // - name.contains (used by some frontends)
+        // - search (used by navbar)
+        String resolvedName = nameContains;
+        if ((resolvedName == null || resolvedName.isEmpty()) && allRequestParams != null) {
+            String p = allRequestParams.get("name.contains");
+            if (p != null && !p.isEmpty()) {
+                resolvedName = p;
+            }
+        }
+        if ((resolvedName == null || resolvedName.isEmpty()) && allRequestParams != null) {
+            String p2 = allRequestParams.get("search");
+            if (p2 != null && !p2.isEmpty()) {
+                resolvedName = p2;
+            }
+        }
+
+        Page<Product> page = productService.findAllWithFilters(pageable, categorySlug, resolvedName);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }

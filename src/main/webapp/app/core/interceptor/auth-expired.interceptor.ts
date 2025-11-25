@@ -17,8 +17,8 @@ export class AuthExpiredInterceptor implements HttpInterceptor {
     return next.handle(request).pipe(
       tap({
         error: (err: HttpErrorResponse) => {
-          // Only logout if it's a 401 and not during a tab reload
-          if (err.status === 401 && err.url && !err.url.includes('api/account') && !this.stateStorageService.isReloading()) {
+          // Chỉ logout nếu là lỗi 401 từ API (không phải /api/account)
+          if (err.status === 401 && err.url && !err.url.includes('api/account')) {
             this.stateStorageService.storeUrl(this.router.routerState.snapshot.url);
             this.loginService.logout();
             this.router.navigate(['/login']);

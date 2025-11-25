@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { combineLatest, forkJoin, Subject } from 'rxjs';
 import { map, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import { ProductService } from 'app/entities/product/product.service';
 import { IProduct } from 'app/entities/product/product.model';
@@ -23,7 +24,7 @@ import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
   standalone: true,
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.scss'],
-  imports: [CommonModule, FormsModule, RouterModule, ItemCountComponent, NgbPaginationModule],
+  imports: [CommonModule, FormsModule, RouterModule, ItemCountComponent, NgbPaginationModule, FontAwesomeModule],
 })
 export class ProductListComponent implements OnInit, OnDestroy {
   allProducts: IProduct[] = [];
@@ -86,8 +87,17 @@ export class ProductListComponent implements OnInit, OnDestroy {
   /**
    * Được gọi khi user gõ vào ô search
    */
-  onSearchTermChange(term: string): void {
+  onSearchTermChange(event: Event): void {
+    const term = (event.target as HTMLInputElement).value;
     this.searchSubject.next(term);
+  }
+
+  /**
+   * Lấy tên danh mục từ slug
+   */
+  getCategoryName(): string {
+    const category = this.categories.find(c => c.slug === this.selectedCategorySlug);
+    return category?.name || '';
   }
 
   /**
@@ -95,6 +105,16 @@ export class ProductListComponent implements OnInit, OnDestroy {
    */
   clearSearch(): void {
     this.searchTerm = '';
+    this.searchSubject.next('');
+  }
+
+  /**
+   * Clear tất cả filters
+   */
+  clearAllFilters(): void {
+    this.searchTerm = '';
+    this.selectedCategorySlug = 'all';
+    this.page = 1;
     this.searchSubject.next('');
   }
 
@@ -182,6 +202,10 @@ export class ProductListComponent implements OnInit, OnDestroy {
       return this.utils.formatPrice(0);
     }
     return this.utils.formatPrice(price);
+  }
+
+  getProxiedImageUrl(imageUrl: string | null | undefined): string {
+    return imageUrl || 'content/images/default-product.svg';
   }
 
   onImageError(event: Event): void {

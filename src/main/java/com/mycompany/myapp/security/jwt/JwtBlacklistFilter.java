@@ -6,12 +6,12 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
@@ -23,6 +23,15 @@ public class JwtBlacklistFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JwtBlacklistFilter.class);
     private final TokenBlacklistService tokenBlacklistService;
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
+    private final List<String> publicEndpoints = List.of(
+        "/api/authenticate",
+        "/api/register",
+        "/api/activate",
+        "/api/public/**",
+        "/api/account/reset-password/init",
+        "/api/account/reset-password/finish"
+    );
 
     public JwtBlacklistFilter(TokenBlacklistService tokenBlacklistService) {
         this.tokenBlacklistService = tokenBlacklistService;
@@ -31,31 +40,20 @@ public class JwtBlacklistFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException {
-        // Extract token từ Authorization header
         String token = extractToken(request);
 
-        if (token != null) {
-            // Kiểm tra token có trong blacklist không
-            if (tokenBlacklistService.isBlacklisted(token)) {
-                log.warn("Blacklisted token detected from IP: {}", request.getRemoteAddr());
-
-                // Clear security context
-                SecurityContextHolder.clearContext();
-
-                // Trả về 401 Unauthorized
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.getWriter().write("{\"error\":\"Token has been revoked\",\"message\":\"Please login again\"}");
-                return;
-            }
+        if (token != null && tokenBlacklistService.isBlacklisted(token)) {
+            log.warn("Blacklisted token detected from IP: {}", request.getRemoteAddr());
+            SecurityContextHolder.clearContext();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\":\"Token has been revoked\",\"message\":\"Please login again\"}");
+            return;
         }
 
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Extract JWT token từ Authorization header
-     */
     private String extractToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
@@ -64,13 +62,9 @@ public class JwtBlacklistFilter extends OncePerRequestFilter {
         return null;
     }
 
-    /**
-     * Chỉ áp dụng filter cho các authenticated requests
-     */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        // Cho phép các public endpoints đi qua
-        String path = request.getRequestURI();
-        return path.startsWith("/api/authenticate") || path.startsWith("/api/register") || path.startsWith("/api/activate");
+        // Bỏ qua filter này nếu request URI khớp với bất kỳ endpoint public nào
+        return publicEndpoints.stream().anyMatch(p -> pathMatcher.match(p, request.getRequestURI()));
     }
 }

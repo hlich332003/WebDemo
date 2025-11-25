@@ -23,6 +23,27 @@
 
   <jhi-alert />
 
+  <!-- Search Box -->
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Tìm kiếm theo tên sản phẩm hoặc mô tả..."
+          #searchInput
+          [value]="searchTerm()"
+          (input)="onSearchInput($event)"
+        />
+        @if (searchTerm()) {
+          <button class="btn btn-outline-secondary" type="button" (click)="onClearSearch()">
+            <span>✕</span>
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
   @if (products()) {
     <div class="table-responsive">
       <table class="table table-striped" aria-describedby="product-management-page-heading">
