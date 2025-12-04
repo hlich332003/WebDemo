@@ -32,7 +32,7 @@
                     'bg-warning': order.status === 'PENDING',
                     'bg-info': order.status === 'PROCESSING',
                     'bg-primary': order.status === 'SHIPPED',
-                    'bg-success': order.status === 'DELIVERED',
+                    'bg-success': order.status === 'DELIVERED' || order.status === 'COMPLETED' || order.status === 'ĐÃ HOÀN THÀNH',
                     'bg-danger': order.status === 'CANCELLED',
                   }"
                   >{{ getStatusText(order.status) }}</span

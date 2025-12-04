@@ -1,12 +1,22 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { HttpHeaders, HttpResponse, HttpErrorResponse } from '@angular/common/http';
+import {
+  HttpHeaders,
+  HttpResponse,
+  HttpErrorResponse,
+} from '@angular/common/http';
 import { combineLatest } from 'rxjs';
-import { NgbModal, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap'; // Import NgbPaginationModule
+import { NgbModal, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import { HttpClient } from '@angular/common/http';
 
 import SharedModule from 'app/shared/shared.module';
-import { SortByDirective, SortDirective, SortService, SortState, sortStateSignal } from 'app/shared/sort';
+import {
+  SortByDirective,
+  SortDirective,
+  SortService,
+  SortState,
+  sortStateSignal,
+} from 'app/shared/sort';
 import { ITEMS_PER_PAGE } from 'app/config/pagination.constants';
 import { SORT } from 'app/config/navigation.constants';
 import { ProductService } from 'app/entities/product/product.service';
@@ -14,13 +24,20 @@ import { IProduct } from 'app/entities/product/product.model';
 import ProductDeleteDialogComponent from '../delete/product-delete-dialog.component';
 import { NotificationService } from 'app/shared/notification/notification.service';
 import { ApplicationConfigService } from 'app/core/config/application-config.service';
-import { ItemCountComponent } from 'app/shared/pagination'; // Import ItemCountComponent
+import { ItemCountComponent } from 'app/shared/pagination';
 
 @Component({
   selector: 'jhi-product-management',
   standalone: true,
   templateUrl: './product-management.component.html',
-  imports: [RouterModule, SharedModule, SortDirective, SortByDirective, NgbPaginationModule, ItemCountComponent], // Add NgbPaginationModule and ItemCountComponent
+  imports: [
+    RouterModule,
+    SharedModule,
+    SortDirective,
+    SortByDirective,
+    NgbPaginationModule,
+    ItemCountComponent,
+  ],
 })
 export default class ProductManagementComponent implements OnInit {
   products = signal<IProduct[] | null>(null);
@@ -30,7 +47,7 @@ export default class ProductManagementComponent implements OnInit {
   page!: number;
   sortState = sortStateSignal({});
   searchTerm = signal<string>('');
-  private searchTimeout: any;
+  private searchTimeout?: number;
 
   private readonly productService = inject(ProductService);
   private readonly activatedRoute = inject(ActivatedRoute);
@@ -45,14 +62,17 @@ export default class ProductManagementComponent implements OnInit {
     this.handleNavigation();
   }
 
-  trackIdentity(item: IProduct): number {
-    return item.id ?? 0;
+  trackIdentity(index: number, item: IProduct): number {
+    return item.id ?? index;
   }
 
   deleteProduct(product: IProduct): void {
-    const modalRef = this.modalService.open(ProductDeleteDialogComponent, { size: 'lg', backdrop: 'static' });
+    const modalRef = this.modalService.open(ProductDeleteDialogComponent, {
+      size: 'lg',
+      backdrop: 'static',
+    });
     modalRef.componentInstance.product = product;
-    modalRef.closed.subscribe(reason => {
+    modalRef.closed.subscribe((reason) => {
       if (reason === 'deleted') {
         this.loadAll();
       }
@@ -60,6 +80,7 @@ export default class ProductManagementComponent implements OnInit {
   }
 
   loadAll(): void {
+    if (!this.page) this.page = 1;
     this.isLoading.set(true);
     const params: any = {
       page: this.page - 1,
@@ -67,9 +88,8 @@ export default class ProductManagementComponent implements OnInit {
       sort: this.sortService.buildSortParam(this.sortState(), 'id'),
     };
 
-    // Thêm tham số tìm kiếm nếu có
     if (this.searchTerm()) {
-      params.nameContains = this.searchTerm();
+      params['name.contains'] = this.searchTerm();
     }
 
     this.productService.query(params).subscribe({
@@ -77,7 +97,7 @@ export default class ProductManagementComponent implements OnInit {
         this.isLoading.set(false);
         this.onSuccess(res.body, res.headers);
       },
-      error: error => {
+      error: (error) => {
         console.error('Failed to load products:', error);
         this.isLoading.set(false);
         this.notify.error('Không thể tải danh sách sản phẩm.');
@@ -86,11 +106,10 @@ export default class ProductManagementComponent implements OnInit {
   }
 
   onSearchChange(): void {
-    // Debounce search
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
-    this.searchTimeout = setTimeout(() => {
+    this.searchTimeout = window.setTimeout(() => {
       this.page = 1;
       this.loadAll();
     }, 300);
@@ -113,12 +132,13 @@ export default class ProductManagementComponent implements OnInit {
   }
 
   transition(sortState?: SortState): void {
-    this.router.navigate(['./'], {
-      relativeTo: this.activatedRoute.parent,
+    this.router.navigate([], {
+      relativeTo: this.activatedRoute,
       queryParams: {
         page: this.page,
         sort: this.sortService.buildSortParam(sortState ?? this.sortState()),
       },
+      queryParamsHandling: 'merge',
     });
   }
 
@@ -137,7 +157,7 @@ export default class ProductManagementComponent implements OnInit {
         this.loadAll();
         this.notify.success('Sản phẩm đã được cập nhật.');
       },
-      error: error => {
+      error: (error) => {
         console.error('Failed to toggle featured status:', error);
         this.notify.error('Cập nhật trạng thái nổi bật thất bại!');
       },
@@ -145,28 +165,23 @@ export default class ProductManagementComponent implements OnInit {
   }
 
   exportProducts(): void {
-    this.http.get(this.applicationConfigService.getEndpointFor('api/admin/export/products'), { responseType: 'blob' }).subscribe({
-      next: (data: Blob) => {
-        this.downloadFile(data, 'products.xlsx');
-        this.notify.success('Export sản phẩm thành công!');
-      },
-      error: error => {
-        console.error('Failed to export products:', error);
-        this.notify.error('Export sản phẩm thất bại!');
-      },
-    });
-  }
-
-  private downloadFile(data: Blob, filename: string): void {
-    const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    this.http
+      .get(
+        this.applicationConfigService.getEndpointFor(
+          'api/admin/export/products',
+        ),
+        { responseType: 'blob' },
+      )
+      .subscribe({
+        next: (data: Blob) => {
+          this.downloadFile(data, 'products.xlsx');
+          this.notify.success('Export sản phẩm thành công!');
+        },
+        error: (error) => {
+          console.error('Failed to export products:', error);
+          this.notify.error('Export sản phẩm thất bại!');
+        },
+      });
   }
 
   importProducts(event: Event): void {
@@ -179,26 +194,55 @@ export default class ProductManagementComponent implements OnInit {
     const formData = new FormData();
     formData.append('file', file, file.name);
 
-    this.http.post(this.applicationConfigService.getEndpointFor('api/admin/import/products'), formData).subscribe({
-      next: () => {
-        this.notify.success('Import sản phẩm thành công!');
-        this.loadAll();
-        input.value = '';
-      },
-      error: (error: HttpErrorResponse) => {
-        console.error('Failed to import products');
-        const errorMessage = error.error?.message || error.error?.detail || 'Import sản phẩm thất bại.';
-        this.notify.error(errorMessage);
-        input.value = '';
-      },
+    this.http
+      .post(
+        this.applicationConfigService.getEndpointFor(
+          'api/admin/import/products',
+        ),
+        formData,
+      )
+      .subscribe({
+        next: () => {
+          this.notify.success('Import sản phẩm thành công!');
+          this.loadAll();
+          input.value = '';
+        },
+        error: (error: HttpErrorResponse) => {
+          console.error('Failed to import products');
+          const errorMessage =
+            error.error?.message ??
+            error.error?.detail ??
+            'Import sản phẩm thất bại.';
+          this.notify.error(errorMessage);
+          input.value = '';
+        },
+      });
+  }
+
+  private downloadFile(data: Blob, filename: string): void {
+    const blob = new Blob([data], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   }
 
   private handleNavigation(): void {
-    combineLatest([this.activatedRoute.data, this.activatedRoute.queryParamMap]).subscribe(([data, params]) => {
+    combineLatest([
+      this.activatedRoute.data,
+      this.activatedRoute.queryParamMap,
+    ]).subscribe(([data, params]) => {
       const page = params.get('page');
       this.page = +(page ?? 1);
-      this.sortState.set(this.sortService.parseSortParam(params.get(SORT) ?? data.defaultSort));
+      this.sortState.set(
+        this.sortService.parseSortParam(params.get(SORT) ?? data.defaultSort),
+      );
       this.loadAll();
     });
   }
@@ -206,10 +250,7 @@ export default class ProductManagementComponent implements OnInit {
   private onSuccess(products: IProduct[] | null, headers: HttpHeaders): void {
     this.totalItems.set(Number(headers.get('X-Total-Count')));
     if (products) {
-      const sortedProducts = [...products].sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
-      this.products.set(sortedProducts);
-    } else {
-      this.products.set(null);
+      this.products.set(products);
     }
   }
 }

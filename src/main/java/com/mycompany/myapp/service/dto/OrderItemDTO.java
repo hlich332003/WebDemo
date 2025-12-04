@@ -7,8 +7,8 @@ public class OrderItemDTO implements Serializable {
 
     private Long productId;
     private Integer quantity;
-    private Double price;
-    private String productName; // Thêm productName để lưu vào OrderItem entity
+    private Double price; // Hoàn tác về Double
+    private String productName;
 
     public Long getProductId() {
         return productId;
@@ -26,11 +26,11 @@ public class OrderItemDTO implements Serializable {
         this.quantity = quantity;
     }
 
-    public Double getPrice() {
+    public Double getPrice() { // Hoàn tác về Double
         return price;
     }
 
-    public void setPrice(Double price) {
+    public void setPrice(Double price) { // Hoàn tác về Double
         this.price = price;
     }
 

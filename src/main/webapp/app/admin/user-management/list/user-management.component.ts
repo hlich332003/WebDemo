@@ -38,7 +38,10 @@ export default class UserManagementComponent implements OnInit {
     this.userService.update({ ...user, activated: isActivated }).subscribe(() => this.loadAll());
   }
 
-  trackIdentity(item: User): number {
+  trackIdentity(item: User): number;
+  trackIdentity(index: number, item: User): number;
+  trackIdentity(a: any, b?: any): number {
+    const item: User = b ?? a;
     return item.id!;
   }
 
@@ -65,26 +68,7 @@ export default class UserManagementComponent implements OnInit {
     });
   }
 
-  private onSuccess(users: User[] | null, headers: HttpHeaders): void {
-    this.totalItems.set(Number(headers.get('X-Total-Count')));
-
-    // Lọc người dùng dựa trên searchTerm nếu có
-    if (users && this.searchTerm()) {
-      const term = this.searchTerm().toLowerCase();
-      const filtered = users.filter(
-        user =>
-          user.login?.toLowerCase().includes(term) ||
-          user.email?.toLowerCase().includes(term) ||
-          user.firstName?.toLowerCase().includes(term) ||
-          user.lastName?.toLowerCase().includes(term) ||
-          user.phone?.toLowerCase().includes(term),
-      );
-      this.users.set(filtered);
-    } else {
-      this.users.set(users);
-    }
-  }
-
+  // Public interaction methods (search + navigation)
   onSearchChange(): void {
     // Debounce search
     if (this.searchTimeout) {
@@ -108,5 +92,25 @@ export default class UserManagementComponent implements OnInit {
 
   transition(): void {
     this.loadAll();
+  }
+
+  private onSuccess(users: User[] | null, headers: HttpHeaders): void {
+    this.totalItems.set(Number(headers.get('X-Total-Count')));
+
+    // Lọc người dùng dựa trên searchTerm nếu có
+    if (users && this.searchTerm()) {
+      const term = this.searchTerm().toLowerCase();
+      const filtered = users.filter(
+        user =>
+          (user.login?.toLowerCase() ?? '').includes(term) ||
+          (user.email?.toLowerCase() ?? '').includes(term) ||
+          (user.firstName?.toLowerCase() ?? '').includes(term) ||
+          (user.lastName?.toLowerCase() ?? '').includes(term) ||
+          (user.phone?.toLowerCase() ?? '').includes(term),
+      );
+      this.users.set(filtered);
+    } else {
+      this.users.set(users);
+    }
   }
 }

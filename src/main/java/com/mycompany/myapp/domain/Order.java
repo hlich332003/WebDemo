@@ -1,21 +1,14 @@
 package com.mycompany.myapp.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.mycompany.myapp.domain.enumeration.OrderStatus; // Import OrderStatus enum
+import com.mycompany.myapp.domain.enumeration.OrderStatus;
 import com.mycompany.myapp.web.rest.dto.OrderSearchDTO;
 import jakarta.persistence.*;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * A Order.
- *
- * SqlResultSetMapping cho native query search
- * Theo chuẩn Baeldung: https://www.baeldung.com/jpa-sql-resultset-mapping
- */
 @Entity
 @Table(name = "jhi_order")
 @SqlResultSetMapping(
@@ -26,7 +19,7 @@ import java.util.Set;
             @ColumnResult(name = "id", type = Long.class),
             @ColumnResult(name = "customerLogin", type = String.class),
             @ColumnResult(name = "orderDate", type = Instant.class),
-            @ColumnResult(name = "totalAmount", type = Double.class),
+            @ColumnResult(name = "totalAmount", type = Double.class), // Hoàn tác về Double
             @ColumnResult(name = "status", type = String.class),
         }
     )
@@ -45,35 +38,35 @@ public class Order implements Serializable {
     private Instant orderDate;
 
     @Column(name = "total_amount")
-    private Double totalAmount;
+    private Double totalAmount; // Hoàn tác về Double
 
-    @Enumerated(EnumType.STRING) // Chú thích cho Enum
-    @Column(name = "status")
-    private OrderStatus status; // Thay đổi kiểu dữ liệu thành OrderStatus enum
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 50, columnDefinition = "NVARCHAR(50)")
+    private OrderStatus status;
 
-    @Column(name = "customer_full_name")
+    @Column(name = "customer_full_name", length = 255, columnDefinition = "NVARCHAR(255)")
     private String customerFullName;
 
-    @Column(name = "customer_email")
+    @Column(name = "customer_email", length = 254, columnDefinition = "NVARCHAR(254)")
     private String customerEmail;
 
-    @Column(name = "customer_phone")
+    @Column(name = "customer_phone", length = 10, columnDefinition = "NVARCHAR(10)")
     private String customerPhone;
 
-    @Column(name = "delivery_address")
+    @Column(name = "delivery_address", length = 255, columnDefinition = "NVARCHAR(255)")
     private String deliveryAddress;
 
-    @Column(name = "payment_method")
+    @Column(name = "payment_method", length = 50, columnDefinition = "NVARCHAR(50)")
     private String paymentMethod;
 
-    @Column(name = "order_code", unique = true, nullable = false)
+    @Column(name = "order_code", unique = true, nullable = false, length = 255, columnDefinition = "NVARCHAR(255)")
     private String orderCode;
 
-    @Column(name = "notes", length = 500)
+    @Column(name = "notes", length = 500, columnDefinition = "NVARCHAR(500)")
     private String notes;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "user_id") // Explicitly map to user_id column
+    @JoinColumn(name = "user_id")
     @JsonIgnoreProperties(value = { "authorities", "orders" }, allowSetters = true)
     private User customer;
 
@@ -81,15 +74,10 @@ public class Order implements Serializable {
     @JsonIgnoreProperties(value = { "order" }, allowSetters = true)
     private Set<OrderItem> items = new HashSet<>();
 
-    // jhipster-needle-entity-add-field - JHipster will add fields here
+    // Getters and setters
 
     public Long getId() {
         return this.id;
-    }
-
-    public Order id(Long id) {
-        this.setId(id);
-        return this;
     }
 
     public void setId(Long id) {
@@ -100,38 +88,23 @@ public class Order implements Serializable {
         return this.orderDate;
     }
 
-    public Order orderDate(Instant orderDate) {
-        this.setOrderDate(orderDate);
-        return this;
-    }
-
     public void setOrderDate(Instant orderDate) {
         this.orderDate = orderDate;
     }
 
-    public Double getTotalAmount() {
+    public Double getTotalAmount() { // Hoàn tác về Double
         return this.totalAmount;
     }
 
-    public Order totalAmount(Double totalAmount) {
-        this.setTotalAmount(totalAmount);
-        return this;
-    }
-
-    public void setTotalAmount(Double totalAmount) {
+    public void setTotalAmount(Double totalAmount) { // Hoàn tác về Double
         this.totalAmount = totalAmount;
     }
 
-    public OrderStatus getStatus() { // Getter trả về OrderStatus
+    public OrderStatus getStatus() {
         return this.status;
     }
 
-    public Order status(OrderStatus status) { // Setter nhận OrderStatus
-        this.setStatus(status);
-        return this;
-    }
-
-    public void setStatus(OrderStatus status) { // Setter nhận OrderStatus
+    public void setStatus(OrderStatus status) {
         this.status = status;
     }
 
@@ -199,11 +172,6 @@ public class Order implements Serializable {
         this.customer = user;
     }
 
-    public Order customer(User user) {
-        this.setCustomer(user);
-        return this;
-    }
-
     public Set<OrderItem> getItems() {
         return this.items;
     }
@@ -217,25 +185,6 @@ public class Order implements Serializable {
         }
         this.items = orderItems;
     }
-
-    public Order items(Set<OrderItem> orderItems) {
-        this.setItems(orderItems);
-        return this;
-    }
-
-    public Order addItems(OrderItem orderItem) {
-        this.items.add(orderItem);
-        orderItem.setOrder(this);
-        return this;
-    }
-
-    public Order removeItems(OrderItem orderItem) {
-        this.items.remove(orderItem);
-        orderItem.setOrder(null);
-        return this;
-    }
-
-    // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
 
     @Override
     public boolean equals(Object o) {
@@ -254,11 +203,9 @@ public class Order implements Serializable {
 
     @Override
     public int hashCode() {
-        // see https://vladmihalcea.com/how-to-implement-equals-and-hashcode-using-the-jpa-entity-identifier/
         return getClass().hashCode();
     }
 
-    // prettier-ignore
     @Override
     public String toString() {
         return "Order{" +

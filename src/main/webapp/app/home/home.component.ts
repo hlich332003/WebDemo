@@ -70,14 +70,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   loadAllData(): void {
     this.isLoading = true;
     forkJoin([
-      this.categoryService.getFeaturedCategories().pipe(map((res: HttpResponse<ICategory[]>) => res.body ?? [])),
+      this.categoryService.query().pipe(map((res: HttpResponse<ICategory[]>) => res.body ?? [])),
       this.productService.query({ size: 1000, sort: ['id,desc'] }).pipe(map((res: HttpResponse<IProduct[]>) => res.body ?? [])),
     ]).subscribe({
       next: ([featuredCats, allProducts]) => {
         console.log('🔍 DEBUG - Total products loaded:', allProducts.length);
         console.log('🔍 DEBUG - First 3 products:', allProducts.slice(0, 3));
         console.log('🔍 DEBUG - Products with imageUrl:', allProducts.filter(p => p.imageUrl).length);
-        console.log('🔍 DEBUG - Products with isFeatured=true:', allProducts.filter(p => p.isFeatured).length);
+        console.log('🔍 DEBUG - Products with isPinned=true:', allProducts.filter(p => p.isPinned).length);
 
         this.featuredCategories = featuredCats;
         this.products = allProducts;
@@ -85,20 +85,20 @@ export class HomeComponent implements OnInit, OnDestroy {
         // Lấy 12 sản phẩm mới nhất (sắp xếp theo id giảm dần)
         this.newProducts = allProducts.slice(0, 12);
 
-        // Best sellers: Ưu tiên sản phẩm GHIM (isFeatured = true)
-        const featuredProducts = allProducts.filter(p => p.isFeatured === true);
-        const lowStockProducts = allProducts
-          .filter(p => p.isFeatured !== true && p.quantity !== null && p.quantity !== undefined && p.quantity < 50)
-          .slice(0, 8 - featuredProducts.length);
+        // Best sellers: ưu tiên sản phẩm được GHIM (isPinned = true), sau đó theo salesCount giảm dần
+        const pinned = allProducts.filter(p => p.isPinned === true);
+        const notPinned = allProducts.filter(p => p.isPinned !== true);
 
-        // Ghép sản phẩm ghim + sản phẩm bán chạy (stock thấp)
-        this.bestSellerProducts = [...featuredProducts, ...lowStockProducts].slice(0, 8);
+        // Sắp xếp notPinned theo salesCount giảm dần (null -> 0)
+        notPinned.sort((a, b) => (b.salesCount ?? 0) - (a.salesCount ?? 0));
 
-        // Nếu vẫn không đủ 8, lấy thêm sản phẩm khác
-        if (this.bestSellerProducts.length < 8) {
-          const remaining = allProducts.filter(p => !this.bestSellerProducts.includes(p)).slice(0, 8 - this.bestSellerProducts.length);
-          this.bestSellerProducts = [...this.bestSellerProducts, ...remaining];
-        }
+        const lowStockCandidates = notPinned.filter(p => p.quantity !== null && p.quantity !== undefined && p.quantity < 50);
+
+        // Ghép sản phẩm ghim + những sản phẩm bán chạy/low stock
+        const combined: IProduct[] = [...pinned, ...lowStockCandidates, ...notPinned];
+
+        // Lấy tối đa 8
+        this.bestSellerProducts = combined.slice(0, 8);
 
         this.featuredCategories.forEach(category => {
           category.products = this.products.filter(product => product.category?.id === category.id);

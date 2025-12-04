@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,13 +43,20 @@ public class JwtBlacklistFilter extends OncePerRequestFilter {
         throws ServletException, IOException {
         String token = extractToken(request);
 
-        if (token != null && tokenBlacklistService.isBlacklisted(token)) {
-            log.warn("Blacklisted token detected from IP: {}", request.getRemoteAddr());
-            SecurityContextHolder.clearContext();
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\":\"Token has been revoked\",\"message\":\"Please login again\"}");
-            return;
+        if (token != null) {
+            try {
+                if (tokenBlacklistService.isBlacklisted(token)) {
+                    log.warn("Blacklisted token detected from IP: {} for URI: {}", request.getRemoteAddr(), request.getRequestURI());
+                    SecurityContextHolder.clearContext();
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\":\"Token has been revoked\",\"message\":\"Please login again\"}");
+                    return;
+                }
+            } catch (Exception ex) {
+                // If Redis is unavailable or check fails, do not block public endpoints — log and continue the filter chain.
+                log.error("Error while checking token blacklist: {}. Proceeding without blocking.", ex.getMessage());
+            }
         }
 
         filterChain.doFilter(request, response);
@@ -64,7 +72,31 @@ public class JwtBlacklistFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        // Bỏ qua filter này nếu request URI khớp với bất kỳ endpoint public nào
-        return publicEndpoints.stream().anyMatch(p -> pathMatcher.match(p, request.getRequestURI()));
+        // Use servlet path (which excludes context path) for matching so filter is robust when app has context path
+        final String servletPath = request.getServletPath() == null ? request.getRequestURI() : request.getServletPath();
+        final String requestUri = request.getRequestURI();
+        final String pathInfo = request.getPathInfo();
+
+        // Build a small set of path candidates to match against public endpoints to be defensive
+        List<String> candidates = new ArrayList<>();
+        if (servletPath != null) candidates.add(servletPath);
+        if (requestUri != null) candidates.add(requestUri);
+        if (pathInfo != null) candidates.add(pathInfo);
+
+        for (String p : publicEndpoints) {
+            for (String candidate : candidates) {
+                if (candidate == null) continue;
+                try {
+                    if (pathMatcher.match(p, candidate) || candidate.startsWith(p.replace("/**", ""))) {
+                        return true;
+                    }
+                } catch (Exception ex) {
+                    if (candidate.contains(p.replace("**", ""))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

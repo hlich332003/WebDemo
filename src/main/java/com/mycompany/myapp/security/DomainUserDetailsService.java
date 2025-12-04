@@ -49,22 +49,25 @@ public class DomainUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User with phone " + login + " was not found in the database"));
         }
 
+        // Fallback: the repository supports a combined lookup (email OR phone) via findOneWithAuthoritiesByLogin
+        // This covers cases where the identifier isn't clearly an email or pure phone number
         return userRepository
-            .findOneWithAuthoritiesByLogin(login.toLowerCase(Locale.ENGLISH))
+            .findOneWithAuthoritiesByLogin(login)
             .map(user -> createSpringSecurityUser(login, user))
             .orElseThrow(() -> new UsernameNotFoundException("User " + login + " was not found in the database"));
     }
 
-    private org.springframework.security.core.userdetails.User createSpringSecurityUser(String lowercaseLogin, User user) {
+    private org.springframework.security.core.userdetails.User createSpringSecurityUser(String username, User user) {
         if (!user.isActivated()) {
-            throw new UserNotActivatedException("User " + lowercaseLogin + " was not activated");
+            throw new UserNotActivatedException("User " + username + " was not activated");
         }
         List<GrantedAuthority> grantedAuthorities = user
             .getAuthorities()
             .stream()
             .map(authority -> new SimpleGrantedAuthority(authority.getName()))
             .collect(Collectors.toList());
-        return new UserWithId(user.getLogin(), user.getPassword(), grantedAuthorities, user.getId());
+        String principal = username; // use the provided login identifier (email or phone)
+        return new UserWithId(principal, user.getPassword(), grantedAuthorities, user.getId());
     }
 
     public static class UserWithId extends org.springframework.security.core.userdetails.User {

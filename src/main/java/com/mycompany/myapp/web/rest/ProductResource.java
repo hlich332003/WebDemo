@@ -16,8 +16,8 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-// import org.springframework.cache.annotation.CacheEvict; // Tạm thời vô hiệu hóa
-// import org.springframework.cache.annotation.Cacheable; // Tạm thời vô hiệu hóa
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -54,22 +54,21 @@ public class ProductResource {
 
     @PostMapping("/products")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    // @CacheEvict(value = "products", allEntries = true) // Tạm thời vô hiệu hóa
-    public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) throws URISyntaxException {
+    @CacheEvict(value = "products", allEntries = true)
+    public Product createProduct(@Valid @RequestBody Product product) throws URISyntaxException { // Thay đổi kiểu trả về
         log.debug("REST request to save Product : {}", product);
         if (product.getId() != null) {
             throw new BadRequestAlertException("A new product cannot already have an ID", ENTITY_NAME, "idexists");
         }
         Product result = productService.save(product);
-        return ResponseEntity.created(new URI("/api/products/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
-            .body(result);
+        // Trả về body trực tiếp
+        return result;
     }
 
     @PutMapping("/products/{id}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    // @CacheEvict(value = "products", allEntries = true) // Tạm thời vô hiệu hóa
-    public ResponseEntity<Product> updateProduct(
+    @CacheEvict(value = "products", allEntries = true)
+    public Product updateProduct( // Thay đổi kiểu trả về
         @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestBody Product product
     ) {
@@ -86,15 +85,14 @@ public class ProductResource {
         }
 
         Product result = productService.update(product);
-        return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, product.getId().toString()))
-            .body(result);
+        // Trả về body trực tiếp
+        return result;
     }
 
     @PatchMapping(value = "/products/{id}", consumes = { "application/json", "application/merge-patch+json" })
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    // @CacheEvict(value = "products", allEntries = true) // Tạm thời vô hiệu hóa
-    public ResponseEntity<Product> partialUpdateProduct(
+    @CacheEvict(value = "products", allEntries = true)
+    public Product partialUpdateProduct( // Thay đổi kiểu trả về
         @PathVariable(value = "id", required = false) final Long id,
         @NotNull @RequestBody Product product
     ) {
@@ -112,32 +110,25 @@ public class ProductResource {
 
         Optional<Product> result = productService.partialUpdate(product);
 
-        return ResponseUtil.wrapOrNotFound(
-            result,
-            HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, product.getId().toString())
-        );
+        // Trả về body trực tiếp
+        return result.orElse(null);
     }
 
     @PatchMapping("/products/{id}/toggle-featured")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    // @CacheEvict(value = "products", allEntries = true) // Tạm thời vô hiệu hóa
     public ResponseEntity<Product> toggleProductFeatured(@PathVariable Long id) {
-        log.debug("REST request to toggle featured status for Product : {}", id);
-        Optional<Product> existingProduct = productService.findOne(id);
-        if (existingProduct.isEmpty()) {
-            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
-        }
-        Product product = existingProduct.get();
-        product.setIsFeatured(!product.getIsFeatured());
-        Product result = productService.update(product);
-        return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
-            .body(result);
+        log.debug("REST request to toggle pinned status for Product : {}", id);
+        // is_pinned column was removed from the schema. Inform the caller.
+        throw new BadRequestAlertException(
+            "Pin/unpin feature is not supported by the current database schema. Use sales_count or implement a separate pin store.",
+            ENTITY_NAME,
+            "notimplemented"
+        );
     }
 
     @GetMapping("/products")
-    // @Cacheable(value = "products", key = "{#pageable.pageNumber, #pageable.pageSize, #pageable.sort}") // Tạm thời vô hiệu hóa
-    public ResponseEntity<List<Product>> getAllProducts(
+    @Cacheable(value = "products", key = "{#pageable.pageNumber, #pageable.pageSize, #pageable.sort}")
+    public List<Product> getAllProducts( // Thay đổi kiểu trả về
         @org.springdoc.core.annotations.ParameterObject Pageable pageable,
         @RequestParam(value = "categorySlug", required = false) String categorySlug,
         @RequestParam(value = "nameContains", required = false) String nameContains,
@@ -163,29 +154,29 @@ public class ProductResource {
         }
 
         Page<Product> page = productService.findAllWithFilters(pageable, categorySlug, resolvedName);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return ResponseEntity.ok().headers(headers).body(page.getContent());
+        // Không cần tạo HttpHeaders ở đây nếu không trả về ResponseEntity
+        return page.getContent(); // Chỉ trả về body
     }
 
     @GetMapping("/products/featured")
-    // @Cacheable(value = "products", key = "'featured'") // Tạm thời vô hiệu hóa
-    public ResponseEntity<List<Product>> getFeaturedProducts() {
+    @Cacheable(value = "products", key = "'featured'")
+    public List<Product> getFeaturedProducts() { // Thay đổi kiểu trả về
         log.debug("REST request to get all featured Products");
         List<Product> products = productService.findAllFeatured();
-        return ResponseEntity.ok().body(products);
+        return products; // Chỉ trả về body
     }
 
     @GetMapping("/products/{id}")
-    // @Cacheable(value = "products", key = "#id") // Tạm thời vô hiệu hóa
-    public ResponseEntity<Product> getProduct(@PathVariable Long id) {
+    @Cacheable(value = "products", key = "#id")
+    public Product getProduct(@PathVariable Long id) { // Thay đổi kiểu trả về
         log.debug("REST request to get Product : {}", id);
         Optional<Product> product = productService.findOne(id);
-        return ResponseUtil.wrapOrNotFound(product);
+        return product.orElse(null); // Chỉ trả về body
     }
 
     @DeleteMapping("/products/{id}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    // @CacheEvict(value = "products", allEntries = true) // Tạm thời vô hiệu hóa
+    @CacheEvict(value = "products", allEntries = true)
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         log.debug("REST request to delete Product : {}", id);
 
@@ -198,7 +189,7 @@ public class ProductResource {
             productService.delete(id);
             return ResponseEntity.noContent()
                 .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
-                .build();
+            .build();
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
             log.error("Cannot delete product due to foreign key constraint: {}", e.getMessage());
             throw new BadRequestAlertException(

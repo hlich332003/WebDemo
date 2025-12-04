@@ -2,7 +2,7 @@ package com.mycompany.myapp.web.rest;
 
 import com.mycompany.myapp.domain.Category;
 import com.mycompany.myapp.repository.CategoryRepository;
-import com.mycompany.myapp.security.AuthoritiesConstants; // Import AuthoritiesConstants
+import com.mycompany.myapp.security.AuthoritiesConstants;
 import com.mycompany.myapp.service.CategoryService;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
@@ -15,11 +15,13 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize; // Import PreAuthorize
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
@@ -50,7 +52,8 @@ public class CategoryResource {
     }
 
     @PostMapping("/categories")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")") // Chỉ admin mới có thể tạo danh mục
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @CacheEvict(value = "categories", allEntries = true)
     public ResponseEntity<Category> createCategory(@Valid @RequestBody Category category) throws URISyntaxException {
         log.debug("REST request to save Category : {}", category);
         if (category.getId() != null) {
@@ -63,7 +66,8 @@ public class CategoryResource {
     }
 
     @PutMapping("/categories/{id}")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")") // Chỉ admin mới có thể cập nhật danh mục
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @CacheEvict(value = "categories", allEntries = true)
     public ResponseEntity<Category> updateCategory(
         @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestBody Category category
@@ -87,7 +91,8 @@ public class CategoryResource {
     }
 
     @PatchMapping(value = "/categories/{id}", consumes = { "application/json", "application/merge-patch+json" })
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")") // Chỉ admin mới có thể cập nhật một phần danh mục
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @CacheEvict(value = "categories", allEntries = true)
     public ResponseEntity<Category> partialUpdateCategory(
         @PathVariable(value = "id", required = false) final Long id,
         @NotNull @RequestBody Category category
@@ -112,46 +117,26 @@ public class CategoryResource {
         );
     }
 
-    @PatchMapping("/categories/{id}/toggle-featured")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")") // Chỉ admin mới có thể ghim danh mục
-    public ResponseEntity<Category> toggleCategoryFeatured(@PathVariable Long id) {
-        log.debug("REST request to toggle featured status for Category : {}", id);
-        Optional<Category> existingCategory = categoryService.findOne(id);
-        if (existingCategory.isEmpty()) {
-            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
-        }
-        Category category = existingCategory.get();
-        category.setIsFeatured(!category.getIsFeatured()); // Đảo ngược trạng thái isFeatured
-        Category result = categoryService.save(category);
-        return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
-            .body(result);
-    }
-
     @GetMapping("/categories")
-    public ResponseEntity<List<Category>> getAllCategories(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
+    @Cacheable(value = "categories", key = "{#pageable.pageNumber, #pageable.pageSize, #pageable.sort}")
+    public List<Category> getAllCategories(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
         log.debug("REST request to get a page of Categories");
         Page<Category> page = categoryService.findAll(pageable);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return ResponseEntity.ok().headers(headers).body(page.getContent());
-    }
-
-    @GetMapping("/categories/featured")
-    public ResponseEntity<List<Category>> getFeaturedCategories() {
-        log.debug("REST request to get all featured Categories");
-        List<Category> categories = categoryService.findAllFeatured();
-        return ResponseEntity.ok().body(categories);
+        // Không cần tạo HttpHeaders ở đây nếu không trả về ResponseEntity
+        return page.getContent(); // Chỉ trả về body
     }
 
     @GetMapping("/categories/{id}")
-    public ResponseEntity<Category> getCategory(@PathVariable Long id) {
+    @Cacheable(value = "categories", key = "#id")
+    public Category getCategory(@PathVariable Long id) {
         log.debug("REST request to get Category : {}", id);
         Optional<Category> category = categoryService.findOne(id);
-        return ResponseUtil.wrapOrNotFound(category);
+        return category.orElse(null); // Chỉ trả về body
     }
 
     @DeleteMapping("/categories/{id}")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")") // Chỉ admin mới có thể xóa danh mục
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @CacheEvict(value = "categories", allEntries = true)
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
         log.debug("REST request to delete Category : {}", id);
         categoryService.delete(id);

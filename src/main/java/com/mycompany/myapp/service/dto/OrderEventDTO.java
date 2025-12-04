@@ -8,11 +8,11 @@ public class OrderEventDTO implements Serializable {
     private String orderCode;
     private String customerEmail;
     private String customerName;
-    private Double totalAmount;
+    private Double totalAmount; // Hoàn tác về Double
 
     public OrderEventDTO() {}
 
-    public OrderEventDTO(Long orderId, String orderCode, String customerEmail, String customerName, Double totalAmount) {
+    public OrderEventDTO(Long orderId, String orderCode, String customerEmail, String customerName, Double totalAmount) { // Hoàn tác về Double
         this.orderId = orderId;
         this.orderCode = orderCode;
         this.customerEmail = customerEmail;
@@ -52,11 +52,11 @@ public class OrderEventDTO implements Serializable {
         this.customerName = customerName;
     }
 
-    public Double getTotalAmount() {
+    public Double getTotalAmount() { // Hoàn tác về Double
         return totalAmount;
     }
 
-    public void setTotalAmount(Double totalAmount) {
+    public void setTotalAmount(Double totalAmount) { // Hoàn tác về Double
         this.totalAmount = totalAmount;
     }
 }

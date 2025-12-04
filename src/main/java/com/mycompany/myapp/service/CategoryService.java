@@ -2,12 +2,10 @@ package com.mycompany.myapp.service;
 
 import com.mycompany.myapp.domain.Category;
 import com.mycompany.myapp.repository.CategoryRepository;
-import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -34,7 +32,7 @@ public class CategoryService {
      * @param category the entity to save.
      * @return the persisted entity.
      */
-    @CacheEvict(value = { "categories", "featuredCategories" }, allEntries = true)
+    @CacheEvict(value = { "categories" }, allEntries = true)
     public Category save(Category category) {
         log.debug("Request to save Category : {}", category);
         return categoryRepository.save(category);
@@ -46,7 +44,7 @@ public class CategoryService {
      * @param category the entity to save.
      * @return the persisted entity.
      */
-    @CacheEvict(value = { "categories", "featuredCategories" }, allEntries = true)
+    @CacheEvict(value = { "categories" }, allEntries = true)
     public Category update(Category category) {
         log.debug("Request to update Category : {}", category);
         return categoryRepository.save(category);
@@ -58,7 +56,7 @@ public class CategoryService {
      * @param category the entity to update partially.
      * @return the persisted entity.
      */
-    @CacheEvict(value = { "categories", "featuredCategories" }, allEntries = true)
+    @CacheEvict(value = { "categories" }, allEntries = true)
     public Optional<Category> partialUpdate(Category category) {
         log.debug("Request to partially update Category : {}", category);
 
@@ -70,9 +68,6 @@ public class CategoryService {
                 }
                 if (category.getSlug() != null) {
                     existingCategory.setSlug(category.getSlug());
-                }
-                if (category.getIsFeatured() != null) { // Thêm logic cập nhật isFeatured
-                    existingCategory.setIsFeatured(category.getIsFeatured());
                 }
 
                 return existingCategory;
@@ -93,18 +88,6 @@ public class CategoryService {
     }
 
     /**
-     * Get all featured categories.
-     *
-     * @return the list of featured entities.
-     */
-    @Transactional(readOnly = true)
-    @Cacheable(value = "featuredCategories")
-    public List<Category> findAllFeatured() {
-        log.debug("Request to get all featured Categories");
-        return categoryRepository.findByIsFeaturedTrue();
-    }
-
-    /**
      * Get one category by id.
      *
      * @param id the id of the entity.
@@ -121,7 +104,7 @@ public class CategoryService {
      *
      * @param id the id of the entity.
      */
-    @CacheEvict(value = { "categories", "featuredCategories" }, allEntries = true)
+    @CacheEvict(value = { "categories" }, allEntries = true)
     public void delete(Long id) {
         log.debug("Request to delete Category : {}", id);
         categoryRepository.deleteById(id);

@@ -1,79 +1,153 @@
-import { AfterViewInit, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
-import { RouterModule } from '@angular/router';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  ViewChild,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  FormControl,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { Router } from '@angular/router';
+import { TranslateService } from '@ngx-translate/core';
 
-import { EMAIL_ALREADY_USED_TYPE, LOGIN_ALREADY_USED_TYPE } from 'app/config/error.constants';
 import SharedModule from 'app/shared/shared.module';
-import PasswordStrengthBarComponent from '../password/password-strength-bar/password-strength-bar.component';
+// import PasswordStrengthBarComponent from './password/password-strength-bar.component'; // Đã xóa import
 import { RegisterService } from './register.service';
+import { LoginService } from 'app/login/login.service';
+import { NotificationService } from 'app/shared/notification/notification.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'jhi-register',
   standalone: true,
-  imports: [SharedModule, RouterModule, FormsModule, ReactiveFormsModule, PasswordStrengthBarComponent],
+  imports: [
+    SharedModule,
+    FormsModule,
+    ReactiveFormsModule,
+    // PasswordStrengthBarComponent, // Đã xóa khỏi imports
+  ],
   templateUrl: './register.component.html',
-  styleUrls: ['./register.component.scss'],
 })
 export default class RegisterComponent implements AfterViewInit {
-  emailInput = viewChild.required<ElementRef>('email');
+  @ViewChild('login', { static: false })
+  login?: ElementRef;
 
   doNotMatch = signal(false);
   error = signal(false);
-  errorEmailExists = signal(false);
   errorUserExists = signal(false);
+  errorEmailExists = signal(false);
   success = signal(false);
 
-  vietnamesePhonePattern = /^(0[3|5|7|8|9])+([0-9]{8})$/;
-
   registerForm = new FormGroup({
-    firstName: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(50)] }),
-    lastName: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(50)] }),
+    login: new FormControl('', {
+      nonNullable: true,
+      validators: [
+        Validators.required,
+        Validators.minLength(1),
+        Validators.maxLength(50),
+        Validators.pattern(
+          '^[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$|^[_.@A-Za-z0-9-]+$',
+        ),
+      ],
+    }),
     email: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.minLength(5), Validators.maxLength(254), Validators.email],
-    }),
-    phone: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.pattern(this.vietnamesePhonePattern)],
+      validators: [
+        Validators.required,
+        Validators.minLength(5),
+        Validators.maxLength(254),
+        Validators.email,
+      ],
     }),
     password: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.minLength(4), Validators.maxLength(50)],
+      validators: [
+        Validators.required,
+        Validators.minLength(4),
+        Validators.maxLength(50),
+      ],
     }),
     confirmPassword: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.minLength(4), Validators.maxLength(50)],
+      validators: [
+        Validators.required,
+        Validators.minLength(4),
+        Validators.maxLength(50),
+      ],
     }),
   });
 
-  private readonly registerService = inject(RegisterService);
+  private translateService = inject(TranslateService);
+  private registerService = inject(RegisterService);
+  private loginService = inject(LoginService);
+  private router = inject(Router);
+  private notify = inject(NotificationService);
 
   ngAfterViewInit(): void {
-    this.emailInput().nativeElement.focus();
+    this.login?.nativeElement.focus();
   }
 
   register(): void {
     this.doNotMatch.set(false);
     this.error.set(false);
-    this.errorEmailExists.set(false);
     this.errorUserExists.set(false);
+    this.errorEmailExists.set(false);
 
-    const { password, confirmPassword } = this.registerForm.getRawValue();
-    if (password !== confirmPassword) {
+    const password = this.registerForm.get(['password'])!.value;
+    if (password !== this.registerForm.get(['confirmPassword'])!.value) {
       this.doNotMatch.set(true);
     } else {
-      const { firstName, lastName, email, phone } = this.registerForm.getRawValue();
+      const { login, email, password } = this.registerForm.getRawValue();
       this.registerService
-        .save({ login: email, email, password, firstName, lastName, phone, langKey: 'en' })
-        .subscribe({ next: () => this.success.set(true), error: response => this.processError(response) });
+        .save({
+          login,
+          email,
+          password,
+          langKey: this.translateService.currentLang,
+        })
+        .subscribe({
+          next: () => {
+            this.success.set(true);
+            this.notify.success(
+              'Đăng ký tài khoản thành công! Đang đăng nhập...',
+            );
+            // Tự động đăng nhập sau khi đăng ký thành công
+            this.loginService
+              .login({ username: login, password: password, rememberMe: false })
+              .subscribe({
+                next: () => {
+                  this.router.navigate(['/']);
+                  this.notify.success('Đăng nhập thành công!');
+                },
+                error: () => {
+                  this.notify.error(
+                    'Đăng nhập tự động thất bại. Vui lòng đăng nhập thủ công.',
+                  );
+                  this.router.navigate(['/login']);
+                },
+              });
+          },
+          error: (response) => this.processError(response),
+        });
     }
   }
 
   private processError(response: HttpErrorResponse): void {
-    if (response.status === 400 && response.error.type === LOGIN_ALREADY_USED_TYPE) {
+    if (
+      response.status === 400 &&
+      response.error?.type === 'LOGIN_ALREADY_USED'
+    ) {
       this.errorUserExists.set(true);
-    } else if (response.status === 400 && response.error.type === EMAIL_ALREADY_USED_TYPE) {
+    } else if (
+      response.status === 400 &&
+      response.error?.type === 'EMAIL_ALREADY_USED'
+    ) {
       this.errorEmailExists.set(true);
     } else {
       this.error.set(true);

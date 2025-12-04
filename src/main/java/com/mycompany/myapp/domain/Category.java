@@ -28,9 +28,6 @@ public class Category extends AbstractAuditingEntity<Long> implements Serializab
     @Column(name = "slug", length = 50, nullable = false, unique = true)
     private String slug;
 
-    @Column(name = "is_featured", nullable = false) // Thêm trường isFeatured
-    private Boolean isFeatured = false; // Mặc định là false
-
     @OneToMany(mappedBy = "category")
     @JsonIgnoreProperties(value = { "category", "hibernateLazyInitializer", "handler" }, allowSetters = true)
     private Set<Product> products = new HashSet<>();
@@ -59,14 +56,6 @@ public class Category extends AbstractAuditingEntity<Long> implements Serializab
 
     public void setSlug(String slug) {
         this.slug = slug;
-    }
-
-    public Boolean getIsFeatured() { // Getter cho isFeatured
-        return isFeatured;
-    }
-
-    public void setIsFeatured(Boolean isFeatured) { // Setter cho isFeatured
-        this.isFeatured = isFeatured;
     }
 
     public Set<Product> getProducts() {
@@ -123,8 +112,6 @@ public class Category extends AbstractAuditingEntity<Long> implements Serializab
             ", slug='" +
             getSlug() +
             "'" +
-            ", isFeatured=" +
-            getIsFeatured() + // Thêm isFeatured vào toString
             "}"
         );
     }

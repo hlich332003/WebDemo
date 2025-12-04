@@ -22,20 +22,21 @@ public class OrderItem implements Serializable {
     @Column(name = "product_id")
     private Long productId;
 
-    @Column(name = "product_name")
+    @Column(name = "product_name", length = 255, columnDefinition = "NVARCHAR(255)")
     private String productName;
 
     @Column(name = "quantity")
     private Integer quantity;
 
-    @Column(name = "price")
-    private Double price;
+    @Column(name = "price") // Hoàn tác về Double
+    private Double price; // Hoàn tác về Double
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
     @JsonIgnoreProperties(value = { "items", "customer" }, allowSetters = true)
     private Order order;
 
-    // jhipster-needle-entity-add-field - JHipster will add fields here
+    // Getters and setters
 
     public Long getId() {
         return this.id;
@@ -89,16 +90,11 @@ public class OrderItem implements Serializable {
         this.quantity = quantity;
     }
 
-    public Double getPrice() {
+    public Double getPrice() { // Hoàn tác về Double
         return this.price;
     }
 
-    public OrderItem price(Double price) {
-        this.setPrice(price);
-        return this;
-    }
-
-    public void setPrice(Double price) {
+    public void setPrice(Double price) { // Hoàn tác về Double
         this.price = price;
     }
 

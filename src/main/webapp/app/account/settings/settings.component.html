@@ -110,6 +110,48 @@
             }
           </div>
 
+          <div class="mb-3">
+            <label class="form-label" for="phone">Phone</label>
+            <input
+              type="text"
+              class="form-control"
+              id="phone"
+              name="phone"
+              placeholder="Your phone number"
+              formControlName="phone"
+              data-cy="phone"
+            />
+            @let phoneRef = settingsForm.get('phone')!;
+            @if (phoneRef.invalid && (phoneRef.dirty || phoneRef.touched)) {
+              <div>
+                @if (phoneRef?.errors?.maxlength) {
+                  <small class="form-text text-danger">Your phone number cannot be longer than 20 characters.</small>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="imageUrl">Image URL</label>
+            <input
+              type="text"
+              class="form-control"
+              id="imageUrl"
+              name="imageUrl"
+              placeholder="Your image URL"
+              formControlName="imageUrl"
+              data-cy="imageUrl"
+            />
+            @let imageUrlRef = settingsForm.get('imageUrl')!;
+            @if (imageUrlRef.invalid && (imageUrlRef.dirty || imageUrlRef.touched)) {
+              <div>
+                @if (imageUrlRef?.errors?.maxlength) {
+                  <small class="form-text text-danger">Your image URL cannot be longer than 256 characters.</small>
+                }
+              </div>
+            }
+          </div>
+
           <button type="submit" [disabled]="settingsForm.invalid" class="btn btn-primary" data-cy="submit">Save</button>
         </form>
       }

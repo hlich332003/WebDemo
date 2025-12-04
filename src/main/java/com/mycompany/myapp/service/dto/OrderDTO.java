@@ -9,7 +9,7 @@ public class OrderDTO implements Serializable {
 
     private CustomerInfoDTO customerInfo;
     private List<OrderItemDTO> items;
-    private Double totalAmount;
+    private Double totalAmount; // Hoàn tác về Double
     private Instant orderDate;
     private String status;
     private String notes;
@@ -30,11 +30,11 @@ public class OrderDTO implements Serializable {
         this.items = items;
     }
 
-    public Double getTotalAmount() {
+    public Double getTotalAmount() { // Hoàn tác về Double
         return totalAmount;
     }
 
-    public void setTotalAmount(Double totalAmount) {
+    public void setTotalAmount(Double totalAmount) { // Hoàn tác về Double
         this.totalAmount = totalAmount;
     }
 

@@ -9,6 +9,8 @@ spring:
   # OTHER CONFIGURATIONS
   messages:
     basename: i18n/messages
+
+    encoding: UTF-8
   main:
     allow-bean-definition-overriding: true
   security:
@@ -67,7 +69,7 @@ spring:
       hibernate.jdbc.time_zone: UTC
       hibernate.timezone.default_storage: NORMALIZE
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
         implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
@@ -88,24 +90,27 @@ spring:
 
   # Mail dev để Spring tạo JavaMailSender
   mail:
-    host: smtp.gmail.com # Thay thế bằng SMTP server của bạn (ví dụ: smtp.office365.com)
-    port: 587 # Cổng SMTP, thường là 587 cho TLS hoặc 465 cho SSL
-    username: catbamaytongdai@gmail.com
-    password: twck ojbt wfcr kawl
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com} # Thay đổi: đọc từ biến môi trường hoặc default smtp.gmail.com
+    port: ${SPRING_MAIL_PORT:587} # Cổng SMTP, thường là 587 cho TLS hoặc 465 cho SSL
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true # Bật STARTTLS để mã hóa kết nối
       mail.smtp.starttls.required: true # Yêu cầu STARTTLS
       mail.smtp.ssl.trust: '*' # Tin tưởng tất cả các chứng chỉ SSL (chỉ dùng cho dev, không khuyến khích cho production)
+  # If you prefer a local SMTP dev server use MailHog (no auth):
+  # docker run --rm -p 1025:1025 -p 8025:8025 mailhog/mailhog
+  # Then set SPRING_MAIL_HOST=localhost and SPRING_MAIL_PORT=1025 and leave username/password empty
 
 management:
   endpoints:
     web:
       exposure:
-        include: 'health' # Chỉ bật health, tắt info
+        include: 'health'
   health:
     mail:
-      enabled: false # Disable mail health check in dev
+      enabled: false
   info:
     env:
       enabled: false # Tắt info endpoint

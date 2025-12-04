@@ -82,7 +82,8 @@ public class AccountResource {
             throw new InvalidPasswordException();
         }
         User user = userService.registerUser(managedUserVM, managedUserVM.getPassword());
-        mailService.sendActivationEmail(user);
+        // Send creation/welcome email instead of an activation email (accounts are auto-activated)
+        mailService.sendCreationEmail(user);
     }
 
     /**
@@ -93,10 +94,9 @@ public class AccountResource {
      */
     @GetMapping("/activate")
     public void activateAccount(@RequestParam(value = "key") String key) {
-        Optional<User> user = userService.activateRegistration(key);
-        if (!user.isPresent()) {
-            throw new AccountResourceException("No user was found for this activation key");
-        }
+        // Activation endpoint is kept for compatibility but activation is disabled
+        // Accounts are auto-activated at registration. Log and return.
+        LOG.info("Activation endpoint called with key='{}'. Activation is disabled; accounts are auto-activated.", key);
     }
 
     /**

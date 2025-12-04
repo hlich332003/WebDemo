@@ -80,9 +80,6 @@ public class ProductService {
                 if (product.getImageUrl() != null) {
                     existingProduct.setImageUrl(product.getImageUrl());
                 }
-                if (product.getIsFeatured() != null) {
-                    existingProduct.setIsFeatured(product.getIsFeatured());
-                }
                 if (product.getCategory() != null) {
                     existingProduct.setCategory(product.getCategory());
                 }
@@ -127,15 +124,16 @@ public class ProductService {
     }
 
     /**
-     * Get all featured products.
+     * Get all featured (top sellers by salesCount) products.
      *
      * @return the list of featured entities.
      */
     @Transactional(readOnly = true)
     @Cacheable(value = "featuredProducts")
     public List<Product> findAllFeatured() {
-        log.debug("Request to get all featured Products");
-        return productRepository.findByIsFeaturedTrue();
+        log.debug("Request to get all featured Products (top sellers by salesCount)");
+        // Return top N sellers - fetch first page of size 10 for example
+        return productRepository.findTopSellers(org.springframework.data.domain.PageRequest.of(0, 10)).getContent();
     }
 
     /**

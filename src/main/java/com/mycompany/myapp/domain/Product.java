@@ -1,7 +1,7 @@
 package com.mycompany.myapp.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.mycompany.myapp.domain.AbstractAuditingEntity; // Thêm import này
+import com.mycompany.myapp.domain.AbstractAuditingEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
@@ -11,8 +11,8 @@ import java.io.Serializable;
     name = "jhi_product",
     indexes = {
         @Index(name = "idx_product_category", columnList = "category_id"),
-        @Index(name = "idx_product_featured", columnList = "is_featured"),
         @Index(name = "idx_product_name", columnList = "name"),
+        @Index(name = "idx_product_sales", columnList = "sales_count")
     }
 )
 public class Product extends AbstractAuditingEntity<Long> implements Serializable {
@@ -42,11 +42,18 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", columnDefinition = "NVARCHAR(MAX)") // Cập nhật để khớp với DB
     private String imageUrl;
 
-    @Column(name = "is_featured", nullable = false) // Đảm bảo không null ở DB
-    private Boolean isFeatured = false; // Khởi tạo là false
+    // Active flag - mapped to DB column `is_active` which is NOT NULL in schema.
+    // Add as Boolean with default TRUE so JPA includes it on INSERTs and avoids NULL constraint failures.
+    @NotNull
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = Boolean.TRUE;
+
+    // Sales count from DB (used to surface best-sellers)
+    @Column(name = "sales_count", nullable = false)
+    private Long salesCount = 0L;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "category_id", nullable = false)
@@ -103,12 +110,20 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
         this.imageUrl = imageUrl;
     }
 
-    public Boolean getIsFeatured() {
-        return isFeatured;
+    public Boolean getIsActive() {
+        return isActive;
     }
 
-    public void setIsFeatured(Boolean isFeatured) {
-        this.isFeatured = isFeatured;
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    public Long getSalesCount() {
+        return salesCount;
+    }
+
+    public void setSalesCount(Long salesCount) {
+        this.salesCount = salesCount;
     }
 
     public Category getCategory() {
@@ -154,8 +169,10 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
             ", imageUrl='" +
             getImageUrl() +
             "'" +
-            ", isFeatured=" +
-            isFeatured +
+            ", isActive=" +
+            isActive +
+            ", salesCount=" +
+            salesCount +
             "}"
         );
     }

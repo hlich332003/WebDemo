@@ -2,12 +2,10 @@
   <div class="register-card">
     <h1 data-cy="registerTitle">Tạo tài khoản</h1>
 
-    @if (success()) {
+    <div *ngIf="success()">
       <div class="alert alert-success">
         <h4 class="alert-heading">Đăng ký thành công!</h4>
-        <p>Tài khoản của bạn đã được tạo. Vui lòng kiểm tra email để nhận link kích hoạt tài khoản.</p>
-        <hr />
-        <p class="mb-0">Sau khi kích hoạt, bạn có thể đăng nhập vào hệ thống.</p>
+        <p>Tài khoản của bạn đã được tạo và kích hoạt tự động. Bạn có thể đăng nhập ngay.</p>
       </div>
       <div class="text-center mt-3">
         <a class="btn btn-primary" routerLink="/login">Đi đến trang đăng nhập</a>
@@ -16,25 +14,25 @@
         <span>Bạn đã có tài khoản? </span>
         <a class="alert-link" routerLink="/login">Đăng nhập</a>
       </div>
-    }
+    </div>
 
-    @if (error()) {
+    <div *ngIf="error()">
       <div class="alert alert-danger"><strong>Đăng ký thất bại!</strong> Vui lòng thử lại sau.</div>
-    }
+    </div>
 
-    @if (errorUserExists()) {
+    <div *ngIf="errorUserExists()">
       <div class="alert alert-danger"><strong>Email này đã được đăng ký!</strong> Vui lòng chọn email khác.</div>
-    }
+    </div>
 
-    @if (errorEmailExists()) {
+    <div *ngIf="errorEmailExists()">
       <div class="alert alert-danger"><strong>Email này đã được sử dụng!</strong> Vui lòng chọn email khác.</div>
-    }
+    </div>
 
-    @if (doNotMatch()) {
+    <div *ngIf="doNotMatch()">
       <div class="alert alert-danger">Mật khẩu và xác nhận mật khẩu không khớp!</div>
-    }
+    </div>
 
-    @if (!success()) {
+    <div *ngIf="!success()">
       <form name="form" (ngSubmit)="register()" [formGroup]="registerForm" novalidate>
         <div class="row">
           <div class="col-md-6 form-group">
@@ -60,7 +58,7 @@
         <div class="form-group">
           <label class="form-label" for="password">Mật khẩu</label>
           <input type="password" class="form-control" id="password" formControlName="password" data-cy="firstPassword" />
-          <jhi-password-strength-bar [passwordToCheck]="registerForm.get('password')!.value" />
+          <!-- <jhi-password-strength-bar [passwordToCheck]="registerForm.get('password')!.value" /> -->
         </div>
 
         <div class="form-group">
@@ -75,6 +73,6 @@
         <span>Bạn đã có tài khoản? </span>
         <a class="alert-link" routerLink="/login">Đăng nhập</a>
       </div>
-    }
+    </div>
   </div>
 </div>

@@ -100,6 +100,20 @@
         }
       </div>
 
+      <div class="mb-3">
+        <label class="form-label" for="field_imageUrl">Image URL</label>
+        <input type="text" id="field_imageUrl" class="form-control" name="imageUrl" formControlName="imageUrl" />
+
+        @let imageUrlRef = editForm.get('imageUrl')!;
+        @if (imageUrlRef.invalid && (imageUrlRef.dirty || imageUrlRef.touched)) {
+          <div>
+            @if (imageUrlRef?.errors?.maxlength) {
+              <small class="form-text text-danger">Trường này không được dài quá 256 ký tự.</small>
+            }
+          </div>
+        }
+      </div>
+
       <div class="form-check">
         <label class="form-check-label" for="activated">
           <input
@@ -116,7 +130,7 @@
 
       <div class="mb-3">
         <label class="form-label" for="field_authority">Vai trò</label>
-        <select class="form-control" id="field_authority" multiple name="authority" formControlName="authorities">
+        <select class="form-control" id="field_authority" name="authority" formControlName="authority">
           @for (authority of authorities(); track $index) {
             <option [value]="authority">{{ authority }}</option>
           }

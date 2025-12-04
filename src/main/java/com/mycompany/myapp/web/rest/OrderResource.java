@@ -10,9 +10,9 @@ import com.mycompany.myapp.service.dto.OrderDTO;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.Normalizer;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,9 +94,44 @@ public class OrderResource {
         }
         OrderStatus newStatus;
         try {
-            newStatus = OrderStatus.valueOf(statusString);
-        } catch (IllegalArgumentException e) {
-            throw new BadRequestAlertException("Invalid status value: " + statusString, ENTITY_NAME, "invalidStatus");
+            // Normalize: trim and remove diacritics to support Vietnamese input variations
+            String normalized = statusString.trim();
+            String noDiacritics = Normalizer.normalize(normalized, Normalizer.Form.NFD).replaceAll("\\p{M}", "").toLowerCase();
+
+            // Map common Vietnamese/English terms to enum names using normalized form
+            switch (noDiacritics) {
+                case "dang giao":
+                case "shipped":
+                    newStatus = OrderStatus.SHIPPED;
+                    break;
+                case "hoan thanh":
+                case "da hoan thanh":
+                case "completed":
+                    newStatus = OrderStatus.COMPLETED;
+                    break;
+                case "dang xu ly":
+                case "processing":
+                    newStatus = OrderStatus.PROCESSING;
+                    break;
+                case "da giao":
+                case "delivered":
+                    newStatus = OrderStatus.DELIVERED;
+                    break;
+                case "huy":
+                case "cancelled":
+                case "cancel":
+                    newStatus = OrderStatus.CANCELLED;
+                    break;
+                case "pending":
+                case "dang cho":
+                    newStatus = OrderStatus.PENDING;
+                    break;
+                default:
+                    // Try direct enum name (English) as a fallback (case-sensitive names defined in enum)
+                    newStatus = OrderStatus.valueOf(statusString.toUpperCase());
+            }
+         } catch (IllegalArgumentException e) {
+             throw new BadRequestAlertException("Invalid status value: " + statusString, ENTITY_NAME, "invalidStatus");
         }
         order.setStatus(newStatus);
         Order result = orderService.save(order);

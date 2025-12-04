@@ -5,9 +5,10 @@ export interface IProduct {
   name: string;
   description: string | null;
   price?: number | null;
-  quantity?: number | null; // Số lượng tồn kho (khớp backend Product.java)
+  quantity?: number | null; // Số lượng tồn kho
   imageUrl: string | null;
-  isFeatured?: boolean | null;
+  isPinned?: boolean | null;
+  salesCount?: number | null;
   category?: ICategory | null;
 }
 

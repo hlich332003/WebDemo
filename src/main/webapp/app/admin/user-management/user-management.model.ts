@@ -4,7 +4,8 @@ export interface IUser {
   firstName?: string | null;
   lastName?: string | null;
   email?: string;
-  phone?: string | null; // Thêm trường phone
+  phone?: string | null;
+  imageUrl?: string | null; // Thêm lại thuộc tính imageUrl
   activated?: boolean;
   langKey?: string;
   authorities?: string[];
@@ -21,7 +22,8 @@ export class User implements IUser {
     public firstName?: string | null,
     public lastName?: string | null,
     public email?: string,
-    public phone?: string | null, // Thêm trường phone
+    public phone?: string | null,
+    public imageUrl?: string | null, // Thêm lại thuộc tính imageUrl
     public activated?: boolean,
     public langKey?: string,
     public authorities?: string[],

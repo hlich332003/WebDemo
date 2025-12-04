@@ -88,7 +88,7 @@ public class MailService {
 
     private void sendEmailFromTemplateSync(User user, String templateName, String titleKey) {
         if (user.getEmail() == null) {
-            LOG.debug("Email doesn't exist for user '{}'", user.getLogin());
+            LOG.debug("Email doesn't exist for user '{}'", user.getEmail());
             return;
         }
         Locale locale = Locale.forLanguageTag(user.getLangKey());

@@ -1,19 +1,16 @@
 package com.mycompany.myapp.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.mycompany.myapp.config.Constants;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Set;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.BatchSize;
+import com.mycompany.myapp.security.AuthoritiesConstants;
 
 @Entity
 @Table(name = "jhi_user")
@@ -24,12 +21,6 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @NotNull
-    @Pattern(regexp = Constants.LOGIN_REGEX)
-    @Size(min = 1, max = 50)
-    @Column(length = 50, unique = true, nullable = false)
-    private String login;
 
     @JsonIgnore
     @NotNull
@@ -79,6 +70,12 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
     @Column(name = "reset_date")
     private Instant resetDate = null;
 
+    // The database contains a non-nullable 'authority_name' column. Keep it in the entity so inserts
+    // won't fail. It reflects a primary authority for compatibility with the DB schema.
+    @Size(max = 50)
+    @Column(name = "authority_name", length = 50, nullable = false)
+    private String authorityName = AuthoritiesConstants.USER;
+
     @JsonIgnore
     @ManyToMany
     @JoinTable(
@@ -89,20 +86,16 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
     @BatchSize(size = 20)
     private Set<Authority> authorities = new HashSet<>();
 
+    // transient compatibility field for legacy code that still uses login
+    @Transient
+    private String login;
+
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getLogin() {
-        return login;
-    }
-
-    public void setLogin(String login) {
-        this.login = StringUtils.lowerCase(login, Locale.ENGLISH);
     }
 
     public String getPassword() {
@@ -193,12 +186,56 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
         this.resetDate = resetDate;
     }
 
+    public String getAuthorityName() {
+        return authorityName;
+    }
+
+    public void setAuthorityName(String authorityName) {
+        this.authorityName = authorityName;
+    }
+
     public Set<Authority> getAuthorities() {
         return authorities;
     }
 
     public void setAuthorities(Set<Authority> authorities) {
         this.authorities = authorities;
+        // keep the simple authorityName in sync for DB compatibility
+        if (authorities != null && !authorities.isEmpty()) {
+            // prefer ADMIN if present, otherwise pick the first
+            String chosen = authorities.stream().map(Authority::getName).filter(n -> n != null).findFirst().orElse(AuthoritiesConstants.USER);
+            // If ADMIN exists, pick it
+            for (Authority a : authorities) {
+                if (AuthoritiesConstants.ADMIN.equals(a.getName())) {
+                    chosen = AuthoritiesConstants.ADMIN;
+                    break;
+                }
+            }
+            this.authorityName = chosen;
+        } else {
+            this.authorityName = AuthoritiesConstants.USER; // keep non-null as DB requires
+        }
+    }
+
+    public String getLogin() {
+        if (this.login != null) return this.login;
+        return this.email;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void syncAuthorityName() {
+        // ensure authorityName is set before persist/update
+        if ((this.authorityName == null || this.authorityName.isEmpty()) && this.authorities != null && !this.authorities.isEmpty()) {
+            setAuthorities(this.authorities); // will set authorityName
+        }
+        if (this.authorityName == null || this.authorityName.isEmpty()) {
+            this.authorityName = AuthoritiesConstants.USER;
+        }
     }
 
     @Override
@@ -221,9 +258,6 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
     public String toString() {
         return (
             "User{" +
-            "login='" +
-            login +
-            '\'' +
             ", firstName='" +
             firstName +
             '\'' +

@@ -35,7 +35,7 @@ export class MyOrdersComponent implements OnInit {
         this.orders = res.body ?? [];
         this.isLoading = false;
       },
-      error: error => {
+      error: (error) => {
         console.error('Failed to load orders:', error);
         this.isLoading = false;
         this.orders = [];
@@ -44,14 +44,20 @@ export class MyOrdersComponent implements OnInit {
   }
 
   trackId(index: number, item: IOrder): number {
-    return item.id ?? 0; // Đã sửa lỗi: Thêm ?? 0
+    return item.id ?? 0;
   }
 
   formatOrderDate(date: Date | null | undefined): string {
     if (!date) {
       return 'N/A';
     }
-    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    };
     return new Date(date).toLocaleDateString('vi-VN', options);
   }
 
@@ -75,6 +81,8 @@ export class MyOrdersComponent implements OnInit {
       PROCESSING: 'Đang xử lý',
       SHIPPED: 'Đang giao',
       DELIVERED: 'Đã giao',
+      COMPLETED: 'Đã hoàn thành',
+      'ĐÃ HOÀN THÀNH': 'Đã hoàn thành',
       CANCELLED: 'Đã hủy',
     };
     return statusMap[status || ''] || status || 'N/A';
