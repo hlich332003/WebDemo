@@ -12,11 +12,6 @@ public class AdminUserDTO { // Xóa implements Serializable
 
     private Long id;
 
-    @NotBlank
-    @Pattern(regexp = Constants.LOGIN_REGEX)
-    @Size(min = 1, max = 50)
-    private String login;
-
     @Size(max = 50)
     private String firstName;
 
@@ -25,6 +20,7 @@ public class AdminUserDTO { // Xóa implements Serializable
 
     @Email
     @Size(min = 5, max = 254)
+    @NotBlank
     private String email;
 
     @Size(max = 20)
@@ -52,7 +48,6 @@ public class AdminUserDTO { // Xóa implements Serializable
 
     public AdminUserDTO(User user) {
         this.id = user.getId();
-        this.login = user.getLogin();
         this.firstName = user.getFirstName();
         this.lastName = user.getLastName();
         this.email = user.getEmail();
@@ -73,14 +68,6 @@ public class AdminUserDTO { // Xóa implements Serializable
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getLogin() {
-        return login;
-    }
-
-    public void setLogin(String login) {
-        this.login = login;
     }
 
     public String getFirstName() {
@@ -183,10 +170,7 @@ public class AdminUserDTO { // Xóa implements Serializable
     public String toString() {
         return (
             "AdminUserDTO{" +
-            "login='" +
-            login +
-            '\'' +
-            ", firstName='" +
+            "firstName='" +
             firstName +
             '\'' +
             ", lastName='" +

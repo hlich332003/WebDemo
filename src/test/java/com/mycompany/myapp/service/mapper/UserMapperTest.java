@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
  */
 class UserMapperTest {
 
-    private static final String DEFAULT_LOGIN = "johndoe";
+    private static final String DEFAULT_EMAIL = "johndoe@localhost";
     private static final Long DEFAULT_ID = 1L;
 
     private UserMapper userMapper;
@@ -32,16 +32,15 @@ class UserMapperTest {
     void init() {
         userMapper = new UserMapper();
         user = new User();
-        user.setLogin(DEFAULT_LOGIN);
         user.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));
         user.setActivated(true);
-        user.setEmail("johndoe@localhost");
+        user.setEmail(DEFAULT_EMAIL);
         user.setFirstName("john");
         user.setLastName("doe");
         user.setImageUrl("image_url");
-        user.setCreatedBy(DEFAULT_LOGIN);
+        user.setCreatedBy(DEFAULT_EMAIL);
         user.setCreatedDate(Instant.now());
-        user.setLastModifiedBy(DEFAULT_LOGIN);
+        user.setLastModifiedBy(DEFAULT_EMAIL);
         user.setLastModifiedDate(Instant.now());
         user.setLangKey("en");
 
@@ -59,7 +58,6 @@ class UserMapperTest {
         AdminUserDTO convertedUserDto = userMapper.userToAdminUserDTO(user);
 
         assertThat(convertedUserDto.getId()).isEqualTo(user.getId());
-        assertThat(convertedUserDto.getLogin()).isEqualTo(user.getLogin());
         assertThat(convertedUserDto.getFirstName()).isEqualTo(user.getFirstName());
         assertThat(convertedUserDto.getLastName()).isEqualTo(user.getLastName());
         assertThat(convertedUserDto.getEmail()).isEqualTo(user.getEmail());
@@ -78,7 +76,6 @@ class UserMapperTest {
         User convertedUser = userMapper.userDTOToUser(userDto);
 
         assertThat(convertedUser.getId()).isEqualTo(userDto.getId());
-        assertThat(convertedUser.getLogin()).isEqualTo(userDto.getLogin());
         assertThat(convertedUser.getFirstName()).isEqualTo(userDto.getFirstName());
         assertThat(convertedUser.getLastName()).isEqualTo(userDto.getLastName());
         assertThat(convertedUser.getEmail()).isEqualTo(userDto.getEmail());

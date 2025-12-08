@@ -31,7 +31,7 @@ public class ProductExportService {
 
         // Tạo hàng tiêu đề
         Row headerRow = sheet.createRow(0);
-        String[] headers = { "ID", "Name", "Description", "Price", "Quantity", "ImageUrl", "SalesCount" };
+        String[] headers = { "ID", "Name", "Description", "Price", "Quantity", "ImageUrl", "IsFeatured" };
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
@@ -47,7 +47,6 @@ public class ProductExportService {
             row.createCell(3).setCellValue(product.getPrice());
             row.createCell(4).setCellValue(product.getQuantity());
             row.createCell(5).setCellValue(product.getImageUrl());
-            row.createCell(6).setCellValue(product.getSalesCount() != null ? product.getSalesCount() : 0L);
         }
 
         // Tự động điều chỉnh độ rộng cột

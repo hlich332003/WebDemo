@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 
 /**
  * Mapper for the entity {@link User} and its DTO called {@link UserDTO}.
+ *
+ * Normal mappers are generated using MapStruct, this one is hand-coded as MapStruct
+ * support is still in beta, and requires a manual step with an IDE.
  */
 @Service
 public class UserMapper {
@@ -43,10 +46,9 @@ public class UserMapper {
         } else {
             User user = new User();
             user.setId(userDTO.getId());
-            // prefer to persist email; keep transient login available via DTO
-            user.setEmail(userDTO.getEmail());
             user.setFirstName(userDTO.getFirstName());
             user.setLastName(userDTO.getLastName());
+            user.setEmail(userDTO.getEmail());
             user.setImageUrl(userDTO.getImageUrl());
             user.setCreatedBy(userDTO.getCreatedBy());
             user.setCreatedDate(userDTO.getCreatedDate());
@@ -109,37 +111,6 @@ public class UserMapper {
         Set<UserDTO> userSet = new HashSet<>();
         for (User userEntity : users) {
             userSet.add(this.toDtoId(userEntity));
-        }
-
-        return userSet;
-    }
-
-    @Named("login")
-    @BeanMapping(ignoreByDefault = true)
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "login", source = "login")
-    public UserDTO toDtoLogin(User user) {
-        if (user == null) {
-            return null;
-        }
-        UserDTO userDto = new UserDTO();
-        userDto.setId(user.getId());
-        userDto.setLogin(user.getLogin());
-        return userDto;
-    }
-
-    @Named("loginSet")
-    @BeanMapping(ignoreByDefault = true)
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "login", source = "login")
-    public Set<UserDTO> toDtoLoginSet(Set<User> users) {
-        if (users == null) {
-            return Collections.emptySet();
-        }
-
-        Set<UserDTO> userSet = new HashSet<>();
-        for (User userEntity : users) {
-            userSet.add(this.toDtoLogin(userEntity));
         }
 
         return userSet;

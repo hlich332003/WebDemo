@@ -34,7 +34,6 @@ export class ProductListComponent implements OnInit, OnDestroy {
   searchTerm = '';
   isLoading = false;
   isSearching = false; // Loading state riêng cho search
-  featuredProducts: IProduct[] = [];
 
   totalItems = 0;
   itemsPerPage = ITEMS_PER_PAGE;
@@ -153,12 +152,10 @@ export class ProductListComponent implements OnInit, OnDestroy {
             return res.body ?? [];
           }),
         ),
-      this.productService.getFeaturedProducts().pipe(map(res => res.body ?? [])),
     ]).subscribe({
-      next: ([categories, products, featuredProds]) => {
+      next: ([categories, products]) => {
         this.categories = categories;
         this.allProducts = products;
-        this.featuredProducts = featuredProds;
         this.filteredProducts = this.allProducts;
 
         // Save to cache

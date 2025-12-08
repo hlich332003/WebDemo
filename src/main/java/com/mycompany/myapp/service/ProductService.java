@@ -34,7 +34,7 @@ public class ProductService {
      * @param product the entity to save.
      * @return the persisted entity.
      */
-    @CacheEvict(value = { "products", "featuredProducts" }, allEntries = true)
+    @CacheEvict(value = { "products" }, allEntries = true)
     public Product save(Product product) {
         log.debug("Request to save Product : {}", product);
         return productRepository.save(product);
@@ -46,7 +46,7 @@ public class ProductService {
      * @param product the entity to save.
      * @return the persisted entity.
      */
-    @CacheEvict(value = { "products", "featuredProducts" }, allEntries = true)
+    @CacheEvict(value = { "products" }, allEntries = true)
     public Product update(Product product) {
         log.debug("Request to update Product : {}", product);
         return productRepository.save(product);
@@ -58,7 +58,7 @@ public class ProductService {
      * @param product the entity to update partially.
      * @return the persisted entity.
      */
-    @CacheEvict(value = { "products", "featuredProducts" }, allEntries = true)
+    @CacheEvict(value = { "products" }, allEntries = true)
     public Optional<Product> partialUpdate(Product product) {
         log.debug("Request to partially update Product : {}", product);
 
@@ -124,19 +124,6 @@ public class ProductService {
     }
 
     /**
-     * Get all featured (top sellers by salesCount) products.
-     *
-     * @return the list of featured entities.
-     */
-    @Transactional(readOnly = true)
-    @Cacheable(value = "featuredProducts")
-    public List<Product> findAllFeatured() {
-        log.debug("Request to get all featured Products (top sellers by salesCount)");
-        // Return top N sellers - fetch first page of size 10 for example
-        return productRepository.findTopSellers(org.springframework.data.domain.PageRequest.of(0, 10)).getContent();
-    }
-
-    /**
      * Get one product by id.
      *
      * @param id the id of the entity.
@@ -153,7 +140,7 @@ public class ProductService {
      *
      * @param id the id of the entity.
      */
-    @CacheEvict(value = { "products", "featuredProducts" }, allEntries = true)
+    @CacheEvict(value = { "products" }, allEntries = true)
     public void delete(Long id) {
         log.debug("Request to delete Product : {}", id);
         productRepository.deleteById(id);

@@ -31,7 +31,7 @@ public class EmailConsumer {
 
     @RabbitListener(queues = RabbitMQConfig.USER_REGISTRATION_QUEUE)
     public void handleUserRegistered(UserRegistrationEventDTO event) {
-        log.info("Received user registered event for user: {}", event.getLogin());
+        log.info("Received user registered event for user: {}", event.getEmail());
         try {
             sendWelcomeEmail(event);
             log.info("Successfully sent welcome email to: {}", event.getEmail());
@@ -43,35 +43,38 @@ public class EmailConsumer {
     private void sendOrderConfirmationEmail(OrderEventDTO event) {
         String subject = "Xác nhận đơn hàng " + event.getOrderCode();
         String content = String.format(
-            	"""
-            	Kính gửi %s,
+            """
+            Kính gửi %s,
 
-            	Cảm ơn bạn đã đặt hàng tại WebDemo!
+            Cảm ơn bạn đã đặt hàng tại WebDemo!
 
-            	Thông tin đơn hàng:
-            	- Mã đơn hàng: %s
-            	- Tổng tiền: %,.0f VNĐ
-            	- Trạng thái: Đang xử lý
+            Thông tin đơn hàng:
+            - Mã đơn hàng: %s
+            - Tổng tiền: %,.0f VNĐ
+            - Trạng thái: Đang xử lý
 
-            	Chúng tôi sẽ liên hệ với bạn sớm nhất!
+            Chúng tôi sẽ liên hệ với bạn sớm nhất!
 
-            	Trân trọng,
-            	WebDemo Team
-            	""",
-            	event.getCustomerName(),
-            	event.getOrderCode(),
-            	event.getTotalAmount()
+            Trân trọng,
+            WebDemo Team
+            """,
+            event.getCustomerName(),
+            event.getOrderCode(),
+            event.getTotalAmount()
         );
 
         log.info("Sending order confirmation email to: {}", event.getCustomerEmail());
         log.info("Email content:\n{}", content);
-        mailService.sendEmail(event.getCustomerEmail(), subject, content, false, false);
+        // mailService.sendEmail(event.getCustomerEmail(), subject, content, false, false);
     }
 
     private void sendWelcomeEmail(UserRegistrationEventDTO event) {
-        String subject = "Tạo tài khoản WebDemo thành công";
+        String subject = "Xác thực tài khoản WebDemo";
         String fullName =
             (event.getFirstName() != null ? event.getFirstName() : "") + " " + (event.getLastName() != null ? event.getLastName() : "");
+
+        // Lấy activation key từ event (cần thêm vào DTO)
+        String activationLink = "http://localhost:8080/api/activate?key=" + event.getActivationKey();
 
         String content = String.format(
             """
@@ -83,18 +86,26 @@ public class EmailConsumer {
             - Tên đăng nhập: %s
             - Email: %s
 
-            Tài khoản của bạn đã được kích hoạt tự động. Bạn có thể đăng nhập tại: http://localhost:8080/login
+            Để kích hoạt tài khoản và bắt đầu mua sắm, vui lòng click vào link bên dưới:
+
+            %s
+
+            Link này sẽ hết hạn sau 24 giờ.
+
+            Nếu bạn không đăng ký tài khoản này, vui lòng bỏ qua email này.
 
             Trân trọng,
             WebDemo Team
             """,
-            fullName.trim().isEmpty() ? event.getLogin() : fullName,
-            event.getLogin(),
-            event.getEmail()
+            fullName.trim().isEmpty() ? event.getEmail() : fullName,
+            event.getEmail(),
+            event.getEmail(),
+            activationLink
         );
 
-        log.info("Sending welcome email to: {}", event.getEmail());
+        log.info("Sending activation email to: {}", event.getEmail());
+        log.info("Activation link: {}", activationLink);
         log.info("Email content:\n{}", content);
-        mailService.sendEmail(event.getEmail(), subject, content, false, false);
+        // mailService.sendEmail(event.getEmail(), subject, content, false, false);
     }
 }

@@ -7,16 +7,14 @@ public class UserRegistrationEventDTO implements Serializable {
     private String email;
     private String firstName;
     private String lastName;
-    private String login;
     private String activationKey;
 
     public UserRegistrationEventDTO() {}
 
-    public UserRegistrationEventDTO(String email, String firstName, String lastName, String login, String activationKey) {
+    public UserRegistrationEventDTO(String email, String firstName, String lastName, String activationKey) {
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.login = login;
         this.activationKey = activationKey;
     }
 
@@ -42,14 +40,6 @@ public class UserRegistrationEventDTO implements Serializable {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
-    }
-
-    public String getLogin() {
-        return login;
-    }
-
-    public void setLogin(String login) {
-        this.login = login;
     }
 
     public String getActivationKey() {

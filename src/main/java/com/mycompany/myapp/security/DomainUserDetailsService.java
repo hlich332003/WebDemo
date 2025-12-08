@@ -35,39 +35,25 @@ public class DomainUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(final String login) {
         log.debug("Authenticating {}", login);
 
-        if (new EmailValidator().isValid(login, null)) {
-            return userRepository
-                .findOneWithAuthoritiesByEmailIgnoreCase(login)
-                .map(user -> createSpringSecurityUser(login, user))
-                .orElseThrow(() -> new UsernameNotFoundException("User with email " + login + " was not found in the database"));
-        }
-
-        if (PHONE_PATTERN.matcher(login).matches()) {
-            return userRepository
-                .findOneWithAuthoritiesByPhone(login)
-                .map(user -> createSpringSecurityUser(login, user))
-                .orElseThrow(() -> new UsernameNotFoundException("User with phone " + login + " was not found in the database"));
-        }
-
-        // Fallback: the repository supports a combined lookup (email OR phone) via findOneWithAuthoritiesByLogin
-        // This covers cases where the identifier isn't clearly an email or pure phone number
+        String lowercaseLogin = login.toLowerCase(Locale.ENGLISH);
         return userRepository
-            .findOneWithAuthoritiesByLogin(login)
-            .map(user -> createSpringSecurityUser(login, user))
-            .orElseThrow(() -> new UsernameNotFoundException("User " + login + " was not found in the database"));
+            .findOneWithAuthoritiesByEmailOrPhone(lowercaseLogin)
+            .map(user -> createSpringSecurityUser(lowercaseLogin, user))
+            .orElseThrow(() -> new UsernameNotFoundException("User " + lowercaseLogin + " was not found in the database"));
     }
 
-    private org.springframework.security.core.userdetails.User createSpringSecurityUser(String username, User user) {
+    private org.springframework.security.core.userdetails.User createSpringSecurityUser(String lowercaseLogin, User user) {
         if (!user.isActivated()) {
-            throw new UserNotActivatedException("User " + username + " was not activated");
+            throw new UserNotActivatedException("User " + lowercaseLogin + " was not activated");
         }
         List<GrantedAuthority> grantedAuthorities = user
             .getAuthorities()
             .stream()
             .map(authority -> new SimpleGrantedAuthority(authority.getName()))
             .collect(Collectors.toList());
-        String principal = username; // use the provided login identifier (email or phone)
-        return new UserWithId(principal, user.getPassword(), grantedAuthorities, user.getId());
+        // Sử dụng email làm username chính
+        String username = user.getEmail() != null ? user.getEmail() : user.getPhone();
+        return new UserWithId(username, user.getPassword(), grantedAuthorities, user.getId());
     }
 
     public static class UserWithId extends org.springframework.security.core.userdetails.User {

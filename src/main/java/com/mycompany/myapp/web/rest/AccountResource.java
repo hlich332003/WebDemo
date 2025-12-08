@@ -73,7 +73,6 @@ public class AccountResource {
      * @param managedUserVM the managed user View Model.
      * @throws InvalidPasswordException {@code 400 (Bad Request)} if the password is incorrect.
      * @throws EmailAlreadyUsedException {@code 400 (Bad Request)} if the email is already used.
-     * @throws LoginAlreadyUsedException {@code 400 (Bad Request)} if the login is already used.
      */
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
@@ -122,13 +121,13 @@ public class AccountResource {
      */
     @PostMapping(value = "/account", consumes = "application/json; charset=UTF-8")
     public void saveAccount(@Valid @RequestBody AdminUserDTO userDTO) {
-        String userLogin = SecurityUtils.getCurrentUserLogin()
+        String userEmail = SecurityUtils.getCurrentUserLogin()
             .orElseThrow(() -> new AccountResourceException("Current user login not found"));
         Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
-        if (existingUser.isPresent() && (!existingUser.orElseThrow().getLogin().equalsIgnoreCase(userLogin))) {
+        if (existingUser.isPresent() && (!existingUser.orElseThrow().getEmail().equalsIgnoreCase(userEmail))) {
             throw new EmailAlreadyUsedException();
         }
-        Optional<User> user = userRepository.findOneByLogin(userLogin);
+        Optional<User> user = userRepository.findOneByEmailIgnoreCase(userEmail);
         if (!user.isPresent()) {
             throw new AccountResourceException("User could not be found");
         }
@@ -224,10 +223,10 @@ public class AccountResource {
 
                 // Xóa refresh token của user (nếu có)
                 SecurityUtils.getCurrentUserLogin()
-                    .flatMap(userRepository::findOneByLogin)
+                    .flatMap(userRepository::findOneByEmailIgnoreCase)
                     .ifPresent(user -> {
                         refreshTokenService.deleteByUserId(user.getId());
-                        LOG.debug("Refresh token deleted for user: {}", user.getLogin());
+                        LOG.debug("Refresh token deleted for user: {}", user.getEmail());
                     });
             } catch (Exception e) {
                 LOG.error("Error during logout: {}", e.getMessage());

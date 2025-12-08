@@ -1,170 +1,215 @@
-@import 'bootstrap/scss/functions';
-@import 'bootstrap/scss/variables';
-
-/* ==========================================================================
-Navbar
-========================================================================== */
-
-.navbar-version {
-  font-size: 0.65em;
-  color: $navbar-dark-color;
-}
-
-.profile-image {
-  height: 1.75em;
-  width: 1.75em;
+// Navbar Component - Pink Purple Theme
+:host {
+  --primary: #e91e63;
+  --purple: #9c27b0;
+  --accent: #ffc107;
+  --dark: #231c3d;
+  --light: #f5f5f5;
+  --white: #ffffff;
 }
 
 .navbar {
-  padding: 0.2rem 1rem;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--purple) 100%);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  transition: all 0.3s ease;
+  padding: 0.5rem 1rem;
 
-  .container-fluid {
+  &.navbar-hidden {
+    top: -100px;
+  }
+
+  .navbar-brand {
+    color: var(--white) !important;
+    font-weight: 700;
+    font-size: 1.5rem;
+    text-decoration: none;
     display: flex;
-    flex-direction: row;
     align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+
+    &:hover {
+      color: var(--accent) !important;
+      transform: scale(1.05);
+    }
   }
 
-  a.nav-link {
-    font-weight: 400;
-  }
+  .search-form {
+    flex: 1;
+    max-width: 500px;
+    margin: 0 2rem;
 
-  .navbar-collapse {
-    @media (min-width: 992px) {
-      display: flex !important;
-      flex-basis: auto;
+    @media (max-width: 768px) {
+      max-width: 100%;
+      margin: 1rem 0;
+      order: 3;
+      width: 100%;
     }
 
-    @media (max-width: 991px) {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background-color: #343a40;
-      z-index: 1000;
+    .search-container {
+      display: flex;
+      align-items: center;
+      background: var(--white);
+      border-radius: 25px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 
-      .navbar-nav {
-        width: 100%;
+      .search-input {
+        flex: 1;
+        border: none;
+        padding: 0.75rem 1rem;
+        outline: none;
 
-        .nav-item {
-          width: 100%;
-
-          .nav-link {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-          }
+        &:focus {
+          box-shadow: inset 0 0 0 2px var(--primary);
         }
+      }
 
-        .dropdown-menu {
-          position: static !important;
-          transform: none !important;
-          width: 100%;
-          border: none;
-          background-color: #2c3034;
-          margin: 0;
-          padding: 0;
+      .btn-search {
+        background: var(--primary);
+        color: var(--white);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
 
-          .dropdown-item {
-            padding: 0.75rem 2rem;
-            color: rgba(255, 255, 255, 0.75);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-
-            &:hover {
-              background-color: #343a40;
-              color: #fff;
-            }
-          }
+        &:hover {
+          background: var(--purple);
         }
       }
     }
   }
 
   .navbar-toggler {
-    margin-left: 0.5rem;
+    border: none;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+    }
+
+    fa-icon {
+      color: var(--white);
+      font-size: 1.3rem;
+    }
   }
-}
 
-/* ==========================================================================
-Logo styles
-========================================================================== */
-.logo-img {
-  height: 45px;
-  width: 45px;
-  display: inline-block;
-  vertical-align: middle;
-  background: url('/content/images/logo-jhipster.png') no-repeat center center;
-  background-size: contain;
-}
+  .navbar-nav {
+    .nav-item {
+      margin: 0 0.25rem;
 
-/* ==========================================================================
-Search form styles
-========================================================================== */
-.search-container {
-  width: 50%;
-  max-width: 600px;
+      .nav-link {
+        color: var(--white) !important;
+        font-weight: 600;
+        padding: 0.75rem 1rem;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.15);
+          color: var(--accent) !important;
+          transform: translateY(-1px);
+        }
+
+        &.active {
+          background: rgba(255, 255, 255, 0.2);
+          color: var(--accent) !important;
+        }
+      }
+
+      &.cart-item .nav-link {
+        position: relative;
+
+        .cart-badge {
+          position: absolute;
+          top: -5px;
+          right: -5px;
+          background: var(--accent);
+          color: var(--dark);
+          font-size: 0.7rem;
+          font-weight: 700;
+          padding: 2px 6px;
+          border-radius: 10px;
+          min-width: 18px;
+          text-align: center;
+          border: 2px solid var(--white);
+          animation: cartBounce 0.5s ease;
+        }
+      }
+    }
+  }
+
+  .dropdown-menu {
+    background: var(--white);
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    margin-top: 0.5rem;
+
+    .dropdown-item {
+      color: #333;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: var(--light);
+        color: var(--primary);
+      }
+    }
+  }
 
   @media (max-width: 991px) {
-    flex: 1;
-    margin: 0 1rem;
+    .navbar-collapse {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      margin-top: 1rem;
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+
+      .nav-link {
+        color: #333 !important;
+
+        &:hover {
+          background: var(--primary);
+          color: var(--white) !important;
+        }
+      }
+    }
   }
 }
 
-.search-form {
-  display: flex;
-  width: 100%;
-  position: relative;
+.navbar-version {
+  font-size: 0.65em;
+  color: rgba(255, 255, 255, 0.7);
 }
 
-.search-input {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
+.profile-image {
+  height: 1.75em;
+  width: 1.75em;
+  border-radius: 50%;
+  border: 2px solid var(--white);
 }
 
-.search-form .btn {
-  border-radius: 0;
-}
-
-.search-form .btn:last-child {
-  border-top-right-radius: 0.25rem;
-  border-bottom-right-radius: 0.25rem;
-}
-
-/* ==========================================================================
-Notification styles
-========================================================================== */
-#notification {
-  position: fixed;
-  top: 80px;
-  right: 20px;
-  z-index: 1050;
-  padding: 12px 16px;
-  border-radius: 8px;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.8);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  transform: translateY(-10px);
-  opacity: 0;
-  transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
-}
-
-#notification:not(.hidden) {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-#notification.hidden {
-  pointer-events: none;
-}
-
-#notification.success {
-  background: #28a745;
-}
-
-#notification.error {
-  background: #dc3545;
-}
-
-#notification.info {
-  background: #17a2b8;
+@keyframes cartBounce {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
 }

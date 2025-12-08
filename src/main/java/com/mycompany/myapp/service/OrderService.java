@@ -3,7 +3,8 @@ package com.mycompany.myapp.service;
 import com.mycompany.myapp.domain.Order;
 import com.mycompany.myapp.domain.OrderItem;
 import com.mycompany.myapp.domain.Product;
-import com.mycompany.myapp.domain.enumeration.OrderStatus;
+//import com.mycompany.myapp.domain.User;
+import com.mycompany.myapp.domain.enumeration.OrderStatus; // Import OrderStatus
 import com.mycompany.myapp.repository.OrderItemRepository;
 import com.mycompany.myapp.repository.OrderRepository;
 import com.mycompany.myapp.repository.ProductRepository;
@@ -36,6 +37,7 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    // private final NotificationService notificationService; // Removed
     private final MessageProducer messageProducer;
 
     public OrderService(
@@ -43,12 +45,14 @@ public class OrderService {
         OrderItemRepository orderItemRepository,
         ProductRepository productRepository,
         UserRepository userRepository,
+        // NotificationService notificationService, // Removed
         MessageProducer messageProducer
     ) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        // this.notificationService = notificationService; // Removed
         this.messageProducer = messageProducer;
     }
 
@@ -67,12 +71,14 @@ public class OrderService {
         Order order = new Order();
         order.setOrderDate(Instant.now());
         order.setTotalAmount(orderDTO.getTotalAmount());
-        order.setStatus(OrderStatus.PENDING);
+        order.setStatus(OrderStatus.PENDING); // Đặt trạng thái ban đầu bằng Enum
         order.setOrderCode("ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         order.setNotes(orderDTO.getNotes());
 
-        SecurityUtils.getCurrentUserLogin().flatMap(userRepository::findOneByLogin).ifPresent(order::setCustomer);
+        // Lấy thông tin người dùng hiện tại và thiết lập cho đơn hàng nếu có
+        SecurityUtils.getCurrentUserLogin().flatMap(userRepository::findOneWithAuthoritiesByEmailOrPhone).ifPresent(order::setCustomer);
 
+        // Điền thông tin khách hàng từ DTO
         if (orderDTO.getCustomerInfo() != null) {
             order.setCustomerFullName(orderDTO.getCustomerInfo().getFullName());
             order.setCustomerEmail(orderDTO.getCustomerInfo().getEmail());
@@ -81,6 +87,7 @@ public class OrderService {
             order.setPaymentMethod(orderDTO.getCustomerInfo().getPaymentMethod());
         }
 
+        // Lưu đơn hàng trước để có ID cho OrderItem
         Order savedOrder = orderRepository.save(order);
 
         Set<OrderItem> orderItems = new HashSet<>();
@@ -114,8 +121,10 @@ public class OrderService {
         orderItemRepository.saveAll(orderItems);
         savedOrder.setItems(orderItems);
 
+        // Define customerName here for use in OrderEventDTO
         String customerName = savedOrder.getCustomerFullName() != null ? savedOrder.getCustomerFullName() : "Khách hàng";
 
+        // Gửi message vào RabbitMQ để gửi email bất đồng bộ
         OrderEventDTO orderEvent = new OrderEventDTO(
             savedOrder.getId(),
             savedOrder.getOrderCode(),
@@ -150,6 +159,6 @@ public class OrderService {
 
     public List<Order> findOrdersByCurrentUser() {
         Optional<String> userLogin = SecurityUtils.getCurrentUserLogin();
-        return userLogin.map(orderRepository::findByCustomerIdentifierOrderByOrderDateDesc).orElse(List.of());
+        return userLogin.map(orderRepository::findByCustomer_EmailOrderByOrderDateDesc).orElse(List.of());
     }
 }

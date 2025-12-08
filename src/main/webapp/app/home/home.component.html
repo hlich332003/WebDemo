@@ -1,10 +1,49 @@
 <section class="hero-section">
-  <div class="hero-overlay"></div>
   <div class="hero-content">
-    <h1>Chào mừng đến với WebDemo</h1>
-    <p>Nơi mua sắm tin cậy cho mọi người</p>
-    @if (!isAdmin()) {
-      <a routerLink="/products" class="btn btn-primary">Mua sắm ngay</a>
+    <h1 class="hero-title">Chào mừng đến với WebDemo</h1>
+    <p class="hero-subtitle">Cửa hàng điện tử & công nghệ hàng đầu Việt Nam</p>
+
+    @if (account()?.authorities?.includes('ROLE_ADMIN')) {
+      <div class="admin-notice">
+        <fa-icon icon="shield-alt"></fa-icon>
+        Bạn đang đăng nhập với quyền Admin
+      </div>
+      <div class="hero-actions">
+        <a routerLink="/admin" class="btn btn-primary">
+          <fa-icon icon="cog"></fa-icon>
+          Quản lý hệ thống
+        </a>
+        <a routerLink="/products" class="btn btn-outline">
+          <fa-icon icon="eye"></fa-icon>
+          Xem cửa hàng
+        </a>
+      </div>
+    } @else {
+      <div class="hero-actions">
+        <a routerLink="/products" class="btn btn-primary">
+          <fa-icon icon="shopping-cart"></fa-icon>
+          Mua sắm ngay
+        </a>
+        <a routerLink="/cart" class="btn btn-outline">
+          <fa-icon icon="shopping-cart"></fa-icon>
+          Xem giỏ hàng
+        </a>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- Category Icons Section -->
+<section class="category-icons">
+  <h2 class="section-title">Danh Mục</h2>
+  <div class="icon-grid">
+    @for (category of featuredCategories; track category.id) {
+      <a [routerLink]="['/products']" [queryParams]="{ categorySlug: category.slug }" class="icon-card">
+        <div class="icon-wrapper">
+          <fa-icon [icon]="['fas', 'tags']" class="category-icon"></fa-icon>
+        </div>
+        <span class="icon-label">{{ category.name }}</span>
+      </a>
     }
   </div>
 </section>
@@ -21,7 +60,7 @@
           <img
             [src]="getProxiedImageUrl(product.imageUrl)"
             [alt]="product.name"
-            [loading]="idx < 4 ? 'eager' : 'lazy'"
+            [attr.loading]="idx < 4 ? 'eager' : 'lazy'"
             (click)="viewProductDetail(product.id)"
             (error)="onImageError($event)"
           />
@@ -50,7 +89,7 @@
 <!-- Sản phẩm mới -->
 <section class="new-products">
   <h2 class="section-title">✨ Sản Phẩm Mới</h2>
-  <div class="product-grid-large">
+  <div class="product-grid-compact">
     @if (newProducts.length === 0) {
       <p>Đang cập nhật sản phẩm mới...</p>
     } @else {

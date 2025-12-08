@@ -1,7 +1,7 @@
 package com.mycompany.myapp.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.mycompany.myapp.domain.AbstractAuditingEntity;
+import com.mycompany.myapp.domain.AbstractAuditingEntity; // Thêm import này
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
@@ -9,11 +9,7 @@ import java.io.Serializable;
 @Entity
 @Table(
     name = "jhi_product",
-    indexes = {
-        @Index(name = "idx_product_category", columnList = "category_id"),
-        @Index(name = "idx_product_name", columnList = "name"),
-        @Index(name = "idx_product_sales", columnList = "sales_count")
-    }
+    indexes = { @Index(name = "idx_product_category", columnList = "category_id"), @Index(name = "idx_product_name", columnList = "name") }
 )
 public class Product extends AbstractAuditingEntity<Long> implements Serializable {
 
@@ -42,18 +38,8 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "image_url", columnDefinition = "NVARCHAR(MAX)") // Cập nhật để khớp với DB
+    @Column(name = "image_url", length = 1024)
     private String imageUrl;
-
-    // Active flag - mapped to DB column `is_active` which is NOT NULL in schema.
-    // Add as Boolean with default TRUE so JPA includes it on INSERTs and avoids NULL constraint failures.
-    @NotNull
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive = Boolean.TRUE;
-
-    // Sales count from DB (used to surface best-sellers)
-    @Column(name = "sales_count", nullable = false)
-    private Long salesCount = 0L;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "category_id", nullable = false)
@@ -110,22 +96,6 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
         this.imageUrl = imageUrl;
     }
 
-    public Boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
-    }
-
-    public Long getSalesCount() {
-        return salesCount;
-    }
-
-    public void setSalesCount(Long salesCount) {
-        this.salesCount = salesCount;
-    }
-
     public Category getCategory() {
         return category;
     }
@@ -169,10 +139,6 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
             ", imageUrl='" +
             getImageUrl() +
             "'" +
-            ", isActive=" +
-            isActive +
-            ", salesCount=" +
-            salesCount +
             "}"
         );
     }

@@ -30,7 +30,7 @@ public class MessageProducer {
     public void sendUserRegisteredEvent(UserRegistrationEventDTO event) {
         try {
             rabbitTemplate.convertAndSend(RabbitMQConfig.APP_EXCHANGE, RabbitMQConfig.USER_REGISTERED_KEY, event);
-            log.info("Sent user registered event for user: {}", event.getLogin());
+            log.info("Sent user registered event for user: {}", event.getEmail());
         } catch (Exception e) {
             log.error("Failed to send user registered event: {}", e.getMessage());
         }

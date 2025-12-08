@@ -1,73 +1,64 @@
-<nav data-cy="navbar" class="navbar navbar-dark navbar-expand-md bg-dark">
-  <div class="container-fluid d-flex align-items-center">
-    <a
-      class="navbar-brand logo"
-      [routerLink]="account()?.authorities?.includes('ROLE_ADMIN') ? '/admin' : '/'"
-      (click)="collapseNavbar()"
-    >
-      <span class="logo-img"></span>
+<nav data-cy="navbar" class="navbar navbar-dark navbar-expand-lg">
+  <div class="container-fluid">
+    <!-- Brand -->
+    <a class="navbar-brand" [routerLink]="account()?.authorities?.includes('ROLE_ADMIN') ? '/admin' : '/'" (click)="collapseNavbar()">
+      <fa-icon icon="shopping-cart" class="brand-icon"></fa-icon>
       <span class="navbar-title">WebDemo</span>
       <span class="navbar-version">{{ version }}</span>
     </a>
 
-    <!-- Thanh tìm kiếm -->
-    <div class="search-container flex-grow-1 mx-3">
-      <form class="search-form d-flex" (ngSubmit)="search()">
+    <!-- Search Form -->
+    <form class="search-form" (ngSubmit)="search()">
+      <div class="search-container">
         <input
           type="text"
           [(ngModel)]="searchTerm"
           name="searchTerm"
-          placeholder="🔍 Tìm kiếm sản phẩm..."
-          class="search-input form-control"
+          placeholder="Tìm kiếm sản phẩm..."
+          class="search-input"
           (input)="onSearchInput($event)"
         />
 
-        <!-- Clear button -->
-        <button type="button" class="btn btn-outline-light" *ngIf="searchTerm" (click)="clearSearch()" aria-label="Clear search">
+        <button type="button" class="search-clear" *ngIf="searchTerm" (click)="clearSearch()">
           <fa-icon icon="times"></fa-icon>
         </button>
 
-        <!-- Spinner while searching -->
-        <button type="submit" class="btn btn-primary" [disabled]="isSearching" aria-label="Search">
+        <button type="submit" class="btn-search" [disabled]="isSearching">
           <fa-icon *ngIf="!isSearching" icon="search"></fa-icon>
-          <span *ngIf="isSearching" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          <span *ngIf="isSearching" class="spinner-border spinner-border-sm"></span>
         </button>
-      </form>
-    </div>
+      </div>
+    </form>
 
-    <a
-      class="navbar-toggler d-lg-none"
-      href="javascript:void(0);"
-      data-toggle="collapse"
-      data-target="#navbarResponsive"
-      aria-controls="navbarResponsive"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
+    <!-- Mobile Toggle -->
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
       (click)="toggleNavbar()"
+      [attr.aria-expanded]="!isNavbarCollapsed()"
     >
-      <fa-icon icon="bars"></fa-icon>
-    </a>
+      <fa-icon icon="bars" class="navbar-toggler-icon"></fa-icon>
+    </button>
 
-    <div class="navbar-collapse collapse d-lg-block" id="navbarResponsive" [ngbCollapse]="isNavbarCollapsed()">
+    <!-- Navigation Menu -->
+    <div class="collapse navbar-collapse" id="navbarNav" [ngbCollapse]="isNavbarCollapsed()">
       <ul class="navbar-nav ms-auto">
+        <!-- Home -->
         <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
           <a class="nav-link" [routerLink]="account()?.authorities?.includes('ROLE_ADMIN') ? '/admin' : '/'" (click)="collapseNavbar()">
-            <span>
-              <fa-icon icon="home"></fa-icon>
-              <span>Trang chủ</span>
-            </span>
+            <fa-icon icon="home" class="nav-icon"></fa-icon>
+            <span class="nav-text">Trang chủ</span>
           </a>
         </li>
-        <!-- Nút giỏ hàng (ẩn cho admin) -->
-        <li *ngIf="showCart()" class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+
+        <!-- Cart (hidden for admin) -->
+        <li *ngIf="showCart()" class="nav-item cart-item" routerLinkActive="active">
           <a class="nav-link" routerLink="/cart" (click)="collapseNavbar()">
-            <span>
-              <fa-icon icon="cart-shopping"></fa-icon>
-              <span>Giỏ hàng</span>
-              @if (((cartItemCount$ | async) ?? 0) > 0) {
-                <span class="badge bg-danger rounded-pill">{{ cartItemCount$ | async }}</span>
-              }
-            </span>
+            <fa-icon icon="shopping-cart" class="nav-icon"></fa-icon>
+            <span class="nav-text">Giỏ hàng</span>
+            <span *ngIf="(cartItemCount$ | async) ?? 0 > 0" class="cart-badge">{{ cartItemCount$ | async }}</span>
           </a>
         </li>
         <!-- jhipster-needle-add-element-to-menu - JHipster will add new menu items here -->

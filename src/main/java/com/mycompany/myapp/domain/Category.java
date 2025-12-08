@@ -102,17 +102,6 @@ public class Category extends AbstractAuditingEntity<Long> implements Serializab
 
     @Override
     public String toString() {
-        return (
-            "Category{" +
-            "id=" +
-            getId() +
-            ", name='" +
-            getName() +
-            "'" +
-            ", slug='" +
-            getSlug() +
-            "'" +
-            "}"
-        );
+        return ("Category{" + "id=" + getId() + ", name='" + getName() + "'" + ", slug='" + getSlug() + "'" + "}");
     }
 }

@@ -155,7 +155,7 @@ public class OrderResource {
         Order order = existingOrder.get();
         if (
             SecurityUtils.hasCurrentUserAnyOfAuthorities(AuthoritiesConstants.USER) &&
-            (order.getCustomer() == null || !order.getCustomer().getLogin().equals(SecurityUtils.getCurrentUserLogin().orElse(null)))
+            (order.getCustomer() == null || !order.getCustomer().getEmail().equals(SecurityUtils.getCurrentUserLogin().orElse(null)))
         ) {
             throw new BadRequestAlertException("You are not authorized to cancel this order", ENTITY_NAME, "unauthorized");
         }
@@ -185,7 +185,7 @@ public class OrderResource {
         }
         if (
             SecurityUtils.hasCurrentUserAnyOfAuthorities(AuthoritiesConstants.USER) &&
-            (order.getCustomer() == null || !order.getCustomer().getLogin().equals(SecurityUtils.getCurrentUserLogin().orElse(null)))
+            (order.getCustomer() == null || !order.getCustomer().getEmail().equals(SecurityUtils.getCurrentUserLogin().orElse(null)))
         ) {
             throw new BadRequestAlertException("You are not authorized to update this order's address", ENTITY_NAME, "unauthorized");
         }
@@ -224,7 +224,7 @@ public class OrderResource {
         if (
             SecurityUtils.hasCurrentUserAnyOfAuthorities(AuthoritiesConstants.USER) &&
             (order.get().getCustomer() == null ||
-                !order.get().getCustomer().getLogin().equals(SecurityUtils.getCurrentUserLogin().orElse(null)))
+                !order.get().getCustomer().getEmail().equals(SecurityUtils.getCurrentUserLogin().orElse(null)))
         ) {
             throw new BadRequestAlertException("You are not authorized to view this order", ENTITY_NAME, "unauthorized");
         }

@@ -69,7 +69,7 @@ public class RefreshTokenResource {
 
                 // Tạo Authentication object từ user
                 Authentication authentication = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                    new UserWithId(user.getLogin(), "", authorities, user.getId()),
+                    new UserWithId(user.getEmail(), "", authorities, user.getId()),
                     null,
                     authorities
                 );

@@ -1,0 +1,33 @@
+@use 'sass:color';
+
+// Main color palette for the "Pink-Purple" theme
+$primary-pink: #e91e63;
+$primary-purple: #9c27b0;
+$dark-background: #231c3d;
+$card-background: #3a305c;
+$light-text: #f5f5f5;
+$accent-color: #ffc107;
+$border-color: rgba(255, 255, 255, 0.15);
+
+// Button styles mixin
+@mixin themed-button {
+  background-color: $primary-pink;
+  color: $light-text;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  &:hover:not(:disabled) {
+    background-color: color.adjust($primary-pink, $lightness: -7%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(color.adjust($primary-pink, $lightness: -7%), 0.3);
+  }
+
+  &:disabled {
+    background-color: color.adjust($card-background, $lightness: 10%);
+    color: rgba($light-text, 0.5);
+    cursor: not-allowed;
+  }
+}
