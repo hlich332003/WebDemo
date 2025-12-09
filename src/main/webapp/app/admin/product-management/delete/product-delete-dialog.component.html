@@ -1,15 +1,27 @@
 <div *ngIf="product">
   <div class="modal-header">
-    <h4 class="modal-title" data-cy="productDeleteDialogHeading">Xác nhận thao tác xóa</h4>
+    <h4 class="modal-title" data-cy="productDeleteDialogHeading">
+      Xác nhận thao tác xóa
+    </h4>
 
-    <button type="button" class="btn-close" data-dismiss="modal" aria-hidden="true" (click)="cancel()">&times;</button>
+    <button
+      type="button"
+      class="btn-close"
+      data-dismiss="modal"
+      aria-hidden="true"
+      (click)="cancel()"
+    >
+      &times;
+    </button>
   </div>
 
   <div class="modal-body">
     <jhi-alert-error></jhi-alert-error>
 
     @if (errorMessage()) {
-      <div class="alert alert-danger" role="alert"><strong>Lỗi!</strong> {{ errorMessage() }}</div>
+      <div class="alert alert-danger" role="alert">
+        <strong>Lỗi!</strong> {{ errorMessage() }}
+      </div>
     }
 
     <p id="jhi-delete-product-heading">
@@ -19,7 +31,13 @@
   </div>
 
   <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-dismiss="modal" (click)="cancel()" [disabled]="isDeleting()">
+    <button
+      type="button"
+      class="btn btn-secondary"
+      data-dismiss="modal"
+      (click)="cancel()"
+      [disabled]="isDeleting()"
+    >
       <fa-icon icon="ban"></fa-icon>&nbsp;<span>Hủy</span>
     </button>
 
@@ -32,7 +50,11 @@
       [disabled]="isDeleting()"
     >
       @if (isDeleting()) {
-        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+        <span
+          class="spinner-border spinner-border-sm me-1"
+          role="status"
+          aria-hidden="true"
+        ></span>
       } @else {
         <fa-icon icon="times"></fa-icon>
       }

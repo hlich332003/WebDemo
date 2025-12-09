@@ -1,4 +1,6 @@
 // Home Component - Pink Purple Theme
+@use '../shared/styles/skeleton-loading' as skeleton;
+
 :host {
   --primary: #e91e63;
   --purple: #9c27b0;
@@ -14,7 +16,11 @@
 
 .hero-section {
   background:
-    linear-gradient(135deg, rgba(233, 30, 99, 0.9) 0%, rgba(156, 39, 176, 0.9) 100%),
+    linear-gradient(
+      135deg,
+      rgba(233, 30, 99, 0.9) 0%,
+      rgba(156, 39, 176, 0.9) 100%
+    ),
     url('https://static.vecteezy.com/system/resources/previews/023/343/014/large_2x/spectacular-gaming-room-interior-gaming-pc-gaming-desk-game-setup-room-tv-desk-for-five-people-futuristic-led-lights-cyberpunk-color-generative-ai-photo.jpg')
       center/cover;
   color: var(--white);
@@ -173,17 +179,34 @@
 
 .product-card,
 .product-card-sm {
-  background: var(--white);
+  background: #ffffff;
   border-radius: 15px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
 
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .badge-new {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 9;
+    background: linear-gradient(135deg, #e91e63, #9c27b0);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(233, 30, 99, 0.3);
   }
 }
 
@@ -228,22 +251,38 @@
     font-size: 0.8rem;
     margin-bottom: 1rem;
   }
+}
 
-  .btn-add-cart {
-    width: 100%;
-    background: var(--primary);
-    color: var(--white);
-    border: none;
-    padding: 0.75rem;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: auto;
+.product-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+
+  .btn-success {
+    background-color: var(--primary);
+    border-color: var(--primary);
 
     &:hover {
-      background: var(--purple);
+      background-color: var(--purple);
+      border-color: var(--purple);
     }
+  }
+}
+
+.view-all-link {
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, var(--primary), var(--purple));
+  color: var(--white);
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 25px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);
   }
 }
 

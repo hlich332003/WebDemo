@@ -39,7 +39,9 @@ export default class UserManagementUpdateComponent implements OnInit {
         Validators.required,
         Validators.minLength(1),
         Validators.maxLength(50),
-        Validators.pattern('^[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$|^[_.@A-Za-z0-9-]+$'),
+        Validators.pattern(
+          '^[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$|^[_.@A-Za-z0-9-]+$',
+        ),
       ],
     }),
     firstName: new FormControl(userTemplate.firstName, {
@@ -80,7 +82,9 @@ export default class UserManagementUpdateComponent implements OnInit {
         this.editForm.patchValue({ ...newUser, authority: 'ROLE_USER' });
       }
     });
-    this.userService.authorities().subscribe(authorities => this.authorities.set(authorities));
+    this.userService
+      .authorities()
+      .subscribe((authorities) => this.authorities.set(authorities));
   }
 
   previousState(): void {

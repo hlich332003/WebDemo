@@ -1,13 +1,25 @@
 <div class="user-management-container">
   <h2>
-    <span id="user-management-page-heading" data-cy="userManagementPageHeading">Quản lý người dùng</span>
+    <span id="user-management-page-heading" data-cy="userManagementPageHeading"
+      >Quản lý người dùng</span
+    >
 
     <div class="d-flex justify-content-end">
-      <button class="btn btn-info me-2 rounded-pill" (click)="loadAll()" [disabled]="isLoading()">
-        <fa-icon icon="sync" [animation]="isLoading() ? 'spin' : undefined"></fa-icon>
+      <button
+        class="btn btn-info me-2 rounded-pill"
+        (click)="loadAll()"
+        [disabled]="isLoading()"
+      >
+        <fa-icon
+          icon="sync"
+          [animation]="isLoading() ? 'spin' : undefined"
+        ></fa-icon>
         <span>Làm mới danh sách</span>
       </button>
-      <button class="btn btn-primary jh-create-entity rounded-pill" [routerLink]="['./new']">
+      <button
+        class="btn btn-primary jh-create-entity rounded-pill"
+        [routerLink]="['./new']"
+      >
         <fa-icon icon="plus"></fa-icon> <span>Tạo người dùng mới</span>
       </button>
     </div>
@@ -28,7 +40,11 @@
         (input)="onSearchInput($event)"
       />
       @if (searchTerm()) {
-        <button class="btn btn-outline-secondary" type="button" (click)="onClearSearch()">
+        <button
+          class="btn btn-outline-secondary"
+          type="button"
+          (click)="onClearSearch()"
+        >
           <fa-icon icon="times"></fa-icon>
         </button>
       }
@@ -36,19 +52,42 @@
   </div>
 
   @if (users()) {
-    <div class="table-container" style="max-height: 70vh; overflow: auto; position: relative">
-      <table class="table table-striped table-hover table-bordered" aria-describedby="user-management-page-heading" style="min-width: 100%">
+    <div
+      class="table-container"
+      style="max-height: 70vh; overflow: auto; position: relative"
+    >
+      <table
+        class="table table-striped table-hover table-bordered"
+        aria-describedby="user-management-page-heading"
+        style="min-width: 100%"
+      >
         <thead class="sticky-top" style="background-color: #f8f9fa; z-index: 1">
           <tr jhiSort [(sortState)]="sortState" (sortChange)="loadAll()">
-            <th scope="col" jhiSortBy="id"><span>ID</span> <fa-icon icon="sort"></fa-icon></th>
-            <th scope="col" jhiSortBy="firstName"><span>Họ và Tên</span> <fa-icon icon="sort"></fa-icon></th>
-            <th scope="col" jhiSortBy="email"><span>Email</span> <fa-icon icon="sort"></fa-icon></th>
-            <th scope="col" jhiSortBy="phone"><span>Số điện thoại</span> <fa-icon icon="sort"></fa-icon></th>
-            <th scope="col" jhiSortBy="activated"><span>Trạng thái</span> <fa-icon icon="sort"></fa-icon></th>
+            <th scope="col" jhiSortBy="id">
+              <span>ID</span> <fa-icon icon="sort"></fa-icon>
+            </th>
+            <th scope="col" jhiSortBy="firstName">
+              <span>Họ và Tên</span> <fa-icon icon="sort"></fa-icon>
+            </th>
+            <th scope="col" jhiSortBy="email">
+              <span>Email</span> <fa-icon icon="sort"></fa-icon>
+            </th>
+            <th scope="col" jhiSortBy="phone">
+              <span>Số điện thoại</span> <fa-icon icon="sort"></fa-icon>
+            </th>
+            <th scope="col" jhiSortBy="activated">
+              <span>Trạng thái</span> <fa-icon icon="sort"></fa-icon>
+            </th>
             <th scope="col"><span>Vai trò</span></th>
-            <th scope="col" jhiSortBy="createdDate"><span>Ngày tạo</span> <fa-icon icon="sort"></fa-icon></th>
-            <th scope="col" jhiSortBy="lastModifiedBy"><span>Người sửa</span> <fa-icon icon="sort"></fa-icon></th>
-            <th scope="col" jhiSortBy="lastModifiedDate"><span>Ngày sửa</span> <fa-icon icon="sort"></fa-icon></th>
+            <th scope="col" jhiSortBy="createdDate">
+              <span>Ngày tạo</span> <fa-icon icon="sort"></fa-icon>
+            </th>
+            <th scope="col" jhiSortBy="lastModifiedBy">
+              <span>Người sửa</span> <fa-icon icon="sort"></fa-icon>
+            </th>
+            <th scope="col" jhiSortBy="lastModifiedDate">
+              <span>Ngày sửa</span> <fa-icon icon="sort"></fa-icon>
+            </th>
             <th scope="col"></th>
           </tr>
         </thead>
@@ -80,7 +119,11 @@
               <td>{{ user.lastModifiedDate | date: 'dd/MM/yy HH:mm' }}</td>
               <td class="text-end">
                 <div class="btn-group">
-                  <button type="submit" [routerLink]="['./', user.login, 'view']" class="btn btn-info btn-sm">
+                  <button
+                    type="submit"
+                    [routerLink]="['./', user.login, 'view']"
+                    class="btn btn-info btn-sm"
+                  >
                     <fa-icon icon="eye"></fa-icon>
                     <span class="d-none d-md-inline">Xem</span>
                   </button>
@@ -90,7 +133,10 @@
                     [routerLink]="['./', user.login, 'edit']"
                     queryParamsHandling="merge"
                     class="btn btn-primary btn-sm"
-                    [disabled]="!currentAccount() || currentAccount()?.login === user.login"
+                    [disabled]="
+                      !currentAccount() ||
+                      currentAccount()?.login === user.login
+                    "
                   >
                     <fa-icon icon="pencil-alt"></fa-icon>
                     <span class="d-none d-md-inline">Sửa</span>
@@ -101,13 +147,20 @@
                       type="button"
                       (click)="setActive(user, false)"
                       class="btn btn-danger btn-sm"
-                      [disabled]="!currentAccount() || currentAccount()?.login === user.login"
+                      [disabled]="
+                        !currentAccount() ||
+                        currentAccount()?.login === user.login
+                      "
                     >
                       <fa-icon icon="lock"></fa-icon>
                       <span class="d-none d-md-inline">Khóa</span>
                     </button>
                   } @else {
-                    <button type="button" (click)="setActive(user, true)" class="btn btn-success btn-sm">
+                    <button
+                      type="button"
+                      (click)="setActive(user, true)"
+                      class="btn btn-success btn-sm"
+                    >
                       <fa-icon icon="lock-open"></fa-icon>
                       <span class="d-none d-md-inline">Mở khóa</span>
                     </button>
@@ -122,7 +175,13 @@
 
     @if (totalItems()) {
       <div class="d-flex justify-content-center mt-3">
-        <jhi-item-count [params]="{ page: page, totalItems: totalItems(), itemsPerPage: itemsPerPage }" />
+        <jhi-item-count
+          [params]="{
+            page: page,
+            totalItems: totalItems(),
+            itemsPerPage: itemsPerPage,
+          }"
+        />
 
         <ngb-pagination
           [collectionSize]="totalItems()"

@@ -46,7 +46,11 @@
           </dt>
           <dd>
             @if (product.imageUrl) {
-              <img [src]="product.imageUrl" alt="Product Image" style="max-height: 200px" />
+              <img
+                [src]="product.imageUrl"
+                alt="Product Image"
+                style="max-height: 200px"
+              />
             }
           </dd>
         </dl>
@@ -55,7 +59,11 @@
           <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span>Quay lại</span>
         </button>
 
-        <button type="button" [routerLink]="['/admin/product-management', product.id, 'edit']" class="btn btn-primary">
+        <button
+          type="button"
+          [routerLink]="['/admin/product-management', product.id, 'edit']"
+          class="btn btn-primary"
+        >
           <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span>Sửa</span>
         </button>
       </div>

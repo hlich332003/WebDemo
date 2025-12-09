@@ -7,7 +7,9 @@ import { mergeMap } from 'rxjs/operators';
 import { IProduct } from '../product.model';
 import { ProductService } from '../product.service'; // Sửa đường dẫn import
 
-export const productResolve = (route: ActivatedRouteSnapshot): Observable<IProduct | null | never> => {
+export const productResolve = (
+  route: ActivatedRouteSnapshot,
+): Observable<IProduct | null | never> => {
   const id = route.params['id'];
   if (id) {
     return inject(ProductService)

@@ -1,7 +1,12 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormGroup,
+  FormControl,
+  Validators,
+} from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -12,6 +17,8 @@ import { NotificationService } from 'app/shared/notification/notification.servic
 import { AccountService } from 'app/core/auth/account.service';
 import { Account } from 'app/core/auth/account.model';
 import { OrderService } from 'app/entities/order/order.service';
+import { WishlistService } from 'app/shared/services/wishlist.service';
+import { IProduct } from 'app/entities/product/product.model';
 
 @Component({
   selector: 'jhi-checkout',
@@ -32,10 +39,19 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   vietnamesePhonePattern = /^(0[35789])+([0-9]{8})$/;
 
   checkoutForm = new FormGroup({
-    fullName: new FormControl('', [Validators.required, Validators.minLength(5)]),
-    phone: new FormControl('', [Validators.required, Validators.pattern(this.vietnamesePhonePattern)]),
+    fullName: new FormControl('', [
+      Validators.required,
+      Validators.minLength(5),
+    ]),
+    phone: new FormControl('', [
+      Validators.required,
+      Validators.pattern(this.vietnamesePhonePattern),
+    ]),
     email: new FormControl('', [Validators.required, Validators.email]),
-    address: new FormControl('', [Validators.required, Validators.minLength(10)]),
+    address: new FormControl('', [
+      Validators.required,
+      Validators.minLength(10),
+    ]),
     paymentMethod: new FormControl('cod', [Validators.required]),
     notes: new FormControl(''),
   });
@@ -46,6 +62,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private accountService = inject(AccountService);
   private orderService = inject(OrderService);
+  public wishlistService = inject(WishlistService);
 
   ngOnInit(): void {
     this.loadCartAndAccount();
@@ -57,23 +74,28 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   private loadCartAndAccount(): void {
-    this.cartService.cartItems$.pipe(takeUntil(this.destroy$)).subscribe(items => {
-      this.cart = items;
-    });
+    this.cartService.cartItems$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((items) => {
+        this.cart = items;
+      });
 
     // Tối ưu: Lắng nghe totalPrice$
-    this.cartService.totalPrice$.pipe(takeUntil(this.destroy$)).subscribe(total => {
-      this.total = total;
-    });
+    this.cartService.totalPrice$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((total) => {
+        this.total = total;
+      });
 
     this.accountService
       .getAuthenticationState()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(account => {
+      .subscribe((account) => {
         this.account = account;
         if (this.account) {
           this.checkoutForm.patchValue({
-            fullName: `${this.account.firstName ?? ''} ${this.account.lastName ?? ''}`.trim(),
+            fullName:
+              `${this.account.firstName ?? ''} ${this.account.lastName ?? ''}`.trim(),
             email: this.account.email,
           });
         }
@@ -105,7 +127,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   private markFormAsTouched(): void {
-    Object.values(this.checkoutForm.controls).forEach(control => {
+    Object.values(this.checkoutForm.controls).forEach((control) => {
       control.markAsTouched();
     });
   }
@@ -120,7 +142,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         address: formValue.address || '',
         paymentMethod: formValue.paymentMethod || 'cod',
       },
-      items: cartItems.map(item => ({
+      items: cartItems.map((item) => ({
         productId: item.product.id,
         productName: item.product.name,
         quantity: item.quantity,
@@ -148,7 +170,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       },
       error: (_error: any) => {
         console.error('Order creation failed');
-        this.notify.error('❌ Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.');
+        this.notify.error(
+          '❌ Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.',
+        );
       },
     });
   }
@@ -164,6 +188,22 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   continueShopping(): void {
     // Thêm query param để force reload dữ liệu sau khi checkout
-    this.router.navigate(['/products'], { queryParams: { reload: Date.now() } });
+    this.router.navigate(['/products'], {
+      queryParams: { reload: Date.now() },
+    });
+  }
+
+  toggleWishlist(product: IProduct, event: Event): void {
+    event.stopPropagation();
+    const added = this.wishlistService.toggleWishlist(product);
+    if (added) {
+      this.notify.success('💖 Đã thêm vào danh sách yêu thích!');
+    } else {
+      this.notify.info('💔 Đã xóa khỏi danh sách yêu thích!');
+    }
+  }
+
+  isInWishlist(productId: number): boolean {
+    return this.wishlistService.isInWishlist(productId);
   }
 }

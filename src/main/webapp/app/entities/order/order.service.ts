@@ -17,8 +17,10 @@ export class OrderService {
   protected http = inject(HttpClient);
   protected applicationConfigService = inject(ApplicationConfigService);
 
-  protected resourceUrl = this.applicationConfigService.getEndpointFor('api/orders');
-  protected myOrdersUrl = this.applicationConfigService.getEndpointFor('api/my-orders');
+  protected resourceUrl =
+    this.applicationConfigService.getEndpointFor('api/orders');
+  protected myOrdersUrl =
+    this.applicationConfigService.getEndpointFor('api/my-orders');
 
   create(orderData: any): Observable<EntityResponseType> {
     return this.http.post<any>(this.resourceUrl, orderData, {
@@ -31,13 +33,21 @@ export class OrderService {
     const options = createRequestOption(req);
     return this.http
       .get<any[]>(this.resourceUrl, { params: options, observe: 'response' })
-      .pipe(map((res: EntityArrayResponseType) => this.convertDateArrayFromServer(res)));
+      .pipe(
+        map((res: EntityArrayResponseType) =>
+          this.convertDateArrayFromServer(res),
+        ),
+      );
   }
 
   queryMyOrders(): Observable<EntityArrayResponseType> {
     return this.http
       .get<any[]>(this.myOrdersUrl, { observe: 'response' })
-      .pipe(map((res: EntityArrayResponseType) => this.convertDateArrayFromServer(res)));
+      .pipe(
+        map((res: EntityArrayResponseType) =>
+          this.convertDateArrayFromServer(res),
+        ),
+      );
   }
 
   find(id: number): Observable<EntityResponseType> {
@@ -47,34 +57,55 @@ export class OrderService {
   }
 
   cancelOrder(id: number): Observable<EntityResponseType> {
-    return this.http.patch<any>(`${this.resourceUrl}/${id}/cancel`, null, { observe: 'response' });
+    return this.http.patch<any>(`${this.resourceUrl}/${id}/cancel`, null, {
+      observe: 'response',
+    });
   }
 
-  updateDeliveryAddress(id: number, address: string): Observable<EntityResponseType> {
-    return this.http.patch<any>(`${this.resourceUrl}/${id}/address`, { address: address }, { observe: 'response' });
+  updateDeliveryAddress(
+    id: number,
+    address: string,
+  ): Observable<EntityResponseType> {
+    return this.http.patch<any>(
+      `${this.resourceUrl}/${id}/address`,
+      { address: address },
+      { observe: 'response' },
+    );
   }
 
   updateStatus(id: number, status: string): Observable<EntityResponseType> {
     return this.http
-      .patch<any>(`${this.resourceUrl}/${id}/status`, { status: status }, { observe: 'response' })
+      .patch<any>(
+        `${this.resourceUrl}/${id}/status`,
+        { status: status },
+        { observe: 'response' },
+      )
       .pipe(map((res: EntityResponseType) => this.convertDateFromServer(res)));
   }
 
   delete(id: number): Observable<HttpResponse<{}>> {
-    return this.http.delete(`${this.resourceUrl}/${id}`, { observe: 'response' });
+    return this.http.delete(`${this.resourceUrl}/${id}`, {
+      observe: 'response',
+    });
   }
 
   protected convertDateFromServer(res: EntityResponseType): EntityResponseType {
     if (res.body) {
-      res.body.orderDate = res.body.orderDate ? dayjs(res.body.orderDate).toDate() : null; // Đã sửa lỗi
+      res.body.orderDate = res.body.orderDate
+        ? dayjs(res.body.orderDate).toDate()
+        : null; // Đã sửa lỗi
     }
     return res;
   }
 
-  protected convertDateArrayFromServer(res: EntityArrayResponseType): EntityArrayResponseType {
+  protected convertDateArrayFromServer(
+    res: EntityArrayResponseType,
+  ): EntityArrayResponseType {
     if (res.body) {
       res.body.forEach((order: any) => {
-        order.orderDate = order.orderDate ? dayjs(order.orderDate).toDate() : null; // Đã sửa lỗi
+        order.orderDate = order.orderDate
+          ? dayjs(order.orderDate).toDate()
+          : null; // Đã sửa lỗi
       });
     }
     return res;

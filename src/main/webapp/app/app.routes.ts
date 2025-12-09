@@ -7,14 +7,18 @@ const routes: Routes = [
   // Trang chủ
   {
     path: '',
-    loadComponent: () => import('./home/home.component').then(m => m.HomeComponent),
+    loadComponent: () =>
+      import('./home/home.component').then((m) => m.HomeComponent),
     title: 'Trang chủ',
   },
 
   // Navbar outlet
   {
     path: '',
-    loadComponent: () => import('./layouts/navbar/navbar.component').then(m => m.NavbarComponent),
+    loadComponent: () =>
+      import('./layouts/navbar/navbar.component').then(
+        (m) => m.NavbarComponent,
+      ),
     outlet: 'navbar',
   },
 
@@ -35,7 +39,8 @@ const routes: Routes = [
   // Trang đăng nhập
   {
     path: 'login',
-    loadComponent: () => import('./login/login.component').then(m => m.LoginComponent),
+    loadComponent: () =>
+      import('./login/login.component').then((m) => m.LoginComponent),
     title: 'Đăng nhập',
   },
 
@@ -48,35 +53,52 @@ const routes: Routes = [
   // Trang danh sách sản phẩm
   {
     path: 'products',
-    loadComponent: () => import('./product-list/product-list.component').then(m => m.ProductListComponent),
+    loadComponent: () =>
+      import('./product-list/product-list.component').then(
+        (m) => m.ProductListComponent,
+      ),
     title: 'Danh sách sản phẩm',
   },
 
   // Trang chi tiết sản phẩm
   {
     path: 'product/:id',
-    loadComponent: () => import('./product-detail/product-detail.component').then(m => m.ProductDetailComponent),
+    loadComponent: () =>
+      import('./product-detail/product-detail.component').then(
+        (m) => m.ProductDetailComponent,
+      ),
     title: 'Chi tiết sản phẩm',
   },
 
   // Trang giỏ hàng
   {
     path: 'cart',
-    loadComponent: () => import('./cart/cart.component').then(m => m.CartComponent),
+    loadComponent: () =>
+      import('./cart/cart.component').then((m) => m.CartComponent),
     title: 'Giỏ hàng',
+  },
+
+  // Trang danh sách yêu thích
+  {
+    path: 'wishlist',
+    loadComponent: () =>
+      import('./wishlist/wishlist.component').then((m) => m.WishlistComponent),
+    title: 'Danh sách yêu thích',
   },
 
   // Trang thanh toán
   {
     path: 'checkout',
-    loadComponent: () => import('./checkout/checkout.component').then(m => m.CheckoutComponent),
+    loadComponent: () =>
+      import('./checkout/checkout.component').then((m) => m.CheckoutComponent),
     title: 'Thanh toán',
   },
 
   // Trang chi tiết đơn hàng
   {
     path: 'order/:id',
-    loadComponent: () => import('./order-detail/order-detail.component').then(m => m.default),
+    loadComponent: () =>
+      import('./order-detail/order-detail.component').then((m) => m.default),
     title: 'Chi tiết đơn hàng',
     canActivate: [UserRouteAccessService], // Yêu cầu đăng nhập
   },

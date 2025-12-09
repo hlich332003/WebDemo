@@ -21,14 +21,14 @@ export default class MainComponent implements OnInit {
   ngOnInit(): void {
     // Try to log in automatically if token exists
     this.accountService.identity().subscribe({
-      next: account => {
+      next: (account) => {
         if (account) {
           console.log('✅ User authenticated on init:', account.login);
         } else {
           console.log('ℹ️ No user authenticated');
         }
       },
-      error: error => {
+      error: (error) => {
         console.error('❌ Authentication failed on init:', error.status);
         // Ignore 401 error when not logged in
       },

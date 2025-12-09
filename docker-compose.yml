@@ -1,30 +1,29 @@
 version: '3.8'
 services:
-  redis:
-    image: redis:8
-    container_name: webdemo-redis
-    ports:
-      - "6379:6379"
-    restart: unless-stopped
+    redis:
+        image: redis:8
+        container_name: webdemo-redis
+        ports:
+            - '6379:6379'
+        restart: unless-stopped
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: webdemo-rabbit
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    restart: unless-stopped
+    rabbitmq:
+        image: rabbitmq:3-management
+        container_name: webdemo-rabbit
+        ports:
+            - '5672:5672'
+            - '15672:15672'
+        environment:
+            RABBITMQ_DEFAULT_USER: guest
+            RABBITMQ_DEFAULT_PASS: guest
+        restart: unless-stopped
 
-  mssql:
-    image: mcr.microsoft.com/mssql/server:2019-latest
-    container_name: webdemo-mssql
-    environment:
-      ACCEPT_EULA: "Y"
-      SA_PASSWORD: "YourStrong!Passw0rd"
-    ports:
-      - "1433:1433"
-    restart: unless-stopped
-
+    mssql:
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        container_name: webdemo-mssql
+        environment:
+            ACCEPT_EULA: 'Y'
+            SA_PASSWORD: 'YourStrong!Passw0rd'
+        ports:
+            - '1433:1433'
+        restart: unless-stopped

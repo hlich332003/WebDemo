@@ -1,6 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 
-import { sampleWithNewData, sampleWithRequiredData } from '../authority.test-samples';
+import {
+  sampleWithNewData,
+  sampleWithRequiredData,
+} from '../authority.test-samples';
 
 import { AuthorityFormService } from './authority-form.service';
 
@@ -25,7 +28,9 @@ describe('Authority Form Service', () => {
       });
 
       it('passing IAuthority should create a new form with FormGroup', () => {
-        const formGroup = service.createAuthorityFormGroup(sampleWithRequiredData);
+        const formGroup = service.createAuthorityFormGroup(
+          sampleWithRequiredData,
+        );
 
         expect(formGroup.controls).toEqual(
           expect.objectContaining({
@@ -53,7 +58,9 @@ describe('Authority Form Service', () => {
       });
 
       it('should return IAuthority', () => {
-        const formGroup = service.createAuthorityFormGroup(sampleWithRequiredData);
+        const formGroup = service.createAuthorityFormGroup(
+          sampleWithRequiredData,
+        );
 
         const authority = service.getAuthority(formGroup) as any;
 

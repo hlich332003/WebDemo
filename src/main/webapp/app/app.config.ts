@@ -1,4 +1,9 @@
-import { ApplicationConfig, LOCALE_ID, importProvidersFrom, inject } from '@angular/core';
+import {
+  ApplicationConfig,
+  LOCALE_ID,
+  importProvidersFrom,
+  inject,
+} from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localeVi from '@angular/common/locales/vi';
 import { BrowserModule, Title } from '@angular/platform-browser';
@@ -13,7 +18,11 @@ import {
   withNavigationErrorHandler,
 } from '@angular/router';
 import { ServiceWorkerModule } from '@angular/service-worker';
-import { provideHttpClient, withInterceptors, withInterceptorsFromDi } from '@angular/common/http';
+import {
+  provideHttpClient,
+  withInterceptors,
+  withInterceptorsFromDi,
+} from '@angular/common/http';
 import { NgbDateAdapter } from '@ng-bootstrap/ng-bootstrap';
 
 import './config/dayjs';
@@ -51,8 +60,13 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes, ...routerFeatures),
     importProvidersFrom(BrowserModule),
-    importProvidersFrom(ServiceWorkerModule.register('ngsw-worker.js', { enabled: false })),
-    provideHttpClient(withInterceptors([authInterceptor]), withInterceptorsFromDi()),
+    importProvidersFrom(
+      ServiceWorkerModule.register('ngsw-worker.js', { enabled: false }),
+    ),
+    provideHttpClient(
+      withInterceptors([authInterceptor]),
+      withInterceptorsFromDi(),
+    ),
     Title,
     { provide: LOCALE_ID, useValue: 'vi' },
     { provide: NgbDateAdapter, useClass: NgbDateDayjsAdapter },

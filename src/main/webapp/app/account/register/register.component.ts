@@ -14,7 +14,6 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import { TranslateService } from '@ngx-translate/core';
 
 import SharedModule from 'app/shared/shared.module';
 // import PasswordStrengthBarComponent from './password/password-strength-bar.component'; // Đã xóa import
@@ -83,7 +82,6 @@ export default class RegisterComponent implements AfterViewInit {
     }),
   });
 
-  private translateService = inject(TranslateService);
   private registerService = inject(RegisterService);
   private loginService = inject(LoginService);
   private router = inject(Router);
@@ -109,7 +107,7 @@ export default class RegisterComponent implements AfterViewInit {
           login,
           email,
           password,
-          langKey: this.translateService.currentLang,
+          langKey: 'vi', // Default to Vietnamese
         })
         .subscribe({
           next: () => {

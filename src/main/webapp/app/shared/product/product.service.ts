@@ -49,21 +49,24 @@ export class MockProductService {
             id: 103,
             name: 'ASUS TUF Gaming',
             price: '8.200.000',
-            image: 'https://via.placeholder.com/200x150/ff0000/ffffff?text=ASUS',
+            image:
+              'https://via.placeholder.com/200x150/ff0000/ffffff?text=ASUS',
             quantity: 12,
           },
           {
             id: 104,
             name: 'Dell UltraSharp',
             price: '9.500.000',
-            image: 'https://via.placeholder.com/200x150/007acc/ffffff?text=Dell',
+            image:
+              'https://via.placeholder.com/200x150/007acc/ffffff?text=Dell',
             quantity: 6,
           },
           {
             id: 105, // Sản phẩm mới
             name: 'ViewSonic VX2780J',
             price: '5.800.000',
-            image: 'https://via.placeholder.com/200x150/f0ad4e/ffffff?text=ViewSonic',
+            image:
+              'https://via.placeholder.com/200x150/f0ad4e/ffffff?text=ViewSonic',
             quantity: 10,
           },
         ],
@@ -77,28 +80,32 @@ export class MockProductService {
             id: 201,
             name: 'Akko 3068B Plus',
             price: '1.290.000',
-            image: 'https://via.placeholder.com/200x150/ff00ff/ffffff?text=Akko',
+            image:
+              'https://via.placeholder.com/200x150/ff00ff/ffffff?text=Akko',
             quantity: 20,
           },
           {
             id: 202,
             name: 'Keychron K8 Pro',
             price: '1.650.000',
-            image: 'https://via.placeholder.com/200x150/ffff00/000000?text=Keychron',
+            image:
+              'https://via.placeholder.com/200x150/ffff00/000000?text=Keychron',
             quantity: 15,
           },
           {
             id: 203,
             name: 'Razer BlackWidow',
             price: '2.800.000',
-            image: 'https://via.placeholder.com/200x150/00ff00/ffffff?text=Razer',
+            image:
+              'https://via.placeholder.com/200x150/00ff00/ffffff?text=Razer',
             quantity: 10,
           },
           {
             id: 204,
             name: 'Logitech MX Keys',
             price: '2.200.000',
-            image: 'https://via.placeholder.com/200x150/000000/ffffff?text=Logitech',
+            image:
+              'https://via.placeholder.com/200x150/000000/ffffff?text=Logitech',
             quantity: 18,
           },
         ],
@@ -126,7 +133,8 @@ export class MockProductService {
             id: 303,
             name: 'Ghế Văn Phòng',
             price: '2.800.000',
-            image: 'https://via.placeholder.com/200x150/45b7d1/ffffff?text=Ghế2',
+            image:
+              'https://via.placeholder.com/200x150/45b7d1/ffffff?text=Ghế2',
             quantity: 12,
           },
         ],
@@ -140,14 +148,16 @@ export class MockProductService {
             id: 401,
             name: 'Logitech G Pro X Superlight',
             price: '2.990.000',
-            image: 'https://via.placeholder.com/200x150/d9534f/ffffff?text=LogitechG',
+            image:
+              'https://via.placeholder.com/200x150/d9534f/ffffff?text=LogitechG',
             quantity: 25,
           },
           {
             id: 402,
             name: 'Razer Viper Ultimate',
             price: '2.500.000',
-            image: 'https://via.placeholder.com/200x150/5cb85c/ffffff?text=RazerViper',
+            image:
+              'https://via.placeholder.com/200x150/5cb85c/ffffff?text=RazerViper',
             quantity: 18,
           },
         ],
@@ -158,7 +168,10 @@ export class MockProductService {
   }
 
   saveProductsData(): void {
-    localStorage.setItem(CONFIG.PRODUCTS_STORAGE_KEY, JSON.stringify(this.categoriesData));
+    localStorage.setItem(
+      CONFIG.PRODUCTS_STORAGE_KEY,
+      JSON.stringify(this.categoriesData),
+    );
   }
 
   loadProductsData(): void {
@@ -180,12 +193,12 @@ export class MockProductService {
       this.loadProductsData();
     }
 
-    return this.categoriesData.flatMap(category => category.products || []);
+    return this.categoriesData.flatMap((category) => category.products || []);
   }
 
   findById(productId: number): MockProduct | null {
     for (const category of this.categoriesData) {
-      const product = category.products.find(p => p.id === productId);
+      const product = category.products.find((p) => p.id === productId);
       if (product) return product;
     }
     return null;

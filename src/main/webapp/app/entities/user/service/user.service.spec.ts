@@ -1,9 +1,16 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 
 import { Account } from 'app/core/auth/account.model'; // Đã sửa import
-import { sampleWithFullData, sampleWithPartialData, sampleWithRequiredData } from '../user.test-samples';
+import {
+  sampleWithFullData,
+  sampleWithPartialData,
+  sampleWithRequiredData,
+} from '../user.test-samples';
 
 import { UserService } from './user.service';
 
@@ -30,7 +37,7 @@ describe('User Service', () => {
       const returnedFromService = { ...requireRestSample };
       const expected = { ...sampleWithRequiredData };
 
-      service.find(123).subscribe(resp => (expectedResult = resp.body));
+      service.find(123).subscribe((resp) => (expectedResult = resp.body));
 
       const req = httpMock.expectOne({ method: 'GET' });
       req.flush(returnedFromService);
@@ -42,7 +49,7 @@ describe('User Service', () => {
 
       const expected = { ...sampleWithRequiredData };
 
-      service.query().subscribe(resp => (expectedResult = resp.body));
+      service.query().subscribe((resp) => (expectedResult = resp.body));
 
       const req = httpMock.expectOne({ method: 'GET' });
       req.flush([returnedFromService]);
@@ -61,22 +68,35 @@ describe('User Service', () => {
       it('should not add a User to an array that contains it', () => {
         const user: Account = sampleWithRequiredData; // Đã sửa kiểu
         const userCollection: Account[] = [{ ...user }, sampleWithPartialData];
-        expectedResult = service.addUserToCollectionIfMissing(userCollection, user);
+        expectedResult = service.addUserToCollectionIfMissing(
+          userCollection,
+          user,
+        );
         expect(expectedResult).toHaveLength(2);
       });
 
       it("should add a User to an array that doesn't contain it", () => {
         const user: Account = sampleWithRequiredData; // Đã sửa kiểu
         const userCollection: Account[] = [sampleWithPartialData];
-        expectedResult = service.addUserToCollectionIfMissing(userCollection, user);
+        expectedResult = service.addUserToCollectionIfMissing(
+          userCollection,
+          user,
+        );
         expect(expectedResult).toHaveLength(2);
         expect(expectedResult).toContain(user);
       });
 
       it('should add only unique User to an array', () => {
-        const userArray: Account[] = [sampleWithRequiredData, sampleWithPartialData, sampleWithFullData]; // Đã sửa kiểu
+        const userArray: Account[] = [
+          sampleWithRequiredData,
+          sampleWithPartialData,
+          sampleWithFullData,
+        ]; // Đã sửa kiểu
         const userCollection: Account[] = [sampleWithRequiredData];
-        expectedResult = service.addUserToCollectionIfMissing(userCollection, ...userArray);
+        expectedResult = service.addUserToCollectionIfMissing(
+          userCollection,
+          ...userArray,
+        );
         expect(expectedResult).toHaveLength(3);
       });
 
@@ -91,14 +111,23 @@ describe('User Service', () => {
 
       it('should accept null and undefined values', () => {
         const user: Account = sampleWithRequiredData; // Đã sửa kiểu
-        expectedResult = service.addUserToCollectionIfMissing([], null, user, undefined);
+        expectedResult = service.addUserToCollectionIfMissing(
+          [],
+          null,
+          user,
+          undefined,
+        );
         expect(expectedResult).toHaveLength(1);
         expect(expectedResult).toContain(user);
       });
 
       it('should return initial array if no User is added', () => {
         const userCollection: Account[] = [sampleWithRequiredData]; // Đã sửa kiểu
-        expectedResult = service.addUserToCollectionIfMissing(userCollection, undefined, null);
+        expectedResult = service.addUserToCollectionIfMissing(
+          userCollection,
+          undefined,
+          null,
+        );
         expect(expectedResult).toEqual(userCollection);
       });
     });

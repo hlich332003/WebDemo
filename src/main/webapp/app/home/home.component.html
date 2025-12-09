@@ -38,7 +38,11 @@
   <h2 class="section-title">Danh Mục</h2>
   <div class="icon-grid">
     @for (category of featuredCategories; track category.id) {
-      <a [routerLink]="['/products']" [queryParams]="{ categorySlug: category.slug }" class="icon-card">
+      <a
+        [routerLink]="['/products']"
+        [queryParams]="{ categorySlug: category.slug }"
+        class="icon-card"
+      >
         <div class="icon-wrapper">
           <fa-icon [icon]="['fas', 'tags']" class="category-icon"></fa-icon>
         </div>
@@ -65,20 +69,41 @@
             (error)="onImageError($event)"
           />
           <div class="product-info">
-            <h4 class="product-name" (click)="viewProductDetail(product.id)">{{ product.name }}</h4>
+            <h4 class="product-name" (click)="viewProductDetail(product.id)">
+              {{ product.name }}
+            </h4>
             <p class="product-price">{{ formatPrice(product.price) }}</p>
             @if (product.quantity !== null && product.quantity !== undefined) {
               @if (product.quantity === 0) {
                 <p class="stock text-danger fw-bold">❌ Hết hàng</p>
               } @else if (product.quantity < 10) {
-                <p class="stock text-warning">⚠️ Chỉ còn {{ product.quantity }} sản phẩm</p>
+                <p class="stock text-warning">
+                  ⚠️ Chỉ còn {{ product.quantity }} sản phẩm
+                </p>
               } @else {
-                <p class="stock text-muted">Còn {{ product.quantity }} sản phẩm</p>
+                <p class="stock text-muted">
+                  Còn {{ product.quantity }} sản phẩm
+                </p>
               }
             }
-            <button class="btn btn-sm btn-success" (click)="addToCart(product)" [disabled]="product.quantity === 0">
-              {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm vào giỏ' }}
-            </button>
+            <div class="product-buttons">
+              <button
+                type="button"
+                (click)="toggleWishlist(product, $event)"
+                class="btn btn-sm"
+                [class.btn-danger]="isInWishlist(product.id!)"
+                [class.btn-outline-danger]="!isInWishlist(product.id!)"
+              >
+                <fa-icon icon="heart"></fa-icon>
+              </button>
+              <button
+                class="btn btn-sm btn-success"
+                (click)="addToCart(product)"
+                [disabled]="product.quantity === 0"
+              >
+                {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm vào giỏ' }}
+              </button>
+            </div>
           </div>
         </div>
       }
@@ -104,20 +129,41 @@
             (error)="onImageError($event)"
           />
           <div class="product-info">
-            <h4 class="product-name" (click)="viewProductDetail(product.id)">{{ product.name }}</h4>
+            <h4 class="product-name" (click)="viewProductDetail(product.id)">
+              {{ product.name }}
+            </h4>
             <p class="product-price">{{ formatPrice(product.price) }}</p>
             @if (product.quantity !== null && product.quantity !== undefined) {
               @if (product.quantity === 0) {
                 <p class="stock text-danger fw-bold">❌ Hết hàng</p>
               } @else if (product.quantity < 10) {
-                <p class="stock text-warning">⚠️ Chỉ còn {{ product.quantity }} sản phẩm</p>
+                <p class="stock text-warning">
+                  ⚠️ Chỉ còn {{ product.quantity }}
+                </p>
               } @else {
-                <p class="stock text-muted">Còn {{ product.quantity }} sản phẩm</p>
+                <p class="stock text-muted">
+                  Kho: {{ product.quantity }}
+                </p>
               }
             }
-            <button class="btn btn-sm btn-success" (click)="addToCart(product)" [disabled]="product.quantity === 0">
-              {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm vào giỏ' }}
-            </button>
+            <div class="product-buttons">
+              <button
+                type="button"
+                (click)="toggleWishlist(product, $event)"
+                class="btn btn-sm"
+                [class.btn-danger]="isInWishlist(product.id!)"
+                [class.btn-outline-danger]="!isInWishlist(product.id!)"
+              >
+                <fa-icon icon="heart"></fa-icon>
+              </button>
+              <button
+                class="btn btn-sm btn-success"
+                (click)="addToCart(product)"
+                [disabled]="product.quantity === 0"
+              >
+                {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm vào giỏ' }}
+              </button>
+            </div>
           </div>
         </div>
       }
@@ -147,26 +193,53 @@
                   (error)="onImageError($event)"
                 />
                 <div class="product-info">
-                  <h4 class="product-name" (click)="viewProductDetail(product.id)">{{ product.name }}</h4>
+                  <h4
+                    class="product-name"
+                    (click)="viewProductDetail(product.id)"
+                  >
+                    {{ product.name }}
+                  </h4>
                   <p class="product-price">{{ formatPrice(product.price) }}</p>
-                  @if (product.quantity !== null && product.quantity !== undefined) {
+                  @if (
+                    product.quantity !== null && product.quantity !== undefined
+                  ) {
                     @if (product.quantity === 0) {
                       <p class="stock text-danger fw-bold">❌ Hết hàng</p>
                     } @else if (product.quantity < 10) {
-                      <p class="stock text-warning">⚠️ Còn {{ product.quantity }}</p>
+                      <p class="stock text-warning">
+                        ⚠️ Còn {{ product.quantity }}
+                      </p>
                     } @else {
-                      <p class="stock text-muted">Còn {{ product.quantity }}</p>
+                      <p class="stock text-muted">Kho: {{ product.quantity }}</p>
                     }
                   }
-                  <button class="btn btn-sm btn-success" (click)="addToCart(product)" [disabled]="product.quantity === 0">
-                    {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm vào giỏ' }}
-                  </button>
+                  <div class="product-buttons">
+                    <button
+                      type="button"
+                      (click)="toggleWishlist(product, $event)"
+                      class="btn btn-sm"
+                      [class.btn-danger]="isInWishlist(product.id!)"
+                      [class.btn-outline-danger]="!isInWishlist(product.id!)"
+                    >
+                      <fa-icon icon="heart"></fa-icon>
+                    </button>
+                    <button
+                      class="btn btn-sm btn-success"
+                      (click)="addToCart(product)"
+                      [disabled]="product.quantity === 0"
+                    >
+                      {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm vào giỏ' }}
+                    </button>
+                  </div>
                 </div>
               </div>
             }
           </div>
-          <a [routerLink]="['/products']" [queryParams]="{ categorySlug: category.slug }" class="view-all-link"
-            >Xem tất cả {{ category.name }} →</a
+          <a
+            [routerLink]="['/products']"
+            [queryParams]="{ categorySlug: category.slug }"
+            class="view-all-link"
+            >Xem thêm →</a
           >
         </div>
       }

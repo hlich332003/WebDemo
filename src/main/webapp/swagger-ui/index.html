@@ -5,8 +5,18 @@
     <title>webDemo - Swagger UI</title>
     <base href="/swagger-ui/" />
     <link rel="stylesheet" type="text/css" href="./swagger-ui.css" />
-    <link rel="icon" type="image/png" href="./favicon-32x32.png" sizes="32x32" />
-    <link rel="icon" type="image/png" href="./favicon-16x16.png" sizes="16x16" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="./favicon-32x32.png"
+      sizes="32x32"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="./favicon-16x16.png"
+      sizes="16x16"
+    />
   </head>
 
   <body>
@@ -26,7 +36,9 @@
       };
 
       const getBearerToken = () => {
-        var authToken = localStorage.getItem('jhi-authenticationToken') || sessionStorage.getItem('jhi-authenticationToken');
+        var authToken =
+          localStorage.getItem('jhi-authenticationToken') ||
+          sessionStorage.getItem('jhi-authenticationToken');
         if (authToken) {
           authToken = JSON.parse(authToken);
           return `Bearer ${authToken}`;
@@ -47,9 +59,15 @@
 
         if (!urls || urls.length === 0) {
           try {
-            const response = await axios.get('/management/jhiopenapigroups', axiosConfig);
+            const response = await axios.get(
+              '/management/jhiopenapigroups',
+              axiosConfig,
+            );
             if (Array.isArray(response.data)) {
-              urls = response.data.map(({ group, description }) => ({ name: description, url: `${serverBaseUri}${baseUrl}/${group}` }));
+              urls = response.data.map(({ group, description }) => ({
+                name: description,
+                url: `${serverBaseUri}${baseUrl}/${group}`,
+              }));
             }
           } catch (error) {
             console.error('Failed to fetch default API docs', error);
@@ -57,13 +75,17 @@
         }
         console.log(`Swagger urls`, urls);
 
-        return urls?.length ? urls : [{ name: 'default', url: `${serverBaseUri}${baseUrl}` }];
+        return urls?.length
+          ? urls
+          : [{ name: 'default', url: `${serverBaseUri}${baseUrl}` }];
       }
 
       function sortUrls(urls) {
         if (!urls) return urls;
 
-        urls.sort((a, b) => compareUrls(a.name.toLowerCase(), b.name.toLowerCase()));
+        urls.sort((a, b) =>
+          compareUrls(a.name.toLowerCase(), b.name.toLowerCase()),
+        );
 
         return urls;
       }
@@ -87,12 +109,19 @@
           layout: 'StandaloneLayout',
           withCredentials: true,
           presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
-          plugins: [SwaggerUIBundle.plugins.DownloadUrl, AlwaysEnableTryItOutPlugin],
+          plugins: [
+            SwaggerUIBundle.plugins.DownloadUrl,
+            AlwaysEnableTryItOutPlugin,
+          ],
           tryItOutEnabled: true,
           requestInterceptor: function (req) {
             req.headers['Authorization'] = getBearerToken();
             // Remove the sample Swagger UI request body if present
-            if (req.method === 'GET' && req.body === '{"additionalProp1":"string","additionalProp2":"string","additionalProp3":"string"}') {
+            if (
+              req.method === 'GET' &&
+              req.body ===
+                '{"additionalProp1":"string","additionalProp2":"string","additionalProp3":"string"}'
+            ) {
               req.body = undefined;
             }
             return req;

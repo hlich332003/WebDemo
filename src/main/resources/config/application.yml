@@ -1,132 +1,132 @@
 # Spring Boot configuration.
 
 spring:
-  application:
-    name: webDemo
-  docker:
-    compose:
-      enabled: false
-  # OTHER CONFIGURATIONS
-  messages:
-    basename: i18n/messages
+    application:
+        name: webDemo
+    docker:
+        compose:
+            enabled: false
+    # OTHER CONFIGURATIONS
+    messages:
+        basename: i18n/messages
 
-    encoding: UTF-8
-  main:
-    allow-bean-definition-overriding: true
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          authority-prefix: ''
-          authorities-claim-name: auth
+        encoding: UTF-8
+    main:
+        allow-bean-definition-overriding: true
+    security:
+        oauth2:
+            resourceserver:
+                jwt:
+                    authority-prefix: ''
+                    authorities-claim-name: auth
 
-  cache: # Thêm cấu hình cache
-    type: redis # Bật Redis cache
+    cache: # Thêm cấu hình cache
+        type: redis # Bật Redis cache
 
 # JHipster specific properties
 
 jhipster:
-  clientApp:
-    name: 'webDemoApp'
-  mail:
-    from: webDemo@localhost
-  api-docs:
-    default-include-pattern: /api/**
-    management-include-pattern: /management/**
-    title: Web Demo API
-    description: Web Demo API documentation
-    version: 0.0.1
-  security:
-    content-security-policy: "default-src 'self'; frame-src 'self' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://storage.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:"
+    clientApp:
+        name: 'webDemoApp'
+    mail:
+        from: webDemo@localhost
+    api-docs:
+        default-include-pattern: /api/**
+        management-include-pattern: /management/**
+        title: Web Demo API
+        description: Web Demo API documentation
+        version: 0.0.1
+    security:
+        content-security-policy: "default-src 'self'; frame-src 'self' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://storage.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:"
 
 server:
-  port: 8080
-  servlet:
-    encoding:
-      charset: UTF-8
-      force: true
-      enabled: true
+    port: 8080
+    servlet:
+        encoding:
+            charset: UTF-8
+            force: true
+            enabled: true
 
 ---
 # Profile-specific configuration: dev
 
 spring:
-  config:
-    activate:
-      on-profile: dev
+    config:
+        activate:
+            on-profile: dev
 
-  # DATASOURCE CONFIGURATION (dev)
-  datasource:
-    url: jdbc:sqlserver://localhost:1433;databaseName=jhipster_db;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true
-    username: jhipster_user
-    password: Jhip@123
-    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    # DATASOURCE CONFIGURATION (dev)
+    datasource:
+        url: jdbc:sqlserver://localhost:1433;databaseName=jhipster_db;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true
+        username: jhipster_user
+        password: Jhip@123
+        driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
 
-  # JPA & HIBERNATE CONFIGURATION (dev)
-  jpa:
-    properties:
-      hibernate.dialect: org.hibernate.dialect.SQLServerDialect
-      hibernate.jdbc.time_zone: UTC
-      hibernate.timezone.default_storage: NORMALIZE
-    hibernate:
-      ddl-auto: none
-      naming:
-        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
-        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
-    show-sql: true
+    # JPA & HIBERNATE CONFIGURATION (dev)
+    jpa:
+        properties:
+            hibernate.dialect: org.hibernate.dialect.SQLServerDialect
+            hibernate.jdbc.time_zone: UTC
+            hibernate.timezone.default_storage: NORMALIZE
+        hibernate:
+            ddl-auto: none
+            naming:
+                physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+                implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+        show-sql: true
 
-  # REDIS CONFIGURATION (dev)
-  data:
-    redis:
-      host: localhost
-      port: 6379
+    # REDIS CONFIGURATION (dev)
+    data:
+        redis:
+            host: localhost
+            port: 6379
 
-  # RABBITMQ CONFIGURATION (dev)
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    # RABBITMQ CONFIGURATION (dev)
+    rabbitmq:
+        host: localhost
+        port: 5672
+        username: guest
+        password: guest
 
-  # Mail dev để Spring tạo JavaMailSender
-  mail:
-    host: ${SPRING_MAIL_HOST:smtp.gmail.com} # Thay đổi: đọc từ biến môi trường hoặc default smtp.gmail.com
-    port: ${SPRING_MAIL_PORT:587} # Cổng SMTP, thường là 587 cho TLS hoặc 465 cho SSL
-    username: ${SPRING_MAIL_USERNAME:}
-    password: ${SPRING_MAIL_PASSWORD:}
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.starttls.enable: true # Bật STARTTLS để mã hóa kết nối
-      mail.smtp.starttls.required: true # Yêu cầu STARTTLS
-      mail.smtp.ssl.trust: '*' # Tin tưởng tất cả các chứng chỉ SSL (chỉ dùng cho dev, không khuyến khích cho production)
-  # If you prefer a local SMTP dev server use MailHog (no auth):
-  # docker run --rm -p 1025:1025 -p 8025:8025 mailhog/mailhog
-  # Then set SPRING_MAIL_HOST=localhost and SPRING_MAIL_PORT=1025 and leave username/password empty
+    # Mail dev để Spring tạo JavaMailSender
+    mail:
+        host: ${SPRING_MAIL_HOST:smtp.gmail.com} # Thay đổi: đọc từ biến môi trường hoặc default smtp.gmail.com
+        port: ${SPRING_MAIL_PORT:587} # Cổng SMTP, thường là 587 cho TLS hoặc 465 cho SSL
+        username: ${SPRING_MAIL_USERNAME:}
+        password: ${SPRING_MAIL_PASSWORD:}
+        properties:
+            mail.smtp.auth: true
+            mail.smtp.starttls.enable: true # Bật STARTTLS để mã hóa kết nối
+            mail.smtp.starttls.required: true # Yêu cầu STARTTLS
+            mail.smtp.ssl.trust: '*' # Tin tưởng tất cả các chứng chỉ SSL (chỉ dùng cho dev, không khuyến khích cho production)
+    # If you prefer a local SMTP dev server use MailHog (no auth):
+    # docker run --rm -p 1025:1025 -p 8025:8025 mailhog/mailhog
+    # Then set SPRING_MAIL_HOST=localhost and SPRING_MAIL_PORT=1025 and leave username/password empty
 
 management:
-  endpoints:
-    web:
-      exposure:
-        include: 'health'
-  health:
-    mail:
-      enabled: false
-  info:
-    env:
-      enabled: false # Tắt info endpoint
+    endpoints:
+        web:
+            exposure:
+                include: 'health'
+    health:
+        mail:
+            enabled: false
+    info:
+        env:
+            enabled: false # Tắt info endpoint
 
 jhipster:
-  security:
-    authentication:
-      jwt:
-        # Dev-only secret. Có thể thay bằng biến môi trường JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET
-        base64-secret: YzBjZjNjN2VjM2IwYzRlYzJhNWI1NTc2ZWFjZTlmMjE0OTNiYjcwZjFlMjZkMWY3ZDI5Nzg5ZWM5MmUyMTU2ZGIzMTNlNDg4MTJmNDg5YWM2MDFlMmVmYTFiYTVmYTFmYjU3MjIzNDU4OWRlZjExY2ZlNWM4Njg3NWMzZTNlZGU=
-        token-validity-in-seconds: 86400 # 24 hours
-        token-validity-in-seconds-for-remember-me: 2592000 # 30 days
-  cors:
-    allowed-origins: 'http://localhost:9000,http://127.0.0.1:9000,http://localhost:9001,http://127.0.0.1:9001'
-    allowed-methods: '*'
-    allowed-headers: '*'
-    exposed-headers: 'Authorization,Link,X-Total-Count,X-${jhipster.clientApp.name}-alert,X-${jhipster.clientApp.name}-error,X-${jhipster.clientApp.name}-params'
-    allow-credentials: true
-    max-age: 1800
+    security:
+        authentication:
+            jwt:
+                # Dev-only secret. Có thể thay bằng biến môi trường JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET
+                base64-secret: YzBjZjNjN2VjM2IwYzRlYzJhNWI1NTc2ZWFjZTlmMjE0OTNiYjcwZjFlMjZkMWY3ZDI5Nzg5ZWM5MmUyMTU2ZGIzMTNlNDg4MTJmNDg5YWM2MDFlMmVmYTFiYTVmYTFmYjU3MjIzNDU4OWRlZjExY2ZlNWM4Njg3NWMzZTNlZGU=
+                token-validity-in-seconds: 86400 # 24 hours
+                token-validity-in-seconds-for-remember-me: 2592000 # 30 days
+    cors:
+        allowed-origins: 'http://localhost:9000,http://127.0.0.1:9000,http://localhost:9001,http://127.0.0.1:9001'
+        allowed-methods: '*'
+        allowed-headers: '*'
+        exposed-headers: 'Authorization,Link,X-Total-Count,X-${jhipster.clientApp.name}-alert,X-${jhipster.clientApp.name}-error,X-${jhipster.clientApp.name}-params'
+        allow-credentials: true
+        max-age: 1800

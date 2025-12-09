@@ -42,13 +42,24 @@ describe('WebDemo E-Commerce E2E Tests', () => {
   describe('Shopping Cart', () => {
     it('TC-CART-001: Add product to cart', () => {
       cy.visit(`${baseUrl}/products`);
-      cy.get('.product-card').first().find('button').contains('Thêm vào giỏ').click();
-      cy.get('.alert-success').should('contain', 'Đã thêm sản phẩm vào giỏ hàng');
+      cy.get('.product-card')
+        .first()
+        .find('button')
+        .contains('Thêm vào giỏ')
+        .click();
+      cy.get('.alert-success').should(
+        'contain',
+        'Đã thêm sản phẩm vào giỏ hàng',
+      );
     });
 
     it('TC-CART-007: Persist cart in localStorage', () => {
       cy.visit(`${baseUrl}/products`);
-      cy.get('.product-card').first().find('button').contains('Thêm vào giỏ').click();
+      cy.get('.product-card')
+        .first()
+        .find('button')
+        .contains('Thêm vào giỏ')
+        .click();
       cy.reload();
       cy.get('.cart-badge').should('contain', '1');
     });

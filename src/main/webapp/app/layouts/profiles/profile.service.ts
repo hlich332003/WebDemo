@@ -11,7 +11,8 @@ export class ProfileService {
   private readonly http = inject(HttpClient);
   private readonly applicationConfigService = inject(ApplicationConfigService);
 
-  private readonly infoUrl = this.applicationConfigService.getEndpointFor('management/info');
+  private readonly infoUrl =
+    this.applicationConfigService.getEndpointFor('management/info');
   private profileInfo$?: Observable<ProfileInfo>;
 
   getProfileInfo(): Observable<ProfileInfo> {
@@ -20,7 +21,7 @@ export class ProfileService {
     }
 
     // Return default profile info without calling /management/info
-    this.profileInfo$ = new Observable<ProfileInfo>(observer => {
+    this.profileInfo$ = new Observable<ProfileInfo>((observer) => {
       observer.next({
         activeProfiles: ['dev'],
         inProduction: false,

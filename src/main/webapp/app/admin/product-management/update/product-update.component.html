@@ -2,7 +2,11 @@
   <div class="col-8">
     @if (product) {
       <h2 id="page-heading" data-cy="ProductUpdateHeading">
-        <span>{{ isEditing() ? 'Sửa sản phẩm' : 'Xem chi tiết sản phẩm' }} #{{ product.id }}</span>
+        <span
+          >{{ isEditing() ? 'Sửa sản phẩm' : 'Xem chi tiết sản phẩm' }} #{{
+            product.id
+          }}</span
+        >
       </h2>
     } @else {
       <h2 id="page-heading" data-cy="ProductUpdateHeading">
@@ -12,28 +16,58 @@
 
     <jhi-alert-error></jhi-alert-error>
 
-    <form name="editForm" role="form" novalidate (ngSubmit)="save()" [formGroup]="editForm">
+    <form
+      name="editForm"
+      role="form"
+      novalidate
+      (ngSubmit)="save()"
+      [formGroup]="editForm"
+    >
       <div>
         @if (editForm.controls.id.value !== null) {
           <div class="mb-3">
             <label class="form-label" for="field_id">ID</label>
-            <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
+            <input
+              type="number"
+              class="form-control"
+              name="id"
+              id="field_id"
+              data-cy="id"
+              formControlName="id"
+              [readonly]="true"
+            />
           </div>
         }
 
         <div class="mb-3">
           <label class="form-label" for="field_name">Tên sản phẩm</label>
-          <input type="text" class="form-control" name="name" id="field_name" data-cy="name" formControlName="name" />
-          @if (editForm.controls.name.invalid && (editForm.controls.name.dirty || editForm.controls.name.touched)) {
+          <input
+            type="text"
+            class="form-control"
+            name="name"
+            id="field_name"
+            data-cy="name"
+            formControlName="name"
+          />
+          @if (
+            editForm.controls.name.invalid &&
+            (editForm.controls.name.dirty || editForm.controls.name.touched)
+          ) {
             <div>
               @if (editForm.controls.name.errors?.required) {
-                <small class="form-text text-danger">Tên sản phẩm không được để trống.</small>
+                <small class="form-text text-danger"
+                  >Tên sản phẩm không được để trống.</small
+                >
               }
               @if (editForm.controls.name.errors?.minlength) {
-                <small class="form-text text-danger">Tên sản phẩm phải có ít nhất 3 ký tự.</small>
+                <small class="form-text text-danger"
+                  >Tên sản phẩm phải có ít nhất 3 ký tự.</small
+                >
               }
               @if (editForm.controls.name.errors?.maxlength) {
-                <small class="form-text text-danger">Tên sản phẩm không được vượt quá 100 ký tự.</small>
+                <small class="form-text text-danger"
+                  >Tên sản phẩm không được vượt quá 100 ký tự.</small
+                >
               }
             </div>
           }
@@ -48,10 +82,16 @@
             data-cy="description"
             formControlName="description"
           ></textarea>
-          @if (editForm.controls.description.invalid && (editForm.controls.description.dirty || editForm.controls.description.touched)) {
+          @if (
+            editForm.controls.description.invalid &&
+            (editForm.controls.description.dirty ||
+              editForm.controls.description.touched)
+          ) {
             <div>
               @if (editForm.controls.description.errors?.maxlength) {
-                <small class="form-text text-danger">Mô tả không được vượt quá 500 ký tự.</small>
+                <small class="form-text text-danger"
+                  >Mô tả không được vượt quá 500 ký tự.</small
+                >
               }
             </div>
           }
@@ -59,29 +99,60 @@
 
         <div class="mb-3">
           <label class="form-label" for="field_price">Giá</label>
-          <input type="number" class="form-control" name="price" id="field_price" data-cy="price" formControlName="price" />
-          @if (editForm.controls.price.invalid && (editForm.controls.price.dirty || editForm.controls.price.touched)) {
+          <input
+            type="number"
+            class="form-control"
+            name="price"
+            id="field_price"
+            data-cy="price"
+            formControlName="price"
+          />
+          @if (
+            editForm.controls.price.invalid &&
+            (editForm.controls.price.dirty || editForm.controls.price.touched)
+          ) {
             <div>
               @if (editForm.controls.price.errors?.required) {
-                <small class="form-text text-danger">Giá không được để trống.</small>
+                <small class="form-text text-danger"
+                  >Giá không được để trống.</small
+                >
               }
               @if (editForm.controls.price.errors?.min) {
-                <small class="form-text text-danger">Giá phải lớn hơn hoặc bằng 0.</small>
+                <small class="form-text text-danger"
+                  >Giá phải lớn hơn hoặc bằng 0.</small
+                >
               }
             </div>
           }
         </div>
 
         <div class="mb-3">
-          <label class="form-label" for="field_quantity">Số lượng tồn kho</label>
-          <input type="number" class="form-control" name="quantity" id="field_quantity" data-cy="quantity" formControlName="quantity" />
-          @if (editForm.controls.quantity.invalid && (editForm.controls.quantity.dirty || editForm.controls.quantity.touched)) {
+          <label class="form-label" for="field_quantity"
+            >Số lượng tồn kho</label
+          >
+          <input
+            type="number"
+            class="form-control"
+            name="quantity"
+            id="field_quantity"
+            data-cy="quantity"
+            formControlName="quantity"
+          />
+          @if (
+            editForm.controls.quantity.invalid &&
+            (editForm.controls.quantity.dirty ||
+              editForm.controls.quantity.touched)
+          ) {
             <div>
               @if (editForm.controls.quantity.errors?.required) {
-                <small class="form-text text-danger">Số lượng tồn kho không được để trống.</small>
+                <small class="form-text text-danger"
+                  >Số lượng tồn kho không được để trống.</small
+                >
               }
               @if (editForm.controls.quantity.errors?.min) {
-                <small class="form-text text-danger">Số lượng tồn kho phải lớn hơn hoặc bằng 0.</small>
+                <small class="form-text text-danger"
+                  >Số lượng tồn kho phải lớn hơn hoặc bằng 0.</small
+                >
               }
             </div>
           }
@@ -89,7 +160,14 @@
 
         <div class="mb-3">
           <label class="form-label" for="field_imageUrl">URL Hình ảnh</label>
-          <input type="text" class="form-control" name="imageUrl" id="field_imageUrl" data-cy="imageUrl" formControlName="imageUrl" />
+          <input
+            type="text"
+            class="form-control"
+            name="imageUrl"
+            id="field_imageUrl"
+            data-cy="imageUrl"
+            formControlName="imageUrl"
+          />
         </div>
 
         <div class="mb-3">
@@ -109,10 +187,16 @@
               }
             }
           </select>
-          @if (editForm.controls.category.invalid && (editForm.controls.category.dirty || editForm.controls.category.touched)) {
+          @if (
+            editForm.controls.category.invalid &&
+            (editForm.controls.category.dirty ||
+              editForm.controls.category.touched)
+          ) {
             <div>
               @if (editForm.controls.category.errors?.required) {
-                <small class="form-text text-danger">Danh mục không được để trống.</small>
+                <small class="form-text text-danger"
+                  >Danh mục không được để trống.</small
+                >
               }
             </div>
           }
@@ -120,7 +204,13 @@
       </div>
 
       <div>
-        <button type="button" id="cancel-save" data-cy="entityCreateCancelButton" class="btn btn-secondary" (click)="previousState()">
+        <button
+          type="button"
+          id="cancel-save"
+          data-cy="entityCreateCancelButton"
+          class="btn btn-secondary"
+          (click)="previousState()"
+        >
           <fa-icon icon="ban"></fa-icon>&nbsp;<span>Quay lại</span>
         </button>
 
@@ -135,7 +225,11 @@
             <fa-icon icon="save"></fa-icon>&nbsp;<span>Lưu</span>
           </button>
         } @else {
-          <button type="button" class="btn btn-primary" (click)="switchToEditMode()">
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="switchToEditMode()"
+          >
             <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span>Sửa</span>
           </button>
         }

@@ -24,7 +24,8 @@ const routes: Routes = [
   },
   {
     path: 'import', // Thêm route cho import
-    loadComponent: () => import('./import/import.component').then(m => m.ImportComponent),
+    loadComponent: () =>
+      import('./import/import.component').then((m) => m.ImportComponent),
     title: 'Import Dữ liệu',
   },
   {

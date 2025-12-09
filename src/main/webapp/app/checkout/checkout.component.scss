@@ -33,6 +33,7 @@ h1 {
   justify-content: space-between;
   padding: 0.5rem 0;
   border-bottom: 1px solid #eee;
+  position: relative; // Thêm position relative để wishlist-btn có thể absolute
 
   &:last-child {
     border-bottom: none;
@@ -88,6 +89,13 @@ h1 {
   width: 100%;
   padding: 1rem;
   font-size: 1.1rem;
+  background-color: #e91e63;
+  border-color: #e91e63;
+
+  &:hover {
+    background-color: #9c27b0;
+    border-color: #9c27b0;
+  }
 }
 
 .alert {

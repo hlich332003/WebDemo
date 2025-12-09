@@ -8,7 +8,8 @@ import { IOrder } from '../order.model'; // Sửa đường dẫn đúng
 
 @Injectable({ providedIn: 'root' })
 export class OrderManagementService {
-  protected resourceUrl = this.applicationConfigService.getEndpointFor('api/admin/orders');
+  protected resourceUrl =
+    this.applicationConfigService.getEndpointFor('api/admin/orders');
 
   constructor(
     protected http: HttpClient,
@@ -16,7 +17,9 @@ export class OrderManagementService {
   ) {}
 
   searchOrders(searchTerm: string): Observable<IOrderSearchDTO[]> {
-    return this.http.get<IOrderSearchDTO[]>(`${this.resourceUrl}/search`, { params: { searchTerm } });
+    return this.http.get<IOrderSearchDTO[]>(`${this.resourceUrl}/search`, {
+      params: { searchTerm },
+    });
   }
 
   // Bạn có thể thêm các phương thức khác để quản lý đơn hàng ở đây nếu cần

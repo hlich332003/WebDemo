@@ -29,7 +29,7 @@ export class MyOrderDetailComponent implements OnInit {
   private notify = inject(NotificationService);
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.subscribe((params) => {
       const orderId = params.get('id');
       if (orderId) {
         this.loadOrder(Number(orderId));
@@ -82,18 +82,20 @@ export class MyOrderDetailComponent implements OnInit {
       this.notify.error('Địa chỉ giao hàng không được để trống.');
       return;
     }
-    this.orderService.updateDeliveryAddress(orderId, this.newDeliveryAddress).subscribe({
-      next: (res: HttpResponse<IOrder>) => {
-        if (res.body) {
-          this.order = res.body;
-          this.notify.success('Địa chỉ giao hàng đã được cập nhật.');
-          this.isEditingAddress = false;
-        }
-      },
-      error: () => {
-        this.notify.error('Không thể cập nhật địa chỉ giao hàng.');
-      },
-    });
+    this.orderService
+      .updateDeliveryAddress(orderId, this.newDeliveryAddress)
+      .subscribe({
+        next: (res: HttpResponse<IOrder>) => {
+          if (res.body) {
+            this.order = res.body;
+            this.notify.success('Địa chỉ giao hàng đã được cập nhật.');
+            this.isEditingAddress = false;
+          }
+        },
+        error: () => {
+          this.notify.error('Không thể cập nhật địa chỉ giao hàng.');
+        },
+      });
   }
 
   formatPrice(price: number | null | undefined): string {
@@ -107,7 +109,13 @@ export class MyOrderDetailComponent implements OnInit {
     if (!date) {
       return 'N/A';
     }
-    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    };
     return new Date(date).toLocaleDateString('vi-VN', options);
   }
 

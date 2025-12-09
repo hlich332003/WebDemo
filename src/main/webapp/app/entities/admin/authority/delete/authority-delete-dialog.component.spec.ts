@@ -1,6 +1,12 @@
 jest.mock('@ng-bootstrap/ng-bootstrap');
 
-import { ComponentFixture, TestBed, fakeAsync, inject, tick } from '@angular/core/testing';
+import {
+  ComponentFixture,
+  TestBed,
+  fakeAsync,
+  inject,
+  tick,
+} from '@angular/core/testing';
 import { HttpResponse, provideHttpClient } from '@angular/common/http';
 import { of } from 'rxjs';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
@@ -33,7 +39,9 @@ describe('Authority Management Delete Component', () => {
       [],
       fakeAsync(() => {
         // GIVEN
-        jest.spyOn(service, 'delete').mockReturnValue(of(new HttpResponse({ body: {} })));
+        jest
+          .spyOn(service, 'delete')
+          .mockReturnValue(of(new HttpResponse({ body: {} })));
 
         // WHEN
         comp.confirmDelete('ABC');

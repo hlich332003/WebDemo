@@ -1,27 +1,37 @@
 <h1>🛍️ Tất cả Sản phẩm</h1>
 
 <div class="filter-section">
-  <!-- Search box tối ưu với debounce -->
   <div class="search-wrapper">
     <input
       type="text"
       [(ngModel)]="searchTerm"
       (input)="onSearchTermChange($event)"
-      placeholder="🔍 Tìm kiếm theo tên sản phẩm..."
+      placeholder="🔍 Tìm kiếm ..."
       class="search-input"
     />
     @if (isSearching) {
       <span class="search-loading" title="Đang tìm kiếm...">⏳</span>
     }
     @if (searchTerm) {
-      <button class="clear-search-btn" (click)="clearSearch()" type="button" title="Xóa tìm kiếm">✖️</button>
+      <button
+        class="clear-search-btn"
+        (click)="clearSearch()"
+        type="button"
+        title="Xóa tìm kiếm"
+      >
+        ✖️
+      </button>
     }
   </div>
 
   <!-- Category filter -->
   <div class="category-wrapper">
-    <select [(ngModel)]="selectedCategorySlug" (change)="onCategoryChange()" class="category-select">
-      <option value="all">🏷️ Tất cả danh mục</option>
+    <select
+      [(ngModel)]="selectedCategorySlug"
+      (change)="onCategoryChange()"
+      class="category-select"
+    >
+      <option value="all">🏷️ Tất cả</option>
       @for (category of categories; track category.id) {
         <option [value]="category.slug">{{ category.name }}</option>
       }
@@ -46,7 +56,9 @@
         @if (selectedCategorySlug !== 'all') {
           <span class="category-badge">🏷️ {{ getCategoryName() }}</span>
         }
-        <button class="btn-clear-all" (click)="clearAllFilters()" type="button">✖️ Xóa bộ lọc</button>
+        <button class="btn-clear-all" (click)="clearAllFilters()" type="button">
+          ✖️ Xóa bộ lọc
+        </button>
       </p>
     }
   </div>
@@ -61,7 +73,11 @@
   } @else {
     @for (product of filteredProducts; track product.id) {
       <div class="product-card" (click)="viewProductDetail(product.id)">
-        <img [src]="getProxiedImageUrl(product.imageUrl)" [alt]="product.name" loading="lazy" (error)="onImageError($event)" />
+        <img
+          [jhiLazyLoad]="getProxiedImageUrl(product.imageUrl)"
+          [alt]="product.name"
+          (error)="onImageError($event)"
+        />
         <div class="product-info">
           <h3>{{ product.name }}</h3>
           <p class="price">{{ formatPrice(product.price) }}</p>
@@ -69,13 +85,30 @@
             @if (product.quantity === 0) {
               <p class="stock text-danger fw-bold">❌ Hết hàng</p>
             } @else if (product.quantity < 10) {
-              <p class="stock text-warning">⚠️ Chỉ còn {{ product.quantity }} sản phẩm</p>
+              <p class="stock text-warning">
+                ⚠️ Chỉ còn {{ product.quantity }} sản phẩm
+              </p>
             } @else {
-              <p class="stock text-muted">Còn {{ product.quantity }} sản phẩm</p>
+              <p class="stock text-muted">
+                Còn {{ product.quantity }} sản phẩm
+              </p>
             }
           }
           <div class="product-buttons">
-            <button (click)="addToCart(product); $event.stopPropagation()" [disabled]="product.quantity === 0" class="add-to-cart-btn">
+            <button
+              type="button"
+              (click)="toggleWishlist(product, $event)"
+              class="btn btn-sm"
+              [class.btn-danger]="isInWishlist(product.id!)"
+              [class.btn-outline-danger]="!isInWishlist(product.id!)"
+            >
+              <fa-icon icon="heart"></fa-icon>
+            </button>
+            <button
+              (click)="addToCart(product); $event.stopPropagation()"
+              [disabled]="product.quantity === 0"
+              class="btn btn-sm btn-primary"
+            >
               {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm vào giỏ' }}
             </button>
           </div>

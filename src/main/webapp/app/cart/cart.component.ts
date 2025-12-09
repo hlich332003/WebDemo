@@ -2,22 +2,26 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import { CartService } from 'app/shared/services/cart.service';
 import { UtilsService } from 'app/shared/utils/utils.service';
 import { NotificationService } from 'app/shared/notification/notification.service';
+import { WishlistService } from 'app/shared/services/wishlist.service';
+import { IProduct } from 'app/entities/product/product.model';
 
 @Component({
   selector: 'jhi-cart',
   standalone: true,
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.scss'],
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, FontAwesomeModule],
 })
 export class CartComponent {
   public cartService = inject(CartService);
   private utils = inject(UtilsService);
   private notify = inject(NotificationService);
+  public wishlistService = inject(WishlistService);
 
   updateQuantity(productId: number, quantity: number | string): void {
     const q = Number(quantity);
@@ -31,7 +35,9 @@ export class CartComponent {
       return;
     }
 
-    const item = this.cartService.getCartItems().find(i => i.product.id === productId);
+    const item = this.cartService
+      .getCartItems()
+      .find((i) => i.product.id === productId);
     if (!item) {
       return;
     }
@@ -50,7 +56,9 @@ export class CartComponent {
   }
 
   increaseQuantity(productId: number, currentQuantity: number): void {
-    const item = this.cartService.getCartItems().find(i => i.product.id === productId);
+    const item = this.cartService
+      .getCartItems()
+      .find((i) => i.product.id === productId);
     if (!item) {
       return;
     }
@@ -61,7 +69,10 @@ export class CartComponent {
       return;
     }
 
-    const success = this.cartService.updateQuantity(productId, currentQuantity + 1);
+    const success = this.cartService.updateQuantity(
+      productId,
+      currentQuantity + 1,
+    );
     if (!success) {
       this.notify.error('⚠️ Không thể tăng số lượng!');
     }
@@ -71,7 +82,9 @@ export class CartComponent {
     if (currentQuantity > 1) {
       this.cartService.updateQuantity(productId, currentQuantity - 1);
     } else {
-      this.notify.info('💡 Số lượng tối thiểu là 1. Dùng nút xóa nếu muốn bỏ sản phẩm.');
+      this.notify.info(
+        '💡 Số lượng tối thiểu là 1. Dùng nút xóa nếu muốn bỏ sản phẩm.',
+      );
     }
   }
 
@@ -89,5 +102,19 @@ export class CartComponent {
   onImageError(event: Event): void {
     const img = event.target as HTMLImageElement;
     img.src = 'content/images/default-product.svg';
+  }
+
+  toggleWishlist(product: IProduct, event: Event): void {
+    event.stopPropagation();
+    const added = this.wishlistService.toggleWishlist(product);
+    if (added) {
+      this.notify.success('💖 Đã thêm vào danh sách yêu thích!');
+    } else {
+      this.notify.info('💔 Đã xóa khỏi danh sách yêu thích!');
+    }
+  }
+
+  isInWishlist(productId: number): boolean {
+    return this.wishlistService.isInWishlist(productId);
   }
 }

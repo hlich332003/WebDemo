@@ -17,8 +17,14 @@ describe('Authority Management Detail Component', () => {
           [
             {
               path: '**',
-              loadComponent: () => import('./authority-detail.component').then(m => m.AuthorityDetailComponent),
-              resolve: { authority: () => of({ name: '572a7ecc-bf76-43f4-8026-46b42fba586d' }) },
+              loadComponent: () =>
+                import('./authority-detail.component').then(
+                  (m) => m.AuthorityDetailComponent,
+                ),
+              resolve: {
+                authority: () =>
+                  of({ name: '572a7ecc-bf76-43f4-8026-46b42fba586d' }),
+              },
             },
           ],
           withComponentInputBinding(),
@@ -37,10 +43,17 @@ describe('Authority Management Detail Component', () => {
   describe('OnInit', () => {
     it('should load authority on init', async () => {
       const harness = await RouterTestingHarness.create();
-      const instance = await harness.navigateByUrl('/', AuthorityDetailComponent);
+      const instance = await harness.navigateByUrl(
+        '/',
+        AuthorityDetailComponent,
+      );
 
       // THEN
-      expect(instance.authority()).toEqual(expect.objectContaining({ name: '572a7ecc-bf76-43f4-8026-46b42fba586d' }));
+      expect(instance.authority()).toEqual(
+        expect.objectContaining({
+          name: '572a7ecc-bf76-43f4-8026-46b42fba586d',
+        }),
+      );
     });
   });
 

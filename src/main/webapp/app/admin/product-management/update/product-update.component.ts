@@ -5,7 +5,13 @@ import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
 import SharedModule from 'app/shared/shared.module';
-import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormGroup,
+  FormControl,
+  Validators,
+} from '@angular/forms';
 
 import { IProduct, NewProduct } from 'app/entities/product/product.model';
 import { ProductService } from 'app/entities/product/product.service';
@@ -45,12 +51,29 @@ export default class ProductUpdateComponent implements OnInit {
 
   editForm: ProductFormGroup = new FormGroup<ProductFormGroupContent>({
     id: new FormControl(null as IProduct['id'] | null, { nonNullable: true }),
-    name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(3), Validators.maxLength(100)] }),
-    description: new FormControl(null as IProduct['description'], { validators: [Validators.maxLength(500)] }),
-    price: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
-    quantity: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
+    name: new FormControl('', {
+      nonNullable: true,
+      validators: [
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(100),
+      ],
+    }),
+    description: new FormControl(null as IProduct['description'], {
+      validators: [Validators.maxLength(500)],
+    }),
+    price: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(0)],
+    }),
+    quantity: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(0)],
+    }),
     imageUrl: new FormControl(null as IProduct['imageUrl']),
-    category: new FormControl(null as IProduct['category'], { validators: [Validators.required] }), // Khởi tạo FormControl cho category
+    category: new FormControl(null as IProduct['category'], {
+      validators: [Validators.required],
+    }), // Khởi tạo FormControl cho category
   });
 
   ngOnInit(): void {
@@ -71,7 +94,7 @@ export default class ProductUpdateComponent implements OnInit {
   }
 
   loadCategories(): void {
-    this.categoryService.query().subscribe(res => {
+    this.categoryService.query().subscribe((res) => {
       this.categories = res.body ?? [];
     });
   }
@@ -92,11 +115,17 @@ export default class ProductUpdateComponent implements OnInit {
 
   switchToEditMode(): void {
     if (this.product?.id) {
-      this.router.navigate(['/admin/product-management', this.product.id, 'edit']);
+      this.router.navigate([
+        '/admin/product-management',
+        this.product.id,
+        'edit',
+      ]);
     }
   }
 
-  protected subscribeToSaveResponse(result: Observable<HttpResponse<IProduct>>): void {
+  protected subscribeToSaveResponse(
+    result: Observable<HttpResponse<IProduct>>,
+  ): void {
     result.pipe(finalize(() => this.onSaveFinalize())).subscribe({
       next: () => this.onSaveSuccess(),
       error: (error: HttpErrorResponse) => {
@@ -112,7 +141,8 @@ export default class ProductUpdateComponent implements OnInit {
   }
 
   protected onSaveError(error: HttpErrorResponse): void {
-    const errorMessage = error.error?.detail || error.message || 'Lưu sản phẩm thất bại.';
+    const errorMessage =
+      error.error?.detail || error.message || 'Lưu sản phẩm thất bại.';
     this.notify.error(errorMessage);
   }
 

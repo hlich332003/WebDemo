@@ -32,7 +32,7 @@ export default class AdminHomeComponent implements OnInit, OnDestroy {
   private readonly applicationConfigService = inject(ApplicationConfigService);
 
   ngOnInit(): void {
-    this.accountService.getAuthenticationState().subscribe(account => {
+    this.accountService.getAuthenticationState().subscribe((account) => {
       this.account.set(account);
     });
     this.loadStats();
@@ -44,15 +44,22 @@ export default class AdminHomeComponent implements OnInit, OnDestroy {
 
   loadStats(): void {
     this.getDashboardStats().subscribe({
-      next: stats => this.stats.set(stats),
+      next: (stats) => this.stats.set(stats),
       error: () => {
         // Set default stats if API fails
-        this.stats.set({ totalRevenue: 0, totalOrders: 0, totalCustomers: 0, totalProducts: 0 });
+        this.stats.set({
+          totalRevenue: 0,
+          totalOrders: 0,
+          totalCustomers: 0,
+          totalProducts: 0,
+        });
       },
     });
   }
 
   getDashboardStats(): Observable<DashboardStats> {
-    return this.http.get<DashboardStats>(this.applicationConfigService.getEndpointFor('api/admin/dashboard-stats'));
+    return this.http.get<DashboardStats>(
+      this.applicationConfigService.getEndpointFor('api/admin/dashboard-stats'),
+    );
   }
 }

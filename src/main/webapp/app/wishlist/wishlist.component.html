@@ -1,0 +1,126 @@
+<div class="wishlist-container">
+  <div class="wishlist-header">
+    <h1 class="page-title">
+      <i class="bi bi-heart-fill"></i>
+      Danh Sách Yêu Thích
+      @if (wishlistCount() > 0) {
+        <span class="count-badge">{{ wishlistCount() }}</span>
+      }
+    </h1>
+
+    @if (wishlistCount() > 0) {
+      <button
+        class="btn-clear-all"
+        (click)="clearWishlist()"
+        title="Xóa tất cả"
+      >
+        <i class="bi bi-trash"></i>
+        Xóa tất cả
+      </button>
+    }
+  </div>
+
+  @if (wishlistCount() === 0) {
+    <div class="empty-wishlist">
+      <i class="bi bi-heart"></i>
+      <h2>Danh sách yêu thích trống</h2>
+      <p>Bạn chưa có sản phẩm yêu thích nào!</p>
+      <a routerLink="/products" class="btn-primary">
+        <i class="bi bi-shop"></i>
+        Khám phá sản phẩm
+      </a>
+    </div>
+  } @else {
+    <div class="wishlist-grid">
+      @for (item of wishlistItems(); track item.product.id) {
+        <div class="wishlist-card">
+          <button
+            class="btn-remove"
+            (click)="removeFromWishlist(item.product.id!)"
+            title="Xóa khỏi yêu thích"
+          >
+            <i class="bi bi-x-lg"></i>
+          </button>
+
+          <div
+            class="product-image"
+            (click)="viewProductDetail(item.product.id!)"
+          >
+            <img
+              [src]="
+                item.product.imageUrl || 'content/images/default-product.svg'
+              "
+              [alt]="item.product.name"
+              (error)="onImageError($event)"
+            />
+            @if (!item.product.quantity || item.product.quantity === 0) {
+              <div class="out-of-stock-badge">Hết hàng</div>
+            } @else if (item.product.quantity < 10) {
+              <div class="low-stock-badge">Sắp hết</div>
+            }
+          </div>
+
+          <div class="product-info">
+            <h3
+              class="product-name"
+              (click)="viewProductDetail(item.product.id!)"
+            >
+              {{ item.product.name }}
+            </h3>
+
+            @if (item.product.category) {
+              <div class="product-category">
+                <i class="bi bi-tag"></i>
+                {{ item.product.category.name }}
+              </div>
+            }
+
+            <div class="product-price">
+              {{ formatPrice(item.product.price) }}
+            </div>
+
+            <div class="product-stock">
+              @if (item.product.quantity && item.product.quantity > 0) {
+                <span class="in-stock">
+                  <i class="bi bi-check-circle"></i>
+                  Kho: {{ item.product.quantity }}
+                </span>
+              } @else {
+                <span class="out-of-stock">
+                  <i class="bi bi-x-circle"></i>
+                  Hết hàng
+                </span>
+              }
+            </div>
+
+            <div class="product-actions">
+              <button
+                class="btn-add-to-cart"
+                (click)="addToCart(item)"
+                [disabled]="
+                  !item.product.quantity || item.product.quantity === 0
+                "
+              >
+                <i class="bi bi-cart-plus"></i>
+                Thêm vào giỏ
+              </button>
+
+              <button
+                class="btn-view-detail"
+                (click)="viewProductDetail(item.product.id!)"
+              >
+                <i class="bi bi-eye"></i>
+                Xem chi tiết
+              </button>
+            </div>
+
+            <div class="added-date">
+              <i class="bi bi-clock"></i>
+              Đã thêm: {{ item.addedAt | date: 'dd/MM/yyyy HH:mm' }}
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

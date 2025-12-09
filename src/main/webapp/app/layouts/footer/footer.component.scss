@@ -1,27 +1,26 @@
 .footer {
-  background-color: #212529;
+  background: linear-gradient(135deg, #e91e63 0%, #9c27b0 100%);
   color: #f8f9fa;
-  padding: 3rem 0;
+  padding: 0.5rem 0;
   font-size: 0.9rem;
   line-height: 1.5;
-  flex-shrink: 0; /* Ngăn footer co lại */
+  flex-shrink: 0;
 }
 
 .footer-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
-  display: grid; /* Sử dụng Grid Layout */
-  grid-template-columns: repeat(3, 1fr); /* Tạo 3 cột bằng nhau */
-  gap: 2rem; /* Khoảng cách giữa các cột */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
 }
 
 .footer-section {
-  /* Không cần flex: 1 nữa */
   h4 {
     color: #ffffff;
     font-size: 1.1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     position: relative;
 
     &::after {
@@ -29,7 +28,7 @@
       display: block;
       width: 40px;
       height: 2px;
-      background-color: #007bff;
+      background-color: #ffc107; // Accent color
       margin-top: 0.5rem;
     }
   }
@@ -43,19 +42,19 @@
       margin-bottom: 0.7rem;
 
       a {
-        color: #adb5bd;
+        color: rgba(255, 255, 255, 0.7);
         text-decoration: none;
         transition: color 0.2s ease-in-out;
 
         &:hover {
-          color: #007bff;
+          color: #ffc107; // Accent color
         }
       }
     }
   }
 
   p {
-    color: #adb5bd;
+    color: rgba(255, 255, 255, 0.7);
   }
 
   .social-icons {
@@ -64,13 +63,13 @@
     margin-top: 1rem;
 
     a {
-      color: #adb5bd;
-      font-size: 1.2rem; /* Giảm kích thước icon một chút */
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1.2rem;
       text-decoration: none;
       transition: color 0.2s ease-in-out;
 
       &:hover {
-        color: #007bff;
+        color: #ffc107; // Accent color
       }
     }
   }
@@ -79,15 +78,15 @@
 .footer-bottom {
   width: 100%;
   text-align: center;
-  padding-top: 2rem;
-  margin-top: 2rem;
-  border-top: 1px solid #343a40;
-  color: #adb5bd;
+  padding-top: 1rem; // Giảm padding
+  margin-top: 1rem; // Giảm margin
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 @media (max-width: 768px) {
   .footer-container {
-    grid-template-columns: 1fr; /* Chuyển thành 1 cột trên màn hình nhỏ */
+    grid-template-columns: 1fr;
     text-align: center;
   }
 

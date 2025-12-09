@@ -1,5 +1,15 @@
-import { ComponentFixture, TestBed, fakeAsync, inject, tick } from '@angular/core/testing';
-import { HttpHeaders, HttpResponse, provideHttpClient } from '@angular/common/http';
+import {
+  ComponentFixture,
+  TestBed,
+  fakeAsync,
+  inject,
+  tick,
+} from '@angular/core/testing';
+import {
+  HttpHeaders,
+  HttpResponse,
+  provideHttpClient,
+} from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { Subject, of } from 'rxjs';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -36,11 +46,13 @@ describe('Authority Management Component', () => {
             ),
             snapshot: {
               queryParams: {},
-              queryParamMap: jest.requireActual('@angular/router').convertToParamMap({
-                page: '1',
-                size: '1',
-                sort: 'name,desc',
-              }),
+              queryParamMap: jest
+                .requireActual('@angular/router')
+                .convertToParamMap({
+                  page: '1',
+                  size: '1',
+                  sort: 'name,desc',
+                }),
             },
           },
         },
@@ -84,7 +96,9 @@ describe('Authority Management Component', () => {
 
     // THEN
     expect(service.query).toHaveBeenCalled();
-    expect(comp.authorities()[0]).toEqual(expect.objectContaining({ name: '572a7ecc-bf76-43f4-8026-46b42fba586d' }));
+    expect(comp.authorities()[0]).toEqual(
+      expect.objectContaining({ name: '572a7ecc-bf76-43f4-8026-46b42fba586d' }),
+    );
   });
 
   describe('trackName', () => {
@@ -99,7 +113,10 @@ describe('Authority Management Component', () => {
 
   it('should calculate the sort attribute for a non-id attribute', () => {
     // WHEN
-    comp.navigateToWithComponentValues({ predicate: 'non-existing-column', order: 'asc' });
+    comp.navigateToWithComponentValues({
+      predicate: 'non-existing-column',
+      order: 'asc',
+    });
 
     // THEN
     expect(routerNavigateSpy).toHaveBeenLastCalledWith(
@@ -117,7 +134,9 @@ describe('Authority Management Component', () => {
     comp.ngOnInit();
 
     // THEN
-    expect(service.query).toHaveBeenLastCalledWith(expect.objectContaining({ sort: ['name,desc'] }));
+    expect(service.query).toHaveBeenLastCalledWith(
+      expect.objectContaining({ sort: ['name,desc'] }),
+    );
   });
 
   describe('delete', () => {

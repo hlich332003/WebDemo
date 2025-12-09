@@ -1,5 +1,6 @@
 @use 'variables' as *;
 @use 'sass:color';
+@use 'loading-states';
 
 /* ==========================================================================
    Global styles
@@ -64,4 +65,47 @@ h6 {
   padding: 2rem;
   margin-top: 2rem;
   margin-bottom: 2rem;
+}
+
+/* ==========================================================================
+   Notification styles
+   ========================================================================== */
+
+.notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 600;
+  z-index: 1050;
+  transition:
+    transform 0.3s ease-in-out,
+    opacity 0.3s ease-in-out;
+  transform: translateY(-20px);
+  opacity: 0;
+  pointer-events: none;
+
+  &.show {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  &.success {
+    background-color: $success;
+  }
+
+  &.error {
+    background-color: $danger;
+  }
+
+  &.info {
+    background-color: $info;
+  }
+
+  &.warning {
+    background-color: $warning;
+  }
 }

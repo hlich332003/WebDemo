@@ -1,5 +1,9 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}" lang="en">
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:lang="${#locale.language}"
+  lang="en"
+>
   <head>
     <title>Xác nhận đơn hàng</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -13,7 +17,10 @@
     </p>
     <p>
       <span>Tổng tiền:</span>
-      <strong th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'">100,000 VND</strong>
+      <strong
+        th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'"
+        >100,000 VND</strong
+      >
     </p>
     <p>Chúng tôi sẽ xử lý đơn hàng của bạn sớm nhất có thể.</p>
     <p>

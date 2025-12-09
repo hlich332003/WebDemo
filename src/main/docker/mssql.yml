@@ -1,20 +1,20 @@
 # This configuration is intended for development purpose, it's **your** responsibility to harden it for production
 name: webdemo
 services:
-  mssql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: webdemo-mssql
-    ports:
-      - '1433:1433'
-    environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=yourStrong(!)Password
-      - MSSQL_PID=Developer
-    volumes:
-      - ./mssql-data:/var/opt/mssql/data
-    healthcheck:
-      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'yourStrong(!)Password' -Q 'SELECT 1' || exit 1
-      interval: 10s
-      timeout: 3s
-      retries: 10
-      start_period: 10s
+    mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        container_name: webdemo-mssql
+        ports:
+            - '1433:1433'
+        environment:
+            - ACCEPT_EULA=Y
+            - MSSQL_SA_PASSWORD=yourStrong(!)Password
+            - MSSQL_PID=Developer
+        volumes:
+            - ./mssql-data:/var/opt/mssql/data
+        healthcheck:
+            test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'yourStrong(!)Password' -Q 'SELECT 1' || exit 1
+            interval: 10s
+            timeout: 3s
+            retries: 10
+            start_period: 10s

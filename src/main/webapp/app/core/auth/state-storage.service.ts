@@ -11,7 +11,9 @@ export class StateStorageService {
 
   getUrl(): string | null {
     const previousUrl = sessionStorage.getItem(this.previousUrlKey);
-    return previousUrl ? (JSON.parse(previousUrl) as string | null) : previousUrl;
+    return previousUrl
+      ? (JSON.parse(previousUrl) as string | null)
+      : previousUrl;
   }
 
   clearUrl(): void {
@@ -23,10 +25,16 @@ export class StateStorageService {
    * @param authenticationToken - JWT token
    * @param _rememberMe - (Unused) Giữ lại để tương thích với interface
    */
-  storeAuthenticationToken(authenticationToken: string, _rememberMe: boolean): void {
+  storeAuthenticationToken(
+    authenticationToken: string,
+    _rememberMe: boolean,
+  ): void {
     // Luôn lưu vào localStorage để không bị mất khi refresh
     localStorage.setItem(this.authenticationKey, authenticationToken);
-    console.log('✅ Token saved to localStorage:', authenticationToken.substring(0, 20) + '...');
+    console.log(
+      '✅ Token saved to localStorage:',
+      authenticationToken.substring(0, 20) + '...',
+    );
   }
 
   /**
@@ -35,7 +43,10 @@ export class StateStorageService {
   getAuthenticationToken(): string | null {
     const token = localStorage.getItem(this.authenticationKey);
     if (token) {
-      console.log('🔑 Token retrieved from localStorage:', token.substring(0, 20) + '...');
+      console.log(
+        '🔑 Token retrieved from localStorage:',
+        token.substring(0, 20) + '...',
+      );
     } else {
       console.log('⚠️ No token found in localStorage');
     }

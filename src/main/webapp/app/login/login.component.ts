@@ -1,5 +1,19 @@
-import { AfterViewInit, Component, ElementRef, OnInit, inject, signal, viewChild } from '@angular/core';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnInit,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import {
+  FormControl,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
 import SharedModule from 'app/shared/shared.module';
@@ -20,8 +34,14 @@ export class LoginComponent implements OnInit, AfterViewInit {
   authenticationError = signal(false);
 
   loginForm = new FormGroup({
-    username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    password: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    username: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    password: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
     rememberMe: new FormControl(false, { nonNullable: true }),
   });
 
@@ -61,12 +81,12 @@ export class LoginComponent implements OnInit, AfterViewInit {
     console.log('Calling loginService.login with:', credentials);
 
     this.loginService.login(credentials).subscribe({
-      next: account => {
+      next: (account) => {
         console.log('Login success:', account);
         this.authenticationError.set(false);
         this.navigateBasedOnRole(account);
       },
-      error: error => {
+      error: (error) => {
         console.error('Login failed:', error);
         this.authenticationError.set(true);
       },

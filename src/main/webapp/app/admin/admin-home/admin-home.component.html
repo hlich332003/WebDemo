@@ -8,22 +8,41 @@
   @if (stats()) {
     <div class="card">
       <div class="card-header bg-primary text-white">
-        <h5 class="mb-0"><fa-icon icon="tachometer-alt"></fa-icon> Tổng quan cửa hàng</h5>
+        <h5 class="mb-0">
+          <fa-icon icon="tachometer-alt"></fa-icon> Tổng quan cửa hàng
+        </h5>
       </div>
       <div class="card-body p-0">
         <table class="table table-bordered mb-0">
           <thead class="table-light">
             <tr>
-              <th class="text-center"><fa-icon icon="cart-shopping" class="text-primary"></fa-icon> Đơn hàng</th>
-              <th class="text-center"><fa-icon icon="box-open" class="text-warning"></fa-icon> Sản phẩm</th>
-              <th class="text-center"><fa-icon icon="dollar-sign" class="text-success"></fa-icon> Doanh thu</th>
+              <th class="text-center">
+                <fa-icon icon="cart-shopping" class="text-primary"></fa-icon>
+                Đơn hàng
+              </th>
+              <th class="text-center">
+                <fa-icon icon="box-open" class="text-warning"></fa-icon> Sản
+                phẩm
+              </th>
+              <th class="text-center">
+                <fa-icon icon="dollar-sign" class="text-success"></fa-icon>
+                Doanh thu
+              </th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td class="text-center fs-5 fw-bold">{{ stats()?.totalOrders }}</td>
-              <td class="text-center fs-5 fw-bold">{{ stats()?.totalProducts }}</td>
-              <td class="text-center fs-5 fw-bold text-success">{{ stats()?.totalRevenue | currency: 'VND' : 'symbol' : '1.0-0' }}</td>
+              <td class="text-center fs-5 fw-bold">
+                {{ stats()?.totalOrders }}
+              </td>
+              <td class="text-center fs-5 fw-bold">
+                {{ stats()?.totalProducts }}
+              </td>
+              <td class="text-center fs-5 fw-bold text-success">
+                {{
+                  stats()?.totalRevenue | currency: 'VND' : 'symbol' : '1.0-0'
+                }}
+              </td>
             </tr>
           </tbody>
         </table>

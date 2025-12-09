@@ -9,7 +9,10 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { IAuthority } from '../authority.model';
 import { AuthorityService } from '../service/authority.service';
-import { AuthorityFormGroup, AuthorityFormService } from './authority-form.service';
+import {
+  AuthorityFormGroup,
+  AuthorityFormService,
+} from './authority-form.service';
 
 @Component({
   selector: 'jhi-authority-update',
@@ -26,7 +29,8 @@ export class AuthorityUpdateComponent implements OnInit {
   protected activatedRoute = inject(ActivatedRoute);
 
   // eslint-disable-next-line @typescript-eslint/member-ordering
-  editForm: AuthorityFormGroup = this.authorityFormService.createAuthorityFormGroup();
+  editForm: AuthorityFormGroup =
+    this.authorityFormService.createAuthorityFormGroup();
 
   ngOnInit(): void {
     this.activatedRoute.data.subscribe(({ authority }) => {
@@ -47,7 +51,9 @@ export class AuthorityUpdateComponent implements OnInit {
     this.subscribeToSaveResponse(this.authorityService.create(authority));
   }
 
-  protected subscribeToSaveResponse(result: Observable<HttpResponse<IAuthority>>): void {
+  protected subscribeToSaveResponse(
+    result: Observable<HttpResponse<IAuthority>>,
+  ): void {
     result.pipe(finalize(() => this.onSaveFinalize())).subscribe({
       next: () => this.onSaveSuccess(),
       error: () => this.onSaveError(),

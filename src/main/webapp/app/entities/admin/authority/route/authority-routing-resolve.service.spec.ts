@@ -1,6 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpResponse, provideHttpClient } from '@angular/common/http';
-import { ActivatedRoute, ActivatedRouteSnapshot, Router, convertToParamMap } from '@angular/router';
+import {
+  ActivatedRoute,
+  ActivatedRouteSnapshot,
+  Router,
+  convertToParamMap,
+} from '@angular/router';
 import { of } from 'rxjs';
 
 import { IAuthority } from '../authority.model';
@@ -29,7 +34,9 @@ describe('Authority routing resolve service', () => {
       ],
     });
     mockRouter = TestBed.inject(Router);
-    jest.spyOn(mockRouter, 'navigate').mockImplementation(() => Promise.resolve(true));
+    jest
+      .spyOn(mockRouter, 'navigate')
+      .mockImplementation(() => Promise.resolve(true));
     mockActivatedRouteSnapshot = TestBed.inject(ActivatedRoute).snapshot;
     service = TestBed.inject(AuthorityService);
     resultAuthority = undefined;
@@ -38,7 +45,9 @@ describe('Authority routing resolve service', () => {
   describe('resolve', () => {
     it('should return IAuthority returned by find', () => {
       // GIVEN
-      service.find = jest.fn(name => of(new HttpResponse({ body: { name } })));
+      service.find = jest.fn((name) =>
+        of(new HttpResponse({ body: { name } })),
+      );
       mockActivatedRouteSnapshot.params = { name: 'ABC' };
 
       // WHEN
@@ -76,7 +85,9 @@ describe('Authority routing resolve service', () => {
 
     it('should route to 404 page if data not found in server', () => {
       // GIVEN
-      jest.spyOn(service, 'find').mockReturnValue(of(new HttpResponse<IAuthority>({ body: null })));
+      jest
+        .spyOn(service, 'find')
+        .mockReturnValue(of(new HttpResponse<IAuthority>({ body: null })));
       mockActivatedRouteSnapshot.params = { name: 'ABC' };
 
       // WHEN

@@ -11,8 +11,11 @@ export interface ICartItem {
   providedIn: 'root',
 })
 export class CartService {
-  private cartItemsSubject: BehaviorSubject<ICartItem[]> = new BehaviorSubject<ICartItem[]>(this.getCartFromLocalStorage());
-  public cartItems$: Observable<ICartItem[]> = this.cartItemsSubject.asObservable();
+  private cartItemsSubject: BehaviorSubject<ICartItem[]> = new BehaviorSubject<
+    ICartItem[]
+  >(this.getCartFromLocalStorage());
+  public cartItems$: Observable<ICartItem[]> =
+    this.cartItemsSubject.asObservable();
 
   // Tối ưu: Tạo các Observable cho dữ liệu được tính toán
   public totalQuantity$: Observable<number>;
@@ -21,13 +24,18 @@ export class CartService {
   constructor() {
     // Tính toán tổng số lượng
     this.totalQuantity$ = this.cartItems$.pipe(
-      map(items => items.reduce((total, item) => total + item.quantity, 0)),
+      map((items) => items.reduce((total, item) => total + item.quantity, 0)),
       shareReplay(1), // Cache lại kết quả cuối cùng
     );
 
     // Tính toán tổng giá tiền
     this.totalPrice$ = this.cartItems$.pipe(
-      map(items => items.reduce((total, item) => total + (item.product.price ?? 0) * item.quantity, 0)),
+      map((items) =>
+        items.reduce(
+          (total, item) => total + (item.product.price ?? 0) * item.quantity,
+          0,
+        ),
+      ),
       shareReplay(1), // Cache lại kết quả cuối cùng
     );
   }
@@ -63,7 +71,9 @@ export class CartService {
     }
 
     const currentCart = this.getCartItems(); // Lấy giá trị hiện tại
-    const existingItem = currentCart.find(item => item.product.id === product.id);
+    const existingItem = currentCart.find(
+      (item) => item.product.id === product.id,
+    );
 
     const currentQuantityInCart = existingItem ? existingItem.quantity : 0;
     const newTotalQuantity = currentQuantityInCart + quantity;
@@ -88,7 +98,7 @@ export class CartService {
 
   updateQuantity(productId: number, quantity: number): boolean {
     const currentCart = this.getCartItems();
-    const item = currentCart.find(i => i.product.id === productId);
+    const item = currentCart.find((i) => i.product.id === productId);
 
     if (!item) {
       return false;
@@ -102,7 +112,9 @@ export class CartService {
     }
 
     if (quantity > availableStock) {
-      console.warn(`Cannot set quantity to ${quantity}. Only ${availableStock} available in stock`);
+      console.warn(
+        `Cannot set quantity to ${quantity}. Only ${availableStock} available in stock`,
+      );
       return false;
     }
 
@@ -114,7 +126,7 @@ export class CartService {
 
   removeFromCart(productId: number): void {
     let currentCart = this.getCartItems();
-    currentCart = currentCart.filter(item => item.product.id !== productId);
+    currentCart = currentCart.filter((item) => item.product.id !== productId);
     this.cartItemsSubject.next(currentCart);
     this.saveCartToLocalStorage(currentCart);
   }
@@ -131,5 +143,21 @@ export class CartService {
   // Phương thức này vẫn hữu ích để lấy giá trị tức thời nếu cần
   getCartItems(): ICartItem[] {
     return this.cartItemsSubject.value;
+  }
+
+  // Thêm phương thức getCartCount để navbar và cart component sử dụng
+  getCartCount(): number {
+    return this.getCartItems().reduce(
+      (total, item) => total + item.quantity,
+      0,
+    );
+  }
+
+  // Thêm phương thức getCartTotal để checkout sử dụng
+  getCartTotal(): number {
+    return this.getCartItems().reduce(
+      (total, item) => total + (item.product.price ?? 0) * item.quantity,
+      0,
+    );
   }
 }

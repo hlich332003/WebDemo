@@ -14,67 +14,67 @@
 # ===================================================================
 
 logging:
-  level:
-    ROOT: DEBUG
-    tech.jhipster: DEBUG
-    com.mycompany.myapp: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql: TRACE
+    level:
+        ROOT: DEBUG
+        tech.jhipster: DEBUG
+        com.mycompany.myapp: DEBUG
+        org.hibernate.SQL: DEBUG
+        org.hibernate.type.descriptor.sql: TRACE
 
 spring:
-  devtools:
-    restart:
-      enabled: true
-      additional-exclude: static/**
-    livereload:
-      enabled: false # we use Webpack dev server + BrowserSync for livereload
-  docker:
-    compose:
-      enabled: false
-      profiles:
-        active: dev
-  jackson:
-    serialization:
-      indent-output: true
-  datasource:
-    type: com.zaxxer.hikari.HikariDataSource
-    # Cấu hình cho SQL Server
-    url: jdbc:sqlserver://localhost:1433;databaseName=jhipster_db;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true
-    username: jhipster_user
-    password: Jhip@123
-    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    hikari:
-      poolName: Hikari
-      auto-commit: false
-  liquibase:
-    # Remove 'faker' if you do not want the sample data to be loaded automatically
-    contexts: dev, faker
-  mail:
-    # Use environment variables in dev. Set SPRING_MAIL_HOST, SPRING_MAIL_PORT, SPRING_MAIL_USERNAME and SPRING_MAIL_PASSWORD in your environment.
-    # Example (PowerShell):
-    # $env:SPRING_MAIL_HOST = "smtp.gmail.com"; $env:SPRING_MAIL_PORT = "587"; $env:SPRING_MAIL_USERNAME = "your_email@gmail.com"; $env:SPRING_MAIL_PASSWORD = "your_app_password"
-    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
-    port: ${SPRING_MAIL_PORT:587}
-    username: catbamaytongdai@gmail.com
-    password: cqji eiju swlf ulvq
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
-          ssl:
-            trust: "*"
-  messages:
-    cache-duration: PT1S # 1 second, see the ISO 8601 standard
-  thymeleaf:
-    cache: false
+    devtools:
+        restart:
+            enabled: true
+            additional-exclude: static/**
+        livereload:
+            enabled: false # we use Webpack dev server + BrowserSync for livereload
+    docker:
+        compose:
+            enabled: false
+            profiles:
+                active: dev
+    jackson:
+        serialization:
+            indent-output: true
+    datasource:
+        type: com.zaxxer.hikari.HikariDataSource
+        # Cấu hình cho SQL Server
+        url: jdbc:sqlserver://localhost:1433;databaseName=jhipster_db;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true
+        username: jhipster_user
+        password: Jhip@123
+        driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+        hikari:
+            poolName: Hikari
+            auto-commit: false
+    liquibase:
+        # Remove 'faker' if you do not want the sample data to be loaded automatically
+        contexts: dev, faker
+    mail:
+        # Use environment variables in dev. Set SPRING_MAIL_HOST, SPRING_MAIL_PORT, SPRING_MAIL_USERNAME and SPRING_MAIL_PASSWORD in your environment.
+        # Example (PowerShell):
+        # $env:SPRING_MAIL_HOST = "smtp.gmail.com"; $env:SPRING_MAIL_PORT = "587"; $env:SPRING_MAIL_USERNAME = "your_email@gmail.com"; $env:SPRING_MAIL_PASSWORD = "your_app_password"
+        host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+        port: ${SPRING_MAIL_PORT:587}
+        username: catbamaytongdai@gmail.com
+        password: cqji eiju swlf ulvq
+        properties:
+            mail:
+                smtp:
+                    auth: true
+                    starttls:
+                        enable: true
+                        required: true
+                    ssl:
+                        trust: '*'
+    messages:
+        cache-duration: PT1S # 1 second, see the ISO 8601 standard
+    thymeleaf:
+        cache: false
 
 server:
-  port: 8080
-  # make sure requests the proxy uri instead of the server one
-  forward-headers-strategy: native
+    port: 8080
+    # make sure requests the proxy uri instead of the server one
+    forward-headers-strategy: native
 
 # ===================================================================
 # JHipster specific properties
@@ -83,39 +83,39 @@ server:
 # ===================================================================
 
 jhipster:
-  # Đã xóa hoàn toàn khối cache để tránh lỗi ConverterNotFoundException
-  # cache: # Cache configuration
+    # Đã xóa hoàn toàn khối cache để tránh lỗi ConverterNotFoundException
+    # cache: # Cache configuration
     # ehcache: # Ehcache configuration
-      # time-to-live-seconds: 3600 # By default objects stay 1 hour in the cache
-      # max-entries: 100 # Number of objects in each cache entry
-  # CORS is only enabled by default with the "dev" profile
-  cors:
-    # Allow Ionic for JHipster by default (* no longer allowed in Spring Boot 2.4+)
-    allowed-origins: 'http://localhost:8100,https://localhost:8100,http://localhost:9000,https://localhost:9000,http://localhost:4200,https://localhost:4200'
-    # Enable CORS when running in GitHub Codespaces
-    allowed-origin-patterns: 'https://*.githubpreview.dev'
-    allowed-methods: '*'
-    allowed-headers: '*'
-    exposed-headers: 'Authorization,Link,X-Total-Count,X-${jhipster.clientApp.name}-alert,X-${jhipster.clientApp.name}-error,X-${jhipster.clientApp.name}-params'
-    allow-credentials: true
-    max-age: 1800
-  security:
-    authentication:
-      jwt:
-        # This token must be encoded using Base64 and be at least 256 bits long (you can type `openssl rand -base64 64` on your command line to generate a 512 bits one)
-        base64-secret: YzBjZjNjN2VjM2IwYzRlYzJhNWI1NTc2ZWFjZTlmMjE0OTNiYjcwZjFlMjZkMWY3ZDI5Nzg5ZWM5MmUyMTU2ZGIzMTNlNDg4MTJmNDg5YWM2MDFlMmVmYTFiYTVmYTFmYjU3MjIzNDU4OWRlZjExY2ZlNWM4Njg3NWMzZTNlZGU=
-        # Token is valid 24 hours
-        token-validity-in-seconds: 86400
-        token-validity-in-seconds-for-remember-me: 2592000
-  mail: # specific JHipster mail property, for standard properties see MailProperties
-    base-url: http://127.0.0.1:8080
-  logging:
-    use-json-format: false # By default, logs are not in Json format
-    logstash: # Forward logs to logstash over a socket, used by LoggingConfiguration
-      enabled: false
-      host: localhost
-      port: 5000
-      ring-buffer-size: 512
+    # time-to-live-seconds: 3600 # By default objects stay 1 hour in the cache
+    # max-entries: 100 # Number of objects in each cache entry
+    # CORS is only enabled by default with the "dev" profile
+    cors:
+        # Allow Ionic for JHipster by default (* no longer allowed in Spring Boot 2.4+)
+        allowed-origins: 'http://localhost:8100,https://localhost:8100,http://localhost:9000,https://localhost:9000,http://localhost:4200,https://localhost:4200'
+        # Enable CORS when running in GitHub Codespaces
+        allowed-origin-patterns: 'https://*.githubpreview.dev'
+        allowed-methods: '*'
+        allowed-headers: '*'
+        exposed-headers: 'Authorization,Link,X-Total-Count,X-${jhipster.clientApp.name}-alert,X-${jhipster.clientApp.name}-error,X-${jhipster.clientApp.name}-params'
+        allow-credentials: true
+        max-age: 1800
+    security:
+        authentication:
+            jwt:
+                # This token must be encoded using Base64 and be at least 256 bits long (you can type `openssl rand -base64 64` on your command line to generate a 512 bits one)
+                base64-secret: YzBjZjNjN2VjM2IwYzRlYzJhNWI1NTc2ZWFjZTlmMjE0OTNiYjcwZjFlMjZkMWY3ZDI5Nzg5ZWM5MmUyMTU2ZGIzMTNlNDg4MTJmNDg5YWM2MDFlMmVmYTFiYTVmYTFmYjU3MjIzNDU4OWRlZjExY2ZlNWM4Njg3NWMzZTNlZGU=
+                # Token is valid 24 hours
+                token-validity-in-seconds: 86400
+                token-validity-in-seconds-for-remember-me: 2592000
+    mail: # specific JHipster mail property, for standard properties see MailProperties
+        base-url: http://127.0.0.1:8080
+    logging:
+        use-json-format: false # By default, logs are not in Json format
+        logstash: # Forward logs to logstash over a socket, used by LoggingConfiguration
+            enabled: false
+            host: localhost
+            port: 5000
+            ring-buffer-size: 512
 # ===================================================================
 # Application specific properties
 # Add your own application properties here, see the ApplicationProperties class

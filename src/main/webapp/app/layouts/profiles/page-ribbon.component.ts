@@ -25,7 +25,9 @@ export default class PageRibbonComponent implements OnInit {
   private readonly profileService = inject(ProfileService);
 
   ngOnInit(): void {
-    const ribbonEnv$: Observable<string | undefined> = this.profileService.getProfileInfo().pipe(map(profileInfo => profileInfo.ribbonEnv));
+    const ribbonEnv$: Observable<string | undefined> = this.profileService
+      .getProfileInfo()
+      .pipe(map((profileInfo) => profileInfo.ribbonEnv));
     this.ribbonEnvSignal = toSignal(ribbonEnv$, { injector: this.injector });
   }
 }

@@ -7,7 +7,8 @@ import { IProductSearchDTO } from 'app/shared/model/product-search-dto.model'; /
 
 @Injectable({ providedIn: 'root' })
 export class ProductAdminService {
-  protected resourceUrl = this.applicationConfigService.getEndpointFor('api/admin/products');
+  protected resourceUrl =
+    this.applicationConfigService.getEndpointFor('api/admin/products');
 
   constructor(
     protected http: HttpClient,
@@ -15,7 +16,9 @@ export class ProductAdminService {
   ) {}
 
   searchProducts(searchTerm: string): Observable<IProductSearchDTO[]> {
-    return this.http.get<IProductSearchDTO[]>(`${this.resourceUrl}/search`, { params: { searchTerm } });
+    return this.http.get<IProductSearchDTO[]>(`${this.resourceUrl}/search`, {
+      params: { searchTerm },
+    });
   }
 
   // Bạn có thể thêm các phương thức khác để quản lý sản phẩm ở đây nếu cần

@@ -1,4 +1,11 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  signal,
+  computed,
+} from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Observable, Subject } from 'rxjs';
@@ -14,13 +21,20 @@ import { EntityNavbarItems } from 'app/entities/entity-navbar-items';
 import { environment } from 'environments/environment';
 import NavbarItem from './navbar-item.model';
 import { CartService } from 'app/shared/services/cart.service';
+import { WishlistService } from 'app/shared/services/wishlist.service';
 
 @Component({
   selector: 'jhi-navbar',
   standalone: true,
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss'],
-  imports: [RouterModule, SharedModule, HasAnyAuthorityDirective, FormsModule, FontAwesomeModule],
+  imports: [
+    RouterModule,
+    SharedModule,
+    HasAnyAuthorityDirective,
+    FormsModule,
+    FontAwesomeModule,
+  ],
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   inProduction?: boolean;
@@ -38,6 +52,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   // Tối ưu: Sử dụng Observable trực tiếp từ service
   cartItemCount$: Observable<number>;
+  wishlistItemCount$: Observable<number>;
 
   /**
    * Computed signal to determine if the cart should be shown.
@@ -57,20 +72,34 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private readonly profileService = inject(ProfileService);
   private readonly router = inject(Router);
   private readonly cartService = inject(CartService); // Inject CartService
+  private readonly wishlistService = inject(WishlistService); // Inject WishlistService
 
   constructor() {
     const { VERSION } = environment;
     if (VERSION) {
-      this.version = VERSION.toLowerCase().startsWith('v') ? VERSION : `v${VERSION}`;
+      this.version = VERSION.toLowerCase().startsWith('v')
+        ? VERSION
+        : `v${VERSION}`;
     }
-    // Gán Observable từ service
+    // Gán Observable từ services
     this.cartItemCount$ = this.cartService.totalQuantity$;
+
+    // Wishlist sử dụng signal, cần convert sang Observable
+    this.wishlistItemCount$ = new Observable((observer) => {
+      const effect = this.wishlistService.count;
+      observer.next(effect());
+      // Theo dõi thay đổi
+      const unsubscribe = setInterval(() => {
+        observer.next(effect());
+      }, 100);
+      return () => clearInterval(unsubscribe);
+    });
   }
 
   ngOnInit(): void {
     this.entitiesNavbarItems = EntityNavbarItems;
     this.profileService.getProfileInfo().subscribe({
-      next: profileInfo => {
+      next: (profileInfo) => {
         this.inProduction = profileInfo.inProduction;
         this.openAPIEnabled = profileInfo.openAPIEnabled;
       },
@@ -86,12 +115,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
         distinctUntilChanged(), // Chỉ trigger khi giá trị thay đổi
         takeUntil(this.destroy$),
       )
-      .subscribe(term => {
+      .subscribe((term) => {
         if (term.trim()) {
           this.isSearching = true;
-          this.router.navigate(['/products'], { queryParams: { search: term.trim() } }).then(() => {
-            this.isSearching = false;
-          });
+          this.router
+            .navigate(['/products'], { queryParams: { search: term.trim() } })
+            .then(() => {
+              this.isSearching = false;
+            });
         }
       });
   }
@@ -114,7 +145,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
     // Emit empty to debounce stream to cancel pending searches
     this.searchSubject.next('');
     // Navigate to product list and remove the search param
-    this.router.navigate(['/products'], { queryParams: { search: null }, queryParamsHandling: 'merge' });
+    this.router.navigate(['/products'], {
+      queryParams: { search: null },
+      queryParamsHandling: 'merge',
+    });
   }
 
   /**
@@ -123,9 +157,13 @@ export class NavbarComponent implements OnInit, OnDestroy {
   search(): void {
     if (this.searchTerm.trim()) {
       this.isSearching = true;
-      this.router.navigate(['/products'], { queryParams: { search: this.searchTerm.trim() } }).then(() => {
-        this.isSearching = false;
-      });
+      this.router
+        .navigate(['/products'], {
+          queryParams: { search: this.searchTerm.trim() },
+        })
+        .then(() => {
+          this.isSearching = false;
+        });
     }
   }
 
@@ -149,6 +187,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   toggleNavbar(): void {
-    this.isNavbarCollapsed.update(isNavbarCollapsed => !isNavbarCollapsed);
+    this.isNavbarCollapsed.update((isNavbarCollapsed) => !isNavbarCollapsed);
   }
 }

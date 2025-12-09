@@ -3,7 +3,12 @@ import { RouterModule } from '@angular/router';
 import { HttpHeaders, HttpResponse } from '@angular/common/http';
 
 import SharedModule from 'app/shared/shared.module';
-import { SortByDirective, SortDirective, SortService, sortStateSignal } from 'app/shared/sort';
+import {
+  SortByDirective,
+  SortDirective,
+  SortService,
+  sortStateSignal,
+} from 'app/shared/sort';
 import { AccountService } from 'app/core/auth/account.service';
 import { UserManagementService } from '../service/user-management.service';
 import { User } from '../user-management.model';
@@ -14,7 +19,13 @@ import ItemCountComponent from 'app/shared/pagination/item-count.component';
   standalone: true,
   templateUrl: './user-management.component.html',
   styleUrls: ['./user-management.component.scss'],
-  imports: [RouterModule, SharedModule, SortDirective, SortByDirective, ItemCountComponent],
+  imports: [
+    RouterModule,
+    SharedModule,
+    SortDirective,
+    SortByDirective,
+    ItemCountComponent,
+  ],
 })
 export default class UserManagementComponent implements OnInit {
   currentAccount = inject(AccountService).trackCurrentAccount();
@@ -35,7 +46,9 @@ export default class UserManagementComponent implements OnInit {
   }
 
   setActive(user: User, isActivated: boolean): void {
-    this.userService.update({ ...user, activated: isActivated }).subscribe(() => this.loadAll());
+    this.userService
+      .update({ ...user, activated: isActivated })
+      .subscribe(() => this.loadAll());
   }
 
   trackIdentity(item: User): number;
@@ -101,7 +114,7 @@ export default class UserManagementComponent implements OnInit {
     if (users && this.searchTerm()) {
       const term = this.searchTerm().toLowerCase();
       const filtered = users.filter(
-        user =>
+        (user) =>
           (user.login?.toLowerCase() ?? '').includes(term) ||
           (user.email?.toLowerCase() ?? '').includes(term) ||
           (user.firstName?.toLowerCase() ?? '').includes(term) ||

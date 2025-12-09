@@ -27,7 +27,11 @@ export default tseslint.config(
   },
   {
     files: ['src/main/webapp/**/*.ts'],
-    extends: [...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylistic, ...angular.configs.tsRecommended],
+    extends: [
+      ...tseslint.configs.strictTypeChecked,
+      ...tseslint.configs.stylistic,
+      ...angular.configs.tsRecommended,
+    ],
     languageOptions: {
       globals: {
         ...globals.browser,
@@ -56,7 +60,10 @@ export default tseslint.config(
       ],
       '@angular-eslint/relative-url-prefix': 'error',
       '@typescript-eslint/consistent-type-definitions': 'off',
-      '@typescript-eslint/explicit-function-return-type': ['error', { allowExpressions: true }],
+      '@typescript-eslint/explicit-function-return-type': [
+        'error',
+        { allowExpressions: true },
+      ],
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/member-ordering': [
         'error',
@@ -94,7 +101,10 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/prefer-nullish-coalescing': 'error',
       '@typescript-eslint/prefer-optional-chain': 'error',
-      '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
+      '@typescript-eslint/restrict-template-expressions': [
+        'error',
+        { allowNumber: true },
+      ],
       '@typescript-eslint/unbound-method': 'off',
       'arrow-body-style': 'error',
       curly: 'error',
@@ -107,7 +117,11 @@ export default tseslint.config(
       'no-labels': 'error',
       'no-new': 'error',
       'no-new-wrappers': 'error',
-      'object-shorthand': ['error', 'always', { avoidExplicitReturnArrows: true }],
+      'object-shorthand': [
+        'error',
+        'always',
+        { avoidExplicitReturnArrows: true },
+      ],
       radix: 'error',
       'spaced-comment': ['warn', 'always'],
     },
@@ -120,7 +134,10 @@ export default tseslint.config(
   },
   {
     files: ['**/*.html'],
-    extends: [...angular.configs.templateRecommended, ...angular.configs.templateAccessibility],
+    extends: [
+      ...angular.configs.templateRecommended,
+      ...angular.configs.templateAccessibility,
+    ],
     rules: {
       '@angular-eslint/template/click-events-have-key-events': 'off',
       '@angular-eslint/template/interactive-supports-focus': 'off',

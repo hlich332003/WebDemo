@@ -16,13 +16,18 @@ export class OrderManagementService {
   protected http = inject(HttpClient);
   protected applicationConfigService = inject(ApplicationConfigService);
 
-  protected resourceUrl = this.applicationConfigService.getEndpointFor('api/orders'); // Đã sửa API endpoint
+  protected resourceUrl =
+    this.applicationConfigService.getEndpointFor('api/orders'); // Đã sửa API endpoint
 
   query(req?: any): Observable<EntityArrayResponseType> {
     const options = createRequestOption(req);
     return this.http
       .get<IOrder[]>(this.resourceUrl, { params: options, observe: 'response' })
-      .pipe(map((res: EntityArrayResponseType) => this.convertDateArrayFromServer(res)));
+      .pipe(
+        map((res: EntityArrayResponseType) =>
+          this.convertDateArrayFromServer(res),
+        ),
+      );
   }
 
   find(id: number): Observable<EntityResponseType> {
@@ -33,29 +38,43 @@ export class OrderManagementService {
 
   updateStatus(id: number, status: string): Observable<EntityResponseType> {
     return this.http
-      .patch<IOrder>(`${this.resourceUrl}/${id}/status`, { status: status }, { observe: 'response' }) // Sửa payload
+      .patch<IOrder>(
+        `${this.resourceUrl}/${id}/status`,
+        { status: status },
+        { observe: 'response' },
+      ) // Sửa payload
       .pipe(map((res: EntityResponseType) => this.convertDateFromServer(res)));
   }
 
   cancelOrder(id: number): Observable<HttpResponse<{}>> {
-    return this.http.patch(`${this.resourceUrl}/${id}/cancel`, null, { observe: 'response' });
+    return this.http.patch(`${this.resourceUrl}/${id}/cancel`, null, {
+      observe: 'response',
+    });
   }
 
   delete(id: number): Observable<HttpResponse<{}>> {
-    return this.http.delete(`${this.resourceUrl}/${id}`, { observe: 'response' });
+    return this.http.delete(`${this.resourceUrl}/${id}`, {
+      observe: 'response',
+    });
   }
 
   protected convertDateFromServer(res: EntityResponseType): EntityResponseType {
     if (res.body) {
-      res.body.orderDate = res.body.orderDate ? dayjs(res.body.orderDate).toDate() : null; // Đã sửa lỗi
+      res.body.orderDate = res.body.orderDate
+        ? dayjs(res.body.orderDate).toDate()
+        : null; // Đã sửa lỗi
     }
     return res;
   }
 
-  protected convertDateArrayFromServer(res: EntityArrayResponseType): EntityArrayResponseType {
+  protected convertDateArrayFromServer(
+    res: EntityArrayResponseType,
+  ): EntityArrayResponseType {
     if (res.body) {
       res.body.forEach((order: IOrder) => {
-        order.orderDate = order.orderDate ? dayjs(order.orderDate).toDate() : null; // Đã sửa lỗi
+        order.orderDate = order.orderDate
+          ? dayjs(order.orderDate).toDate()
+          : null; // Đã sửa lỗi
       });
     }
     return res;

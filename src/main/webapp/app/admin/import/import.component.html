@@ -4,7 +4,12 @@
   <div class="import-section">
     <h3>Import Sản phẩm từ File</h3>
     <p>Chọn một file Excel (.xlsx) từ máy tính để import danh sách sản phẩm.</p>
-    <input type="file" (change)="onFileSelected($event, 'products')" accept=".xlsx" [disabled]="isImportingProducts()" />
+    <input
+      type="file"
+      (change)="onFileSelected($event, 'products')"
+      accept=".xlsx"
+      [disabled]="isImportingProducts()"
+    />
     @if (isImportingProducts()) {
       <div class="spinner-border spinner-border-sm text-primary" role="status">
         <span class="visually-hidden">Đang import...</span>
@@ -43,8 +48,15 @@
 
   <div class="import-section">
     <h3>Import Người dùng từ File</h3>
-    <p>Chọn một file Excel (.xlsx) từ máy tính để import danh sách người dùng.</p>
-    <input type="file" (change)="onFileSelected($event, 'users')" accept=".xlsx" [disabled]="isImportingUsers()" />
+    <p>
+      Chọn một file Excel (.xlsx) từ máy tính để import danh sách người dùng.
+    </p>
+    <input
+      type="file"
+      (change)="onFileSelected($event, 'users')"
+      accept=".xlsx"
+      [disabled]="isImportingUsers()"
+    />
     @if (isImportingUsers()) {
       <div class="spinner-border spinner-border-sm text-primary" role="status">
         <span class="visually-hidden">Đang import...</span>
@@ -55,7 +67,9 @@
 
   <div class="import-section">
     <h3>Import Người dùng từ URL</h3>
-    <p>Nhập URL của file Excel (.xlsx) online để import danh sách người dùng.</p>
+    <p>
+      Nhập URL của file Excel (.xlsx) online để import danh sách người dùng.
+    </p>
     <div class="input-group mb-3">
       <input
         type="text"
@@ -64,7 +78,12 @@
         [(ngModel)]="userImportUrl"
         [disabled]="isImportingUsersFromUrl()"
       />
-      <button class="btn btn-primary" type="button" (click)="onUrlImport('users')" [disabled]="!userImportUrl || isImportingUsersFromUrl()">
+      <button
+        class="btn btn-primary"
+        type="button"
+        (click)="onUrlImport('users')"
+        [disabled]="!userImportUrl || isImportingUsersFromUrl()"
+      >
         Import từ URL
       </button>
     </div>

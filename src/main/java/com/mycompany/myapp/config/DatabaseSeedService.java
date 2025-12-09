@@ -65,9 +65,9 @@ public class DatabaseSeedService {
         final String adminPhone = "0000000001";
 
         // Try to find existing admin by email first, then by phone
-        Optional<User> existingAdminOpt = userRepository.findOneWithAuthoritiesByLogin(adminEmail);
+        Optional<User> existingAdminOpt = userRepository.findOneWithAuthoritiesByEmailIgnoreCase(adminEmail);
         if (existingAdminOpt.isEmpty()) {
-            existingAdminOpt = userRepository.findOneWithAuthoritiesByLogin(adminPhone);
+            existingAdminOpt = userRepository.findOneByPhone(adminPhone);
         }
 
         if (existingAdminOpt.isEmpty()) {
@@ -83,10 +83,6 @@ public class DatabaseSeedService {
             Set<Authority> authorities = new HashSet<>();
             authorityRepository.findById(AuthoritiesConstants.ADMIN).ifPresent(authorities::add);
             adminUser.setAuthorities(authorities);
-            // ensure authorityName non-null for DB
-            if (adminUser.getAuthorityName() == null || adminUser.getAuthorityName().isEmpty()) {
-                adminUser.setAuthorityName(AuthoritiesConstants.ADMIN);
-            }
             userRepository.save(adminUser);
             log.info("Created default admin user: {} / {}", adminEmail, adminPhone);
         } else {
@@ -144,18 +140,6 @@ public class DatabaseSeedService {
                 changed = true;
             }
 
-            // ensure authorityName is set to a sensible value for DB
-            if (adminUser.getAuthorityName() == null || adminUser.getAuthorityName().isEmpty()) {
-                if (authorities.stream().anyMatch(a -> AuthoritiesConstants.ADMIN.equals(a.getName()))) {
-                    adminUser.setAuthorityName(AuthoritiesConstants.ADMIN);
-                } else if (!authorities.isEmpty()) {
-                    adminUser.setAuthorityName(authorities.iterator().next().getName());
-                } else {
-                    adminUser.setAuthorityName(AuthoritiesConstants.USER);
-                }
-                changed = true;
-            }
-
             if (changed) {
                 userRepository.save(adminUser);
                 log.info("Updated existing admin user (added missing fields/authority): {}", adminUser.getEmail());
@@ -177,9 +161,6 @@ public class DatabaseSeedService {
             Set<Authority> authorities = new HashSet<>();
             authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
             regularUser.setAuthorities(authorities);
-            if (regularUser.getAuthorityName() == null || regularUser.getAuthorityName().isEmpty()) {
-                regularUser.setAuthorityName(AuthoritiesConstants.USER);
-            }
             userRepository.save(regularUser);
             log.info("Created default regular user.");
         } else {
@@ -193,10 +174,6 @@ public class DatabaseSeedService {
             if (userAuth != null && authorities.stream().noneMatch(a -> a.getName().equals(userAuth.getName()))) {
                 authorities.add(userAuth);
                 regularUser.setAuthorities(authorities);
-                // ensure authorityName also set
-                if (regularUser.getAuthorityName() == null || regularUser.getAuthorityName().isEmpty()) {
-                    regularUser.setAuthorityName(AuthoritiesConstants.USER);
-                }
                 userRepository.save(regularUser);
                 log.info("Added USER authority to existing user: {}", regularUser.getEmail());
             }
@@ -228,10 +205,7 @@ public class DatabaseSeedService {
             laptop.setPrice(1200.00);
             laptop.setQuantity(50);
             laptop.setImageUrl("https://example.com/laptop.jpg");
-            laptop.setSalesCount(500L);
             laptop.setCategory(electronicsCategory.get());
-            // Ensure non-null active flag to satisfy NOT NULL DB constraint
-            laptop.setIsActive(Boolean.TRUE);
             productRepository.save(laptop);
             log.info("Created product: Laptop");
         }
@@ -244,10 +218,7 @@ public class DatabaseSeedService {
             book.setPrice(15.99);
             book.setQuantity(100);
             book.setImageUrl("https://example.com/gatsby.jpg");
-            book.setSalesCount(5L);
             book.setCategory(booksCategory.get());
-            // Ensure non-null active flag to satisfy NOT NULL DB constraint
-            book.setIsActive(Boolean.TRUE);
             productRepository.save(book);
             log.info("Created product: The Great Gatsby");
         }

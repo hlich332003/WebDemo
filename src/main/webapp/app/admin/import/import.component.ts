@@ -47,7 +47,8 @@ export class ImportComponent {
           input.value = ''; // Clear file input
         },
         error: (error: HttpErrorResponse) => {
-          const errorMessage = error.error?.detail || error.message || `Import ${type} thất bại.`;
+          const errorMessage =
+            error.error?.detail || error.message || `Import ${type} thất bại.`;
           this.notify.error(errorMessage);
           if (type === 'products') {
             this.isImportingProducts.set(false);
@@ -61,27 +62,41 @@ export class ImportComponent {
   }
 
   onUrlImport(type: 'products' | 'users'): void {
-    const urlToImport = type === 'products' ? this.productImportUrl : this.userImportUrl;
+    const urlToImport =
+      type === 'products' ? this.productImportUrl : this.userImportUrl;
 
     if (!this.validateUrl(urlToImport)) {
       return;
     }
 
-    const endpoint = type === 'products' ? '/api/admin/import/products-from-url' : '/api/admin/import/users-from-url';
-    const loadingSignal = type === 'products' ? this.isImportingProductsFromUrl : this.isImportingUsersFromUrl;
+    const endpoint =
+      type === 'products'
+        ? '/api/admin/import/products-from-url'
+        : '/api/admin/import/users-from-url';
+    const loadingSignal =
+      type === 'products'
+        ? this.isImportingProductsFromUrl
+        : this.isImportingUsersFromUrl;
 
     loadingSignal.set(true);
-    this.http.post(endpoint, urlToImport, { headers: { 'Content-Type': 'text/plain' } }).subscribe({
-      next: () => {
-        this.notify.success(`Import ${type} từ URL thành công!`);
-        this.resetImportState(type, loadingSignal);
-      },
-      error: (error: HttpErrorResponse) => {
-        const errorMessage = error.error?.detail || error.message || `Import ${type} từ URL thất bại.`;
-        this.notify.error(errorMessage);
-        loadingSignal.set(false);
-      },
-    });
+    this.http
+      .post(endpoint, urlToImport, {
+        headers: { 'Content-Type': 'text/plain' },
+      })
+      .subscribe({
+        next: () => {
+          this.notify.success(`Import ${type} từ URL thành công!`);
+          this.resetImportState(type, loadingSignal);
+        },
+        error: (error: HttpErrorResponse) => {
+          const errorMessage =
+            error.error?.detail ||
+            error.message ||
+            `Import ${type} từ URL thất bại.`;
+          this.notify.error(errorMessage);
+          loadingSignal.set(false);
+        },
+      });
   }
 
   private validateUrl(url: string): boolean {
@@ -103,7 +118,10 @@ export class ImportComponent {
     }
   }
 
-  private resetImportState(type: 'products' | 'users', loadingSignal: any): void {
+  private resetImportState(
+    type: 'products' | 'users',
+    loadingSignal: any,
+  ): void {
     loadingSignal.set(false);
     if (type === 'products') {
       this.productImportUrl = '';

@@ -1,9 +1,17 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 
 import { IAuthority } from '../authority.model';
-import { sampleWithFullData, sampleWithNewData, sampleWithPartialData, sampleWithRequiredData } from '../authority.test-samples';
+import {
+  sampleWithFullData,
+  sampleWithNewData,
+  sampleWithPartialData,
+  sampleWithRequiredData,
+} from '../authority.test-samples';
 
 import { AuthorityService } from './authority.service';
 
@@ -30,7 +38,7 @@ describe('Authority Service', () => {
       const returnedFromService = { ...requireRestSample };
       const expected = { ...sampleWithRequiredData };
 
-      service.find('ABC').subscribe(resp => (expectedResult = resp.body));
+      service.find('ABC').subscribe((resp) => (expectedResult = resp.body));
 
       const req = httpMock.expectOne({ method: 'GET' });
       req.flush(returnedFromService);
@@ -42,7 +50,9 @@ describe('Authority Service', () => {
       const returnedFromService = { ...requireRestSample };
       const expected = { ...sampleWithRequiredData };
 
-      service.create(authority).subscribe(resp => (expectedResult = resp.body));
+      service
+        .create(authority)
+        .subscribe((resp) => (expectedResult = resp.body));
 
       const req = httpMock.expectOne({ method: 'POST' });
       req.flush(returnedFromService);
@@ -54,7 +64,7 @@ describe('Authority Service', () => {
 
       const expected = { ...sampleWithRequiredData };
 
-      service.query().subscribe(resp => (expectedResult = resp.body));
+      service.query().subscribe((resp) => (expectedResult = resp.body));
 
       const req = httpMock.expectOne({ method: 'GET' });
       req.flush([returnedFromService]);
@@ -65,7 +75,7 @@ describe('Authority Service', () => {
     it('should delete a Authority', () => {
       const expected = true;
 
-      service.delete('ABC').subscribe(resp => (expectedResult = resp.ok));
+      service.delete('ABC').subscribe((resp) => (expectedResult = resp.ok));
 
       const req = httpMock.expectOne({ method: 'DELETE' });
       req.flush({ status: 200 });
@@ -75,7 +85,10 @@ describe('Authority Service', () => {
     describe('addAuthorityToCollectionIfMissing', () => {
       it('should add a Authority to an empty array', () => {
         const authority: IAuthority = sampleWithRequiredData;
-        expectedResult = service.addAuthorityToCollectionIfMissing([], authority);
+        expectedResult = service.addAuthorityToCollectionIfMissing(
+          [],
+          authority,
+        );
         expect(expectedResult).toHaveLength(1);
         expect(expectedResult).toContain(authority);
       });
@@ -88,29 +101,46 @@ describe('Authority Service', () => {
           },
           sampleWithPartialData,
         ];
-        expectedResult = service.addAuthorityToCollectionIfMissing(authorityCollection, authority);
+        expectedResult = service.addAuthorityToCollectionIfMissing(
+          authorityCollection,
+          authority,
+        );
         expect(expectedResult).toHaveLength(2);
       });
 
       it("should add a Authority to an array that doesn't contain it", () => {
         const authority: IAuthority = sampleWithRequiredData;
         const authorityCollection: IAuthority[] = [sampleWithPartialData];
-        expectedResult = service.addAuthorityToCollectionIfMissing(authorityCollection, authority);
+        expectedResult = service.addAuthorityToCollectionIfMissing(
+          authorityCollection,
+          authority,
+        );
         expect(expectedResult).toHaveLength(2);
         expect(expectedResult).toContain(authority);
       });
 
       it('should add only unique Authority to an array', () => {
-        const authorityArray: IAuthority[] = [sampleWithRequiredData, sampleWithPartialData, sampleWithFullData];
+        const authorityArray: IAuthority[] = [
+          sampleWithRequiredData,
+          sampleWithPartialData,
+          sampleWithFullData,
+        ];
         const authorityCollection: IAuthority[] = [sampleWithRequiredData];
-        expectedResult = service.addAuthorityToCollectionIfMissing(authorityCollection, ...authorityArray);
+        expectedResult = service.addAuthorityToCollectionIfMissing(
+          authorityCollection,
+          ...authorityArray,
+        );
         expect(expectedResult).toHaveLength(3);
       });
 
       it('should accept varargs', () => {
         const authority: IAuthority = sampleWithRequiredData;
         const authority2: IAuthority = sampleWithPartialData;
-        expectedResult = service.addAuthorityToCollectionIfMissing([], authority, authority2);
+        expectedResult = service.addAuthorityToCollectionIfMissing(
+          [],
+          authority,
+          authority2,
+        );
         expect(expectedResult).toHaveLength(2);
         expect(expectedResult).toContain(authority);
         expect(expectedResult).toContain(authority2);
@@ -118,14 +148,23 @@ describe('Authority Service', () => {
 
       it('should accept null and undefined values', () => {
         const authority: IAuthority = sampleWithRequiredData;
-        expectedResult = service.addAuthorityToCollectionIfMissing([], null, authority, undefined);
+        expectedResult = service.addAuthorityToCollectionIfMissing(
+          [],
+          null,
+          authority,
+          undefined,
+        );
         expect(expectedResult).toHaveLength(1);
         expect(expectedResult).toContain(authority);
       });
 
       it('should return initial array if no Authority is added', () => {
         const authorityCollection: IAuthority[] = [sampleWithRequiredData];
-        expectedResult = service.addAuthorityToCollectionIfMissing(authorityCollection, undefined, null);
+        expectedResult = service.addAuthorityToCollectionIfMissing(
+          authorityCollection,
+          undefined,
+          null,
+        );
         expect(expectedResult).toEqual(authorityCollection);
       });
     });

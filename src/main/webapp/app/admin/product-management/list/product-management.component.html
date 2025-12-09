@@ -1,20 +1,43 @@
 <div>
   <h2>
-    <span id="product-management-page-heading" data-cy="productManagementPageHeading">Quản lý sản phẩm</span>
+    <span
+      id="product-management-page-heading"
+      data-cy="productManagementPageHeading"
+      >Quản lý sản phẩm</span
+    >
 
     <div class="d-flex justify-content-end">
-      <button class="btn btn-info me-2 rounded-pill" (click)="loadAll()" [disabled]="isLoading()">
+      <button
+        class="btn btn-info me-2 rounded-pill"
+        (click)="loadAll()"
+        [disabled]="isLoading()"
+      >
         <span>Làm mới danh sách</span>
       </button>
-      <button class="btn btn-primary jh-create-entity me-2 rounded-pill" [routerLink]="['./new']">
+      <button
+        class="btn btn-primary jh-create-entity me-2 rounded-pill"
+        [routerLink]="['./new']"
+      >
         <span>Tạo sản phẩm mới</span>
       </button>
-      <button class="btn btn-success ms-2 rounded-pill" (click)="exportProducts()">
+      <button
+        class="btn btn-success ms-2 rounded-pill"
+        (click)="exportProducts()"
+      >
         <span>Export Excel</span>
       </button>
-      <label for="importProductsFile" class="btn btn-warning ms-2 mb-0 rounded-pill">
+      <label
+        for="importProductsFile"
+        class="btn btn-warning ms-2 mb-0 rounded-pill"
+      >
         <span>Import Sản phẩm</span>
-        <input type="file" id="importProductsFile" style="display: none" (change)="importProducts($event)" accept=".xlsx" />
+        <input
+          type="file"
+          id="importProductsFile"
+          style="display: none"
+          (change)="importProducts($event)"
+          accept=".xlsx"
+        />
       </label>
     </div>
   </h2>
@@ -35,7 +58,12 @@
           [value]="searchTerm()"
           (input)="onSearchInput($event)"
         />
-        <button *ngIf="searchTerm()" class="btn btn-outline-secondary" type="button" (click)="onClearSearch()">
+        <button
+          *ngIf="searchTerm()"
+          class="btn btn-outline-secondary"
+          type="button"
+          (click)="onClearSearch()"
+        >
           <span>✕</span>
         </button>
       </div>
@@ -44,7 +72,10 @@
 
   <ng-container *ngIf="products() as productsList">
     <div class="table-responsive" *ngIf="productsList.length > 0">
-      <table class="table table-striped" aria-describedby="product-management-page-heading">
+      <table
+        class="table table-striped"
+        aria-describedby="product-management-page-heading"
+      >
         <thead>
           <tr jhiSort [(sortState)]="sortState" (sortChange)="loadAll()">
             <th scope="col" jhiSortBy="id"><span>ID</span></th>
@@ -57,32 +88,54 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let product of productsList; trackBy: trackIdentity" [class.table-info]="product.isPinned">
+          <tr
+            *ngFor="let product of productsList; trackBy: trackIdentity"
+            [class.table-info]="product.isPinned"
+          >
             <td>
-              <a [routerLink]="['/admin/product-management', product.id, 'edit']">{{ product.id }}</a>
+              <a
+                [routerLink]="['/admin/product-management', product.id, 'edit']"
+                >{{ product.id }}</a
+              >
             </td>
             <td>{{ product.name }}</td>
             <td>{{ product.description }}</td>
             <td>{{ product.price | currency: 'VND' }}</td>
             <td>{{ product.quantity }}</td>
             <td>
-              <img *ngIf="product.imageUrl" [src]="product.imageUrl" alt="Product Image" style="max-height: 50px" />
+              <img
+                *ngIf="product.imageUrl"
+                [src]="product.imageUrl"
+                alt="Product Image"
+                style="max-height: 50px"
+              />
             </td>
             <td class="text-end">
               <div class="btn-group">
-                <button class="btn btn-success btn-sm rounded-pill me-1" (click)="toggleFeatured(product)">
+                <button
+                  class="btn btn-success btn-sm rounded-pill me-1"
+                  (click)="toggleFeatured(product)"
+                >
                   <span>{{ product.isPinned ? 'Bỏ ghim' : 'Ghim' }}</span>
                 </button>
 
                 <button
                   type="submit"
-                  [routerLink]="['/admin/product-management', product.id, 'edit']"
+                  [routerLink]="[
+                    '/admin/product-management',
+                    product.id,
+                    'edit',
+                  ]"
                   class="btn btn-info btn-sm rounded-pill me-1"
                 >
                   <span>Chi tiết</span>
                 </button>
 
-                <button type="button" (click)="deleteProduct(product)" class="btn btn-danger btn-sm rounded-pill">
+                <button
+                  type="button"
+                  (click)="deleteProduct(product)"
+                  class="btn btn-danger btn-sm rounded-pill"
+                >
                   <span>Xóa</span>
                 </button>
               </div>
@@ -92,13 +145,24 @@
       </table>
     </div>
 
-    <div class="d-flex justify-content-center" *ngIf="productsList.length === 0">
-      <div class="alert alert-warning">Không có sản phẩm nào được tìm thấy.</div>
+    <div
+      class="d-flex justify-content-center"
+      *ngIf="productsList.length === 0"
+    >
+      <div class="alert alert-warning">
+        Không có sản phẩm nào được tìm thấy.
+      </div>
     </div>
 
     <!-- Pagination controls -->
     <div class="d-flex justify-content-end mt-3">
-      <jhi-item-count [params]="{ page: page, totalItems: totalItems(), itemsPerPage: itemsPerPage }"></jhi-item-count>
+      <jhi-item-count
+        [params]="{
+          page: page,
+          totalItems: totalItems(),
+          itemsPerPage: itemsPerPage,
+        }"
+      ></jhi-item-count>
     </div>
     <div class="d-flex justify-content-center">
       <ngb-pagination
@@ -108,7 +172,8 @@
         [maxSize]="5"
         [rotate]="true"
         [boundaryLinks]="true"
-        (pageChange)="pageChange($event)">
+        (pageChange)="pageChange($event)"
+      >
       </ngb-pagination>
     </div>
   </ng-container>

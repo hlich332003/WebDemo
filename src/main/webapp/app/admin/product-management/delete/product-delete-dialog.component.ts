@@ -29,12 +29,12 @@ export default class ProductDeleteDialogComponent {
     this.errorMessage.set(null);
 
     this.productService.delete(id).subscribe({
-      next: response => {
+      next: (response) => {
         console.log('Delete successful:', response);
         this.isDeleting.set(false);
         this.activeModal.close(ITEM_DELETED_EVENT);
       },
-      error: error => {
+      error: (error) => {
         console.error('Delete error - Full error object:', error);
         console.error('Error status:', error.status);
         console.error('Error message:', error.message);

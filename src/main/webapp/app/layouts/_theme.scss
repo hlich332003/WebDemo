@@ -22,7 +22,8 @@ $border-color: rgba(255, 255, 255, 0.15);
   &:hover:not(:disabled) {
     background-color: color.adjust($primary-pink, $lightness: -7%);
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(color.adjust($primary-pink, $lightness: -7%), 0.3);
+    box-shadow: 0 4px 15px
+      rgba(color.adjust($primary-pink, $lightness: -7%), 0.3);
   }
 
   &:disabled {
