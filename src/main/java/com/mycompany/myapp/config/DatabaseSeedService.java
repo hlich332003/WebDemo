@@ -9,9 +9,7 @@ import com.mycompany.myapp.repository.CategoryRepository;
 import com.mycompany.myapp.repository.ProductRepository;
 import com.mycompany.myapp.repository.UserRepository;
 import com.mycompany.myapp.security.AuthoritiesConstants;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -61,17 +59,14 @@ public class DatabaseSeedService {
 
         // Admin identity we want to ensure exists (do not delete or overwrite existing data)
         final String adminEmail = "admin@localhost";
-        // Use 10-digit phone to match DB column size (NVARCHAR(10))
         final String adminPhone = "0000000001";
 
-        // Try to find existing admin by email first, then by phone
-        Optional<User> existingAdminOpt = userRepository.findOneWithAuthoritiesByEmailIgnoreCase(adminEmail);
+        Optional<User> existingAdminOpt = userRepository.findOneByEmailIgnoreCase(adminEmail);
         if (existingAdminOpt.isEmpty()) {
             existingAdminOpt = userRepository.findOneByPhone(adminPhone);
         }
 
         if (existingAdminOpt.isEmpty()) {
-            // Create admin user if not exists (by email or phone)
             User adminUser = new User();
             adminUser.setPassword(passwordEncoder.encode("admin"));
             adminUser.setFirstName("Admin");
@@ -80,17 +75,13 @@ public class DatabaseSeedService {
             adminUser.setPhone(adminPhone);
             adminUser.setActivated(true);
             adminUser.setLangKey("en");
-            Set<Authority> authorities = new HashSet<>();
-            authorityRepository.findById(AuthoritiesConstants.ADMIN).ifPresent(authorities::add);
-            adminUser.setAuthorities(authorities);
+            authorityRepository.findById(AuthoritiesConstants.ADMIN).ifPresent(adminUser::setAuthority);
             userRepository.save(adminUser);
             log.info("Created default admin user: {} / {}", adminEmail, adminPhone);
         } else {
-            // If admin user exists, ensure it has ADMIN authority and required contact fields, but do not remove other data
             User adminUser = existingAdminOpt.get();
             boolean changed = false;
 
-            // Ensure first/last name are present
             if (adminUser.getFirstName() == null || adminUser.getFirstName().isEmpty()) {
                 adminUser.setFirstName("Admin");
                 changed = true;
@@ -100,19 +91,16 @@ public class DatabaseSeedService {
                 changed = true;
             }
 
-            // Ensure phone is set (but don't overwrite an existing different phone)
             if (adminUser.getPhone() == null || adminUser.getPhone().isEmpty()) {
                 adminUser.setPhone(adminPhone);
                 changed = true;
             }
 
-            // Ensure email is set (but don't overwrite if different)
             if (adminUser.getEmail() == null || adminUser.getEmail().isEmpty()) {
                 adminUser.setEmail(adminEmail);
                 changed = true;
             }
 
-            // Ensure activated and langKey
             if (!adminUser.isActivated()) {
                 adminUser.setActivated(true);
                 changed = true;
@@ -122,21 +110,13 @@ public class DatabaseSeedService {
                 changed = true;
             }
 
-            // Ensure password exists (do not overwrite if already present)
             if (adminUser.getPassword() == null || adminUser.getPassword().isEmpty()) {
                 adminUser.setPassword(passwordEncoder.encode("admin"));
                 changed = true;
             }
 
-            // Ensure ADMIN authority present - use persistent collection safely within transactional method
-            Set<Authority> authorities = adminUser.getAuthorities();
-            if (authorities == null) {
-                authorities = new HashSet<>();
-            }
-            Authority adminAuth = authorityRepository.findById(AuthoritiesConstants.ADMIN).orElse(null);
-            if (adminAuth != null && authorities.stream().noneMatch(a -> a.getName().equals(adminAuth.getName()))) {
-                authorities.add(adminAuth);
-                adminUser.setAuthorities(authorities);
+            if (adminUser.getAuthority() == null || !adminUser.getAuthority().getName().equals(AuthoritiesConstants.ADMIN)) {
+                authorityRepository.findById(AuthoritiesConstants.ADMIN).ifPresent(adminUser::setAuthority);
                 changed = true;
             }
 
@@ -148,8 +128,7 @@ public class DatabaseSeedService {
             }
         }
 
-        // Create a regular user if not exists (by email)
-        Optional<User> existingUserOpt = userRepository.findOneWithAuthoritiesByEmailIgnoreCase("user@localhost");
+        Optional<User> existingUserOpt = userRepository.findOneByEmailIgnoreCase("user@localhost");
         if (existingUserOpt.isEmpty()) {
             User regularUser = new User();
             regularUser.setPassword(passwordEncoder.encode("user"));
@@ -158,28 +137,18 @@ public class DatabaseSeedService {
             regularUser.setEmail("user@localhost");
             regularUser.setActivated(true);
             regularUser.setLangKey("en");
-            Set<Authority> authorities = new HashSet<>();
-            authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
-            regularUser.setAuthorities(authorities);
+            authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(regularUser::setAuthority);
             userRepository.save(regularUser);
             log.info("Created default regular user.");
         } else {
-            // If regular user exists but missing USER authority, add it
             User regularUser = existingUserOpt.get();
-            Set<Authority> authorities = regularUser.getAuthorities();
-            if (authorities == null) {
-                authorities = new HashSet<>();
-            }
-            Authority userAuth = authorityRepository.findById(AuthoritiesConstants.USER).orElse(null);
-            if (userAuth != null && authorities.stream().noneMatch(a -> a.getName().equals(userAuth.getName()))) {
-                authorities.add(userAuth);
-                regularUser.setAuthorities(authorities);
+            if (regularUser.getAuthority() == null || !regularUser.getAuthority().getName().equals(AuthoritiesConstants.USER)) {
+                authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(regularUser::setAuthority);
                 userRepository.save(regularUser);
                 log.info("Added USER authority to existing user: {}", regularUser.getEmail());
             }
         }
 
-        // Create sample categories if not exists
         if (categoryRepository.findByName("Electronics").isEmpty()) {
             Category electronics = new Category();
             electronics.setName("Electronics");
@@ -196,7 +165,6 @@ public class DatabaseSeedService {
             log.info("Created category: Books");
         }
 
-        // Create sample products if not exists
         Optional<Category> electronicsCategory = categoryRepository.findByName("Electronics");
         if (electronicsCategory.isPresent() && productRepository.findFirstByName("Laptop").isEmpty()) {
             Product laptop = new Product();

@@ -1,4 +1,60 @@
-/* Add custom styles for your component here */
+// Admin Product Management - Modern Theme
+@use '../../../shared/styles/variables' as *;
+
+:host {
+  display: block;
+  padding: 2rem;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+.admin-header {
+  background: linear-gradient(
+    135deg,
+    rgba($primary, 0.15),
+    rgba($secondary, 0.1)
+  );
+  padding: 2rem;
+  border-radius: $border-radius-lg;
+  margin-bottom: 2rem;
+  box-shadow: $shadow-lg;
+  color: $text-primary;
+  position: relative;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba($primary, 0.2);
+  background-size: cover;
+  background-position: center;
+  background-blend-mode: overlay;
+
+  h2 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
+
+    i {
+      color: $primary;
+    }
+  }
+
+  .header-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+}
+
+.table-container {
+  background: $white;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-md;
+  overflow: hidden;
+}
 
 .table-responsive {
   overflow-x: auto;
@@ -8,37 +64,47 @@
     min-width: 800px;
     margin-bottom: 0;
     table-layout: auto;
+    border-collapse: separate;
+    border-spacing: 0;
 
     th,
     td {
-      padding: 12px;
+      padding: 1rem;
       vertical-align: middle;
       white-space: nowrap;
       min-width: 100px;
       position: relative;
-      border-right: 1px solid #dee2e6;
-
-      &:last-child {
-        border-right: none;
-      }
+      border-bottom: 1px solid $border-color;
+      color: $text-primary;
     }
 
     thead th {
       font-weight: 600;
-      background-color: #f8f9fa;
+      background: $primary;
+      color: $white;
       position: sticky;
       top: 0;
       z-index: 10;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      border-bottom: 2px solid darken($primary, 10%);
     }
 
     tbody tr {
+      transition: $transition-base;
+
       &:hover {
-        background-color: #f1f3f5;
+        background: linear-gradient(
+          135deg,
+          rgba($primary, 0.03),
+          rgba($secondary, 0.03)
+        );
       }
 
       &.table-info {
-        background-color: #cfe2ff !important;
+        background: rgba($primary, 0.1) !important;
+      }
+
+      &:last-child td {
+        border-bottom: none;
       }
     }
   }
@@ -51,5 +117,83 @@
 
   .btn {
     white-space: nowrap;
+    border-radius: $border-radius-sm;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    transition: $transition-base;
+    box-shadow: $shadow-sm;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-md;
+    }
+
+    &.btn-primary {
+      background: linear-gradient(135deg, $primary, $secondary);
+      border: none;
+    }
+
+    &.btn-success {
+      background: $success;
+      border: none;
+    }
+
+    &.btn-danger {
+      background: $danger;
+      border: none;
+    }
+
+    &.btn-info {
+      background: linear-gradient(135deg, $secondary, $primary);
+      border: none;
+    }
+  }
+}
+
+.product-image-cell {
+  img {
+    border-radius: $border-radius-sm;
+    box-shadow: $shadow-sm;
+  }
+}
+
+.badge {
+  padding: 0.5rem 0.75rem;
+  border-radius: $border-radius-sm;
+  font-weight: 600;
+
+  &.bg-success {
+    background: $success !important;
+  }
+
+  &.bg-warning {
+    background: $warning !important;
+  }
+
+  &.bg-danger {
+    background: $danger !important;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  :host {
+    padding: 1rem;
+  }
+
+  .admin-header {
+    padding: 1.5rem;
+
+    h2 {
+      font-size: 1.5rem;
+    }
+  }
+
+  .btn-group {
+    flex-direction: column;
+
+    .btn {
+      width: 100%;
+    }
   }
 }

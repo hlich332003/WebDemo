@@ -5,13 +5,12 @@ import { Observable } from 'rxjs';
 import { ApplicationConfigService } from 'app/core/config/application-config.service';
 
 export interface Registration {
-  login: string;
   email: string;
   password?: string;
   langKey?: string;
-  phone?: string;
-  firstName?: string; // Thêm thuộc tính firstName
-  lastName?: string; // Thêm thuộc tính lastName
+  phone?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })

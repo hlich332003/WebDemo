@@ -3,11 +3,13 @@
 // Main color palette for the "Pink-Purple" theme
 $primary-pink: #e91e63;
 $primary-purple: #9c27b0;
-$dark-background: #231c3d;
-$card-background: #3a305c;
-$light-text: #f5f5f5;
+$dark-background: #1a1a2e;
+$card-background: #ffffff;
+$light-text: #4a148c; // Đổi sang màu tím đậm để dễ đọc
 $accent-color: #ffc107;
-$border-color: rgba(255, 255, 255, 0.15);
+$border-color: rgba(0, 0, 0, 0.1);
+$product-card-bg: #ffffff;
+$product-text-color: #4a148c; // Đổi sang màu tím đậm để dễ đọc
 
 // Button styles mixin
 @mixin themed-button {

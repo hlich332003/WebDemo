@@ -92,7 +92,6 @@ public class UserService {
                 }
             });
 
-        // Kiểm tra phone nếu có
         if (userDTO.getPhone() != null) {
             userRepository
                 .findOneByPhone(userDTO.getPhone())
@@ -117,18 +116,15 @@ public class UserService {
         newUser.setLangKey(userDTO.getLangKey());
         newUser.setActivated(true);
         newUser.setActivationKey(null);
-        Set<Authority> authorities = new HashSet<>();
-        authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
-        newUser.setAuthorities(authorities);
+        authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(newUser::setAuthority);
         userRepository.save(newUser);
         log.debug("Created Information for User: {}", newUser);
 
-        // Gửi message vào RabbitMQ để gửi email xác thực
         UserRegistrationEventDTO registrationEvent = new UserRegistrationEventDTO(
             newUser.getEmail(),
             newUser.getFirstName(),
             newUser.getLastName(),
-            newUser.getActivationKey()
+            null
         );
         messageProducer.sendUserRegisteredEvent(registrationEvent);
 
@@ -163,15 +159,10 @@ public class UserService {
         user.setResetKey(RandomUtil.generateResetKey());
         user.setResetDate(Instant.now());
         user.setActivated(true);
-        if (userDTO.getAuthorities() != null) {
-            Set<Authority> authorities = userDTO
-                .getAuthorities()
-                .stream()
-                .map(authorityRepository::findById)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toSet());
-            user.setAuthorities(authorities);
+        if (userDTO.getAuthorities() != null && !userDTO.getAuthorities().isEmpty()) {
+            authorityRepository.findById(userDTO.getAuthorities().iterator().next()).ifPresent(user::setAuthority);
+        } else {
+            authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(user::setAuthority);
         }
         userRepository.save(user);
         log.debug("Created Information for User: {}", user);
@@ -192,15 +183,9 @@ public class UserService {
                 user.setImageUrl(userDTO.getImageUrl());
                 user.setActivated(userDTO.isActivated());
                 user.setLangKey(userDTO.getLangKey());
-                Set<Authority> managedAuthorities = user.getAuthorities();
-                managedAuthorities.clear();
-                userDTO
-                    .getAuthorities()
-                    .stream()
-                    .map(authorityRepository::findById)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .forEach(managedAuthorities::add);
+                if (userDTO.getAuthorities() != null && !userDTO.getAuthorities().isEmpty()) {
+                    authorityRepository.findById(userDTO.getAuthorities().iterator().next()).ifPresent(user::setAuthority);
+                }
                 log.debug("Changed Information for User: {}", user);
                 return user;
             })
@@ -218,7 +203,7 @@ public class UserService {
 
     public void updateUser(String firstName, String lastName, String email, String langKey, String imageUrl) {
         SecurityUtils.getCurrentUserLogin()
-            .flatMap(userRepository::findOneWithAuthoritiesByEmailOrPhone)
+            .flatMap(userRepository::findOneByEmailIgnoreCase)
             .ifPresent(user -> {
                 user.setFirstName(firstName);
                 user.setLastName(lastName);
@@ -234,7 +219,7 @@ public class UserService {
     @Transactional
     public void changePassword(String currentClearTextPassword, String newPassword) {
         SecurityUtils.getCurrentUserLogin()
-            .flatMap(userRepository::findOneWithAuthoritiesByEmailOrPhone)
+            .flatMap(userRepository::findOneByEmailIgnoreCase)
             .ifPresent(user -> {
                 String currentEncryptedPassword = user.getPassword();
                 if (!passwordEncoder.matches(currentClearTextPassword, currentEncryptedPassword)) {
@@ -258,12 +243,12 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public Optional<User> getUserWithAuthoritiesByEmail(String email) {
-        return userRepository.findOneWithAuthoritiesByEmailIgnoreCase(email);
+        return userRepository.findOneByEmailIgnoreCase(email);
     }
 
     @Transactional(readOnly = true)
     public Optional<User> getUserWithAuthorities() {
-        return SecurityUtils.getCurrentUserLogin().flatMap(userRepository::findOneWithAuthoritiesByEmailOrPhone);
+        return SecurityUtils.getCurrentUserLogin().flatMap(userRepository::findOneByEmailIgnoreCase);
     }
 
     @Scheduled(cron = "0 0 1 * * ?")

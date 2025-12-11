@@ -1,79 +1,77 @@
-<div class="user-management-container">
-  <h2>
-    <span id="user-management-page-heading" data-cy="userManagementPageHeading"
-      >Quản lý người dùng</span
-    >
+<div>
+  <div class="admin-header">
+    <h2>
+      <span
+        id="user-management-page-heading"
+        data-cy="userManagementPageHeading"
+        >Quản lý người dùng</span
+      >
 
-    <div class="d-flex justify-content-end">
-      <button
-        class="btn btn-info me-2 rounded-pill"
-        (click)="loadAll()"
-        [disabled]="isLoading()"
-      >
-        <fa-icon
-          icon="sync"
-          [animation]="isLoading() ? 'spin' : undefined"
-        ></fa-icon>
-        <span>Làm mới danh sách</span>
-      </button>
-      <button
-        class="btn btn-primary jh-create-entity rounded-pill"
-        [routerLink]="['./new']"
-      >
-        <fa-icon icon="plus"></fa-icon> <span>Tạo người dùng mới</span>
-      </button>
-    </div>
-  </h2>
+      <div class="d-flex justify-content-end">
+        <button
+          class="btn btn-info me-2 rounded-pill"
+          (click)="loadAll()"
+          [disabled]="isLoading()"
+        >
+          <fa-icon
+            icon="sync"
+            [animation]="isLoading() ? 'spin' : undefined"
+          ></fa-icon>
+          <span>Làm mới danh sách</span>
+        </button>
+        <button
+          class="btn btn-primary jh-create-entity rounded-pill"
+          [routerLink]="['./new']"
+        >
+          <fa-icon icon="plus"></fa-icon> <span>Tạo người dùng mới</span>
+        </button>
+      </div>
+    </h2>
+  </div>
 
   <jhi-alert-error />
 
   <jhi-alert />
 
-  <!-- Thanh tìm kiếm -->
-  <div class="search-bar mb-3">
-    <div class="input-group">
-      <input
-        type="text"
-        class="form-control"
-        placeholder="Tìm kiếm theo tên, email hoặc số điện thoại..."
-        [value]="searchTerm()"
-        (input)="onSearchInput($event)"
-      />
-      @if (searchTerm()) {
-        <button
-          class="btn btn-outline-secondary"
-          type="button"
-          (click)="onClearSearch()"
-        >
-          <fa-icon icon="times"></fa-icon>
-        </button>
-      }
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Tìm kiếm theo tên, email hoặc số điện thoại..."
+          [value]="searchTerm()"
+          (input)="onSearchInput($event)"
+        />
+        @if (searchTerm()) {
+          <button
+            class="btn btn-outline-secondary"
+            type="button"
+            (click)="onClearSearch()"
+          >
+            <fa-icon icon="times"></fa-icon>
+          </button>
+        }
+      </div>
     </div>
   </div>
 
-  @if (users()) {
-    <div
-      class="table-container"
-      style="max-height: 70vh; overflow: auto; position: relative"
-    >
+  @if (filteredUsers() && filteredUsers()!.length > 0) {
+    <div class="table-responsive">
       <table
-        class="table table-striped table-hover table-bordered"
+        class="table table-striped table-bordered table-hover"
         aria-describedby="user-management-page-heading"
-        style="min-width: 100%"
       >
-        <thead class="sticky-top" style="background-color: #f8f9fa; z-index: 1">
+        <thead>
           <tr jhiSort [(sortState)]="sortState" (sortChange)="loadAll()">
             <th scope="col" jhiSortBy="id">
               <span>ID</span> <fa-icon icon="sort"></fa-icon>
             </th>
-            <th scope="col" jhiSortBy="firstName">
-              <span>Họ và Tên</span> <fa-icon icon="sort"></fa-icon>
-            </th>
             <th scope="col" jhiSortBy="email">
               <span>Email</span> <fa-icon icon="sort"></fa-icon>
             </th>
-            <th scope="col" jhiSortBy="phone">
-              <span>Số điện thoại</span> <fa-icon icon="sort"></fa-icon>
+            <th scope="col" jhiSortBy="firstName">
+              <span>Họ và Tên</span> <fa-icon icon="sort"></fa-icon>
             </th>
             <th scope="col" jhiSortBy="activated">
               <span>Trạng thái</span> <fa-icon icon="sort"></fa-icon>
@@ -82,24 +80,15 @@
             <th scope="col" jhiSortBy="createdDate">
               <span>Ngày tạo</span> <fa-icon icon="sort"></fa-icon>
             </th>
-            <th scope="col" jhiSortBy="lastModifiedBy">
-              <span>Người sửa</span> <fa-icon icon="sort"></fa-icon>
-            </th>
-            <th scope="col" jhiSortBy="lastModifiedDate">
-              <span>Ngày sửa</span> <fa-icon icon="sort"></fa-icon>
-            </th>
             <th scope="col"></th>
           </tr>
         </thead>
         <tbody>
-          @for (user of users(); track trackIdentity(user)) {
+          @for (user of filteredUsers(); track user.id) {
             <tr>
-              <td>
-                <a [routerLink]="['./', user.login, 'view']">{{ user.id }}</a>
-              </td>
-              <td>{{ user.firstName }} {{ user.lastName }}</td>
+              <td>{{ user.id }}</td>
               <td>{{ user.email }}</td>
-              <td>{{ user.phone }}</td>
+              <td>{{ user.firstName }} {{ user.lastName }}</td>
               <td>
                 @if (user.activated) {
                   <span class="badge bg-success">Hoạt động</span>
@@ -115,13 +104,11 @@
                 }
               </td>
               <td>{{ user.createdDate | date: 'dd/MM/yy HH:mm' }}</td>
-              <td>{{ user.lastModifiedBy }}</td>
-              <td>{{ user.lastModifiedDate | date: 'dd/MM/yy HH:mm' }}</td>
               <td class="text-end">
                 <div class="btn-group">
                   <button
-                    type="submit"
-                    [routerLink]="['./', user.login, 'view']"
+                    type="button"
+                    [routerLink]="['./', user.email, 'view']"
                     class="btn btn-info btn-sm"
                   >
                     <fa-icon icon="eye"></fa-icon>
@@ -129,42 +116,30 @@
                   </button>
 
                   <button
-                    type="submit"
-                    [routerLink]="['./', user.login, 'edit']"
+                    type="button"
+                    [routerLink]="['./', user.email, 'edit']"
                     queryParamsHandling="merge"
                     class="btn btn-primary btn-sm"
-                    [disabled]="
-                      !currentAccount() ||
-                      currentAccount()?.login === user.login
-                    "
+                    [disabled]="currentAccount()?.email === user.email"
                   >
                     <fa-icon icon="pencil-alt"></fa-icon>
                     <span class="d-none d-md-inline">Sửa</span>
                   </button>
 
-                  @if (user.activated) {
-                    <button
-                      type="button"
-                      (click)="setActive(user, false)"
-                      class="btn btn-danger btn-sm"
-                      [disabled]="
-                        !currentAccount() ||
-                        currentAccount()?.login === user.login
-                      "
-                    >
-                      <fa-icon icon="lock"></fa-icon>
-                      <span class="d-none d-md-inline">Khóa</span>
-                    </button>
-                  } @else {
-                    <button
-                      type="button"
-                      (click)="setActive(user, true)"
-                      class="btn btn-success btn-sm"
-                    >
-                      <fa-icon icon="lock-open"></fa-icon>
-                      <span class="d-none d-md-inline">Mở khóa</span>
-                    </button>
-                  }
+                  <button
+                    type="button"
+                    (click)="setActive(user, !user.activated)"
+                    class="btn btn-sm"
+                    [ngClass]="user.activated ? 'btn-danger' : 'btn-success'"
+                    [disabled]="currentAccount()?.email === user.email"
+                  >
+                    <fa-icon
+                      [icon]="user.activated ? 'lock' : 'lock-open'"
+                    ></fa-icon>
+                    <span class="d-none d-md-inline">{{
+                      user.activated ? 'Khóa' : 'Mở khóa'
+                    }}</span>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -172,27 +147,31 @@
         </tbody>
       </table>
     </div>
-
-    @if (totalItems()) {
-      <div class="d-flex justify-content-center mt-3">
-        <jhi-item-count
-          [params]="{
-            page: page,
-            totalItems: totalItems(),
-            itemsPerPage: itemsPerPage,
-          }"
-        />
-
-        <ngb-pagination
-          [collectionSize]="totalItems()"
-          [(page)]="page"
-          [pageSize]="itemsPerPage"
-          [maxSize]="5"
-          [rotate]="true"
-          [boundaryLinks]="true"
-          (pageChange)="transition()"
-        />
-      </div>
-    }
+  } @else if (filteredUsers() && filteredUsers()!.length === 0) {
+    <div class="alert alert-warning">
+      <span>Không có người dùng nào được tìm thấy.</span>
+    </div>
+  }
+  @if (totalItems()) {
+    <div class="d-flex justify-content-end mt-3">
+      <jhi-item-count
+        [params]="{
+          page: page,
+          totalItems: totalItems(),
+          itemsPerPage: itemsPerPage,
+        }"
+      />
+    </div>
+    <div class="d-flex justify-content-center">
+      <ngb-pagination
+        [collectionSize]="totalItems()"
+        [(page)]="page"
+        [pageSize]="itemsPerPage"
+        [maxSize]="5"
+        [rotate]="true"
+        [boundaryLinks]="true"
+        (pageChange)="transition()"
+      />
+    </div>
   }
 </div>

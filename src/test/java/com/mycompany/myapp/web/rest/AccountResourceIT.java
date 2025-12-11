@@ -203,7 +203,7 @@ class AccountResourceIT {
         secondUser.setEmail(firstUser.getEmail());
         secondUser.setImageUrl(firstUser.getImageUrl());
         secondUser.setLangKey(firstUser.getLangKey());
-        secondUser.setAuthorities(new HashSet<>(firstUser.getAuthorities()));
+        secondUser.setAuthorities(firstUser.getAuthorities());
 
         // Register second (non activated) user
         restAccountMockMvc
@@ -221,7 +221,7 @@ class AccountResourceIT {
         userWithUpperCaseEmail.setEmail("TEST-register-duplicate-email@example.com");
         userWithUpperCaseEmail.setImageUrl(firstUser.getImageUrl());
         userWithUpperCaseEmail.setLangKey(firstUser.getLangKey());
-        userWithUpperCaseEmail.setAuthorities(new HashSet<>(firstUser.getAuthorities()));
+        userWithUpperCaseEmail.setAuthorities(firstUser.getAuthorities());
 
         // Register third (not activated) user
         restAccountMockMvc
@@ -262,9 +262,8 @@ class AccountResourceIT {
 
         Optional<User> userDup = userRepository.findOneWithAuthoritiesByEmailIgnoreCase("badguy@example.com");
         assertThat(userDup).isPresent();
-        assertThat(userDup.orElseThrow().getAuthorities())
-            .hasSize(1)
-            .containsExactly(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
+        assertThat(userDup.orElseThrow().getAuthority()).isNotNull();
+        assertThat(userDup.orElseThrow().getAuthority().getName()).isEqualTo(AuthoritiesConstants.USER);
 
         userService.deleteUser("badguy@example.com");
     }
@@ -278,6 +277,7 @@ class AccountResourceIT {
         user.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));
         user.setActivated(false);
         user.setActivationKey(activationKey);
+        user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
 
         userRepository.saveAndFlush(user);
 
@@ -303,6 +303,7 @@ class AccountResourceIT {
         user.setEmail("save-account@example.com");
         user.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));
         user.setActivated(true);
+        user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
         userRepository.saveAndFlush(user);
 
         AdminUserDTO userDTO = new AdminUserDTO();
@@ -326,7 +327,7 @@ class AccountResourceIT {
         assertThat(updatedUser.getPassword()).isEqualTo(user.getPassword());
         assertThat(updatedUser.getImageUrl()).isEqualTo(userDTO.getImageUrl());
         assertThat(updatedUser.isActivated()).isTrue();
-        assertThat(updatedUser.getAuthorities()).isEmpty();
+        assertThat(updatedUser.getAuthority().getName()).isEqualTo(AuthoritiesConstants.USER);
 
         userService.deleteUser("save-account@example.com");
     }
@@ -339,6 +340,7 @@ class AccountResourceIT {
         user.setEmail("save-invalid-email@example.com");
         user.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));
         user.setActivated(true);
+        user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
 
         userRepository.saveAndFlush(user);
 
@@ -368,12 +370,14 @@ class AccountResourceIT {
         user.setEmail("save-existing-email@example.com");
         user.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));
         user.setActivated(true);
+        user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
         userRepository.saveAndFlush(user);
 
         User anotherUser = new User();
         anotherUser.setEmail("save-existing-email2@example.com");
         anotherUser.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));
         anotherUser.setActivated(true);
+        anotherUser.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
 
         userRepository.saveAndFlush(anotherUser);
 
@@ -405,6 +409,7 @@ class AccountResourceIT {
         user.setEmail("save-existing-email-and-login@example.com");
         user.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));
         user.setActivated(true);
+        user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
         userRepository.saveAndFlush(user);
 
         AdminUserDTO userDTO = new AdminUserDTO();
@@ -434,6 +439,7 @@ class AccountResourceIT {
         String currentPassword = RandomStringUtils.insecure().nextAlphanumeric(60);
         user.setPassword(passwordEncoder.encode(currentPassword));
         user.setEmail("change-password-wrong-existing-password@example.com");
+        user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
         userRepository.saveAndFlush(user);
 
         restAccountMockMvc
@@ -459,6 +465,7 @@ class AccountResourceIT {
         String currentPassword = RandomStringUtils.insecure().nextAlphanumeric(60);
         user.setPassword(passwordEncoder.encode(currentPassword));
         user.setEmail("change-password@example.com");
+        user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
         userRepository.saveAndFlush(user);
 
         restAccountMockMvc
@@ -483,6 +490,7 @@ class AccountResourceIT {
         String currentPassword = RandomStringUtils.insecure().nextAlphanumeric(60);
         user.setPassword(passwordEncoder.encode(currentPassword));
         user.setEmail("change-password-too-small@example.com");
+        user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
         userRepository.saveAndFlush(user);
 
         String newPassword = RandomStringUtils.insecure().next(ManagedUserVM.PASSWORD_MIN_LENGTH - 1);
@@ -509,6 +517,7 @@ class AccountResourceIT {
         String currentPassword = RandomStringUtils.insecure().nextAlphanumeric(60);
         user.setPassword(passwordEncoder.encode(currentPassword));
         user.setEmail("change-password-too-long@example.com");
+        user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
         userRepository.saveAndFlush(user);
 
         String newPassword = RandomStringUtils.insecure().next(ManagedUserVM.PASSWORD_MAX_LENGTH + 1);
@@ -535,6 +544,7 @@ class AccountResourceIT {
         String currentPassword = RandomStringUtils.insecure().nextAlphanumeric(60);
         user.setPassword(passwordEncoder.encode(currentPassword));
         user.setEmail("change-password-empty@example.com");
+        user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
         userRepository.saveAndFlush(user);
 
         restAccountMockMvc
@@ -559,6 +569,7 @@ class AccountResourceIT {
         user.setActivated(true);
         user.setEmail("password-reset@example.com");
         user.setLangKey("en");
+        user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
         userRepository.saveAndFlush(user);
 
         restAccountMockMvc
@@ -576,6 +587,7 @@ class AccountResourceIT {
         user.setActivated(true);
         user.setEmail("password-reset-upper-case@example.com");
         user.setLangKey("en");
+        user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
         userRepository.saveAndFlush(user);
 
         restAccountMockMvc
@@ -600,6 +612,7 @@ class AccountResourceIT {
         user.setEmail("finish-password-reset@example.com");
         user.setResetDate(Instant.now().plusSeconds(60));
         user.setResetKey("reset key");
+        user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
         userRepository.saveAndFlush(user);
 
         KeyAndPasswordVM keyAndPassword = new KeyAndPasswordVM();
@@ -628,6 +641,7 @@ class AccountResourceIT {
         user.setEmail("finish-password-reset-too-small@example.com");
         user.setResetDate(Instant.now().plusSeconds(60));
         user.setResetKey("reset key too small");
+        user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
         userRepository.saveAndFlush(user);
 
         KeyAndPasswordVM keyAndPassword = new KeyAndPasswordVM();

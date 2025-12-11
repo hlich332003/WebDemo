@@ -1,110 +1,75 @@
+// Admin Home - Modern Theme
+@use 'app/shared/styles/variables' as *;
+
 .admin-home-container {
   padding: 2rem;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
+  background: #f8f9fa;
+  min-height: 100vh;
 
-  h1 {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-    color: #2c3e50;
-    font-weight: 700;
+  .admin-header {
+    // Đã sửa từ .page-header
+    background: linear-gradient(
+      135deg,
+      rgba($primary, 0.15),
+      rgba($secondary, 0.1)
+    );
+    padding: 2rem;
+    border-radius: $border-radius-lg;
+    margin-bottom: 2rem;
+    box-shadow: $shadow-lg;
+    color: $text-primary;
+    position: relative;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba($primary, 0.2);
+    background-size: cover;
+    background-position: center;
+    background-blend-mode: overlay;
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      color: $text-primary;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: relative;
+      z-index: 1;
+
+      i {
+        color: $primary;
+      }
+    }
+
+    > p {
+      font-size: 1.1rem;
+      color: $text-primary;
+      margin-bottom: 0;
+      opacity: 0.85;
+      position: relative;
+      z-index: 1;
+    }
   }
 
-  > p {
-    font-size: 1.1rem;
-    color: #7f8c8d;
-    margin-bottom: 2.5rem;
-  }
-
-  h2 {
-    font-size: 1.75rem;
-    color: #2c3e50;
-    margin-bottom: 1.5rem;
-    font-weight: 600;
-    text-align: left;
-  }
-
-  .stats-grid {
+  .admin-stats {
+    // Đã sửa từ .stats-grid
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1.5rem;
     margin: 2rem 0 3rem;
 
     .stat-card {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border: none;
-      border-radius: 12px;
+      background: $white;
+      border: 1px solid $border-color;
+      border-radius: $border-radius-lg;
       padding: 2rem;
       display: flex;
       align-items: center;
       gap: 1.5rem;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      transition:
-        transform 0.3s ease,
-        box-shadow 0.3s ease;
-
-      &:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-      }
-
-      &:nth-child(1) {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      }
-
-      &:nth-child(2) {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      }
-
-      &:nth-child(3) {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-      }
-
-      fa-icon {
-        font-size: 3rem;
-        color: rgba(255, 255, 255, 0.9);
-      }
-
-      .stat-info {
-        text-align: left;
-        flex: 1;
-
-        h4 {
-          font-size: 0.9rem;
-          color: rgba(255, 255, 255, 0.85);
-          margin-bottom: 0.5rem;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          font-weight: 500;
-        }
-
-        p {
-          font-size: 2rem;
-          font-weight: 700;
-          color: #fff;
-          margin: 0;
-        }
-      }
-    }
-  }
-
-  .admin-dashboard-links {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.5rem;
-    margin-top: 2rem;
-
-    .dashboard-link {
-      background-color: #fff;
-      border: 2px solid #e9ecef;
-      border-radius: 12px;
-      padding: 2rem 1.5rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-decoration: none;
-      color: #2c3e50;
-      transition: all 0.3s ease;
+      box-shadow: $shadow-md;
+      transition: $transition-base;
       position: relative;
       overflow: hidden;
 
@@ -113,46 +78,160 @@
         position: absolute;
         top: 0;
         left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, $primary, $secondary);
+      }
+
+      &:hover {
+        transform: translateY(-5px);
+        box-shadow: $shadow-lg;
+        border-color: $primary;
+      }
+
+      &:nth-child(1) {
+        &::before {
+          background: linear-gradient(135deg, $primary, $secondary);
+        }
+      }
+
+      &:nth-child(2) {
+        &::before {
+          background: linear-gradient(135deg, $success, #28a745);
+        }
+      }
+
+      &:nth-child(3) {
+        &::before {
+          background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+      }
+
+      .stat-icon {
+        // Sửa selector cho icon
+        font-size: 3rem;
+        color: $primary;
+        opacity: 0.8;
+      }
+
+      .stat-info {
+        text-align: left;
+        flex: 1;
+
+        .stat-label {
+          // Sửa selector cho label
+          font-size: 0.9rem;
+          color: $text-secondary;
+          margin-bottom: 0.5rem;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          font-weight: 500;
+          display: block; // Đảm bảo hiển thị đúng
+        }
+
+        .stat-value {
+          // Sửa selector cho value
+          font-size: 2rem;
+          font-weight: 700;
+          color: $text-primary;
+          margin: 0;
+          display: block; // Đảm bảo hiển thị đúng
+        }
+      }
+    }
+  }
+
+  .admin-actions {
+    // Đã sửa từ .admin-dashboard-links
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+
+    .action-card {
+      // Đã sửa từ .dashboard-link
+      background: $white;
+      border: 1px solid $border-color;
+      border-radius: $border-radius-lg;
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: $text-primary;
+      transition: $transition-base;
+      position: relative;
+      overflow: hidden;
+      box-shadow: $shadow-sm;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
         height: 4px;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(90deg, $primary, $secondary);
         transform: scaleX(0);
         transition: transform 0.3s ease;
       }
 
       &:hover {
-        background-color: #f8f9fa;
-        border-color: #667eea;
+        background: linear-gradient(
+          135deg,
+          rgba($primary, 0.03),
+          rgba($secondary, 0.03)
+        );
+        border-color: $primary;
         transform: translateY(-8px);
-        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
+        box-shadow: $shadow-lg;
 
         &::before {
           transform: scaleX(1);
         }
 
-        fa-icon {
+        .action-icon {
+          // Sửa selector cho icon
           transform: scale(1.1);
+          color: $primary;
         }
       }
 
-      fa-icon {
+      .action-icon {
+        // Sửa selector cho icon
         font-size: 3rem;
         margin-bottom: 1rem;
-        color: #667eea;
-        transition: transform 0.3s ease;
+        color: $secondary;
+        transition: $transition-base;
       }
 
-      span {
+      .action-label {
+        // Sửa selector cho label
         font-size: 1.05rem;
         font-weight: 600;
         text-align: center;
+        color: $text-primary;
       }
     }
   }
 
-  hr {
-    border: none;
-    border-top: 2px solid #e9ecef;
-    margin: 3rem 0;
+  // Responsive
+  @media (max-width: 768px) {
+    padding: 1rem;
+
+    .admin-header {
+      // Cập nhật selector responsive
+      padding: 1.5rem;
+
+      h1 {
+        font-size: 1.8rem;
+      }
+    }
+
+    .admin-stats, // Cập nhật selector responsive
+    .admin-actions {
+      // Cập nhật selector responsive
+      grid-template-columns: 1fr;
+    }
   }
 }

@@ -9,8 +9,14 @@ import {
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Observable, Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  takeUntil,
+  map,
+} from 'rxjs/operators';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { NgOptimizedImage } from '@angular/common';
 
 import SharedModule from 'app/shared/shared.module';
 import HasAnyAuthorityDirective from 'app/shared/auth/has-any-authority.directive';
@@ -34,6 +40,7 @@ import { WishlistService } from 'app/shared/services/wishlist.service';
     HasAnyAuthorityDirective,
     FormsModule,
     FontAwesomeModule,
+    NgOptimizedImage, // Add NgOptimizedImage here
   ],
 })
 export class NavbarComponent implements OnInit, OnDestroy {
@@ -46,33 +53,25 @@ export class NavbarComponent implements OnInit, OnDestroy {
   searchTerm = '';
   isSearching = false;
 
-  // Debounce search
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
 
-  // Tối ưu: Sử dụng Observable trực tiếp từ service
   cartItemCount$: Observable<number>;
   wishlistItemCount$: Observable<number>;
 
-  /**
-   * Computed signal to determine if the cart should be shown.
-   * The cart is hidden only for users with the 'ROLE_ADMIN' authority.
-   */
   showCart = computed(() => {
     const currentAccount = this.account();
-    // If the user is not logged in, show the cart.
     if (!currentAccount) {
       return true;
     }
-    // Hide the cart if the user is an admin.
     return !currentAccount.authorities.includes('ROLE_ADMIN');
   });
 
   private readonly loginService = inject(LoginService);
   private readonly profileService = inject(ProfileService);
   private readonly router = inject(Router);
-  private readonly cartService = inject(CartService); // Inject CartService
-  private readonly wishlistService = inject(WishlistService); // Inject WishlistService
+  private readonly cartService = inject(CartService);
+  private readonly wishlistService = inject(WishlistService);
 
   constructor() {
     const { VERSION } = environment;
@@ -81,19 +80,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
         ? VERSION
         : `v${VERSION}`;
     }
-    // Gán Observable từ services
     this.cartItemCount$ = this.cartService.totalQuantity$;
-
-    // Wishlist sử dụng signal, cần convert sang Observable
-    this.wishlistItemCount$ = new Observable((observer) => {
-      const effect = this.wishlistService.count;
-      observer.next(effect());
-      // Theo dõi thay đổi
-      const unsubscribe = setInterval(() => {
-        observer.next(effect());
-      }, 100);
-      return () => clearInterval(unsubscribe);
-    });
+    this.wishlistItemCount$ = this.wishlistService.count$;
   }
 
   ngOnInit(): void {
@@ -104,17 +92,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.openAPIEnabled = profileInfo.openAPIEnabled;
       },
       error: () => {
-        // Ignore info endpoint error
+        // Ignore
       },
     });
 
-    // Setup debounce search
     this.searchSubject
-      .pipe(
-        debounceTime(200), // Chờ 200ms sau khi user ngừng gõ
-        distinctUntilChanged(), // Chỉ trigger khi giá trị thay đổi
-        takeUntil(this.destroy$),
-      )
+      .pipe(debounceTime(200), distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((term) => {
         if (term.trim()) {
           this.isSearching = true;
@@ -127,33 +110,21 @@ export class NavbarComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Được gọi khi user gõ vào ô search
-   */
   onSearchInput(event: Event): void {
     const term = (event.target as HTMLInputElement).value;
     this.searchSubject.next(term);
   }
 
-  /**
-   * Clear search
-   */
   clearSearch(): void {
-    // Clear local search state
     this.searchTerm = '';
     this.isSearching = false;
-    // Emit empty to debounce stream to cancel pending searches
     this.searchSubject.next('');
-    // Navigate to product list and remove the search param
     this.router.navigate(['/products'], {
       queryParams: { search: null },
       queryParamsHandling: 'merge',
     });
   }
 
-  /**
-   * Submit search form
-   */
   search(): void {
     if (this.searchTerm.trim()) {
       this.isSearching = true;

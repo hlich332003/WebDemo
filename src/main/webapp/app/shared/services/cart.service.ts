@@ -1,6 +1,15 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, map, shareReplay } from 'rxjs';
+import { Injectable, inject, OnDestroy } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, of, Subject, forkJoin } from 'rxjs';
+import {
+  map,
+  shareReplay,
+  catchError,
+  takeUntil,
+  switchMap,
+} from 'rxjs/operators';
 import { IProduct } from 'app/entities/product/product.model';
+import { AccountService } from 'app/core/auth/account.service';
 
 export interface ICartItem {
   product: IProduct;
@@ -10,154 +19,94 @@ export interface ICartItem {
 @Injectable({
   providedIn: 'root',
 })
-export class CartService {
-  private cartItemsSubject: BehaviorSubject<ICartItem[]> = new BehaviorSubject<
-    ICartItem[]
-  >(this.getCartFromLocalStorage());
-  public cartItems$: Observable<ICartItem[]> =
-    this.cartItemsSubject.asObservable();
+export class CartService implements OnDestroy {
+  private readonly API_URL = 'api/cart';
+  private readonly PRODUCT_API_URL = 'api/products';
 
-  // Tối ưu: Tạo các Observable cho dữ liệu được tính toán
-  public totalQuantity$: Observable<number>;
-  public totalPrice$: Observable<number>;
+  private http = inject(HttpClient);
+  private accountService = inject(AccountService);
+
+  private cartItemsSubject = new BehaviorSubject<ICartItem[]>([]);
+  public cartItems$ = this.cartItemsSubject.asObservable();
+
+  public totalQuantity$ = this.cartItems$.pipe(
+    map((items) => items.reduce((total, item) => total + item.quantity, 0)),
+    shareReplay(1),
+  );
+  public totalPrice$ = this.cartItems$.pipe(
+    map((items) =>
+      items.reduce(
+        (total, item) => total + (item.product.price ?? 0) * item.quantity,
+        0,
+      ),
+    ),
+    shareReplay(1),
+  );
+
+  private destroy$ = new Subject<void>();
 
   constructor() {
-    // Tính toán tổng số lượng
-    this.totalQuantity$ = this.cartItems$.pipe(
-      map((items) => items.reduce((total, item) => total + item.quantity, 0)),
-      shareReplay(1), // Cache lại kết quả cuối cùng
-    );
-
-    // Tính toán tổng giá tiền
-    this.totalPrice$ = this.cartItems$.pipe(
-      map((items) =>
-        items.reduce(
-          (total, item) => total + (item.product.price ?? 0) * item.quantity,
-          0,
-        ),
-      ),
-      shareReplay(1), // Cache lại kết quả cuối cùng
-    );
+    this.accountService
+      .getAuthenticationState()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((account) => {
+        if (account) {
+          this.loadCart();
+        } else {
+          this.cartItemsSubject.next([]); // Clear cart on logout
+        }
+      });
   }
 
-  private getCartFromLocalStorage(): ICartItem[] {
-    try {
-      const cart = localStorage.getItem('cart');
-      return cart ? JSON.parse(cart) : [];
-    } catch (error) {
-      console.error('Failed to load cart from localStorage:', error);
-      return [];
-    }
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  private saveCartToLocalStorage(cart: ICartItem[]): void {
-    try {
-      localStorage.setItem('cart', JSON.stringify(cart));
-    } catch (error) {
-      console.error('Failed to save cart to localStorage:', error);
-    }
+  loadCart(): void {
+    this.http
+      .get<any[]>(this.API_URL)
+      .pipe(
+        switchMap((cartDtos: any[]) => {
+          if (cartDtos.length === 0) {
+            return of([]);
+          }
+          const productRequests: Observable<IProduct>[] = cartDtos.map((dto) =>
+            this.http.get<IProduct>(`${this.PRODUCT_API_URL}/${dto.productId}`),
+          );
+          return forkJoin(productRequests).pipe(
+            map((products) =>
+              cartDtos.map((dto) => {
+                const product = products.find((p) => p.id === dto.productId);
+                return { product: product!, quantity: dto.quantity };
+              }),
+            ),
+          );
+        }),
+        catchError(() => of([])), // On error, return empty cart
+      )
+      .subscribe((cartItems) => {
+        this.cartItemsSubject.next(cartItems as ICartItem[]);
+      });
   }
 
-  addToCart(product: IProduct, quantity: number = 1): boolean {
-    if (!product?.id || quantity <= 0) {
-      console.error('Invalid product or quantity');
-      return false;
-    }
-
-    const availableStock = product.quantity ?? 0;
-    if (availableStock <= 0) {
-      console.warn('Product out of stock:', product.name);
-      return false;
-    }
-
-    const currentCart = this.getCartItems(); // Lấy giá trị hiện tại
-    const existingItem = currentCart.find(
-      (item) => item.product.id === product.id,
-    );
-
-    const currentQuantityInCart = existingItem ? existingItem.quantity : 0;
-    const newTotalQuantity = currentQuantityInCart + quantity;
-
-    if (newTotalQuantity > availableStock) {
-      console.warn(
-        `Cannot add ${quantity} items. Only ${availableStock - currentQuantityInCart} available (${currentQuantityInCart} already in cart)`,
-      );
-      return false;
-    }
-
-    if (existingItem) {
-      existingItem.quantity += quantity;
-    } else {
-      currentCart.push({ product, quantity });
-    }
-
-    this.cartItemsSubject.next(currentCart);
-    this.saveCartToLocalStorage(currentCart);
-    return true;
+  addToCart(productId: number, quantity = 1): Observable<any> {
+    return this.http.post(this.API_URL, { productId, quantity });
   }
 
-  updateQuantity(productId: number, quantity: number): boolean {
-    const currentCart = this.getCartItems();
-    const item = currentCart.find((i) => i.product.id === productId);
-
-    if (!item) {
-      return false;
-    }
-
-    const availableStock = item.product.quantity ?? 0;
-
-    if (quantity <= 0) {
-      this.removeFromCart(productId);
-      return true;
-    }
-
-    if (quantity > availableStock) {
-      console.warn(
-        `Cannot set quantity to ${quantity}. Only ${availableStock} available in stock`,
-      );
-      return false;
-    }
-
-    item.quantity = quantity;
-    this.cartItemsSubject.next(currentCart);
-    this.saveCartToLocalStorage(currentCart);
-    return true;
+  updateQuantity(productId: number, quantity: number): Observable<any> {
+    return this.http.put(this.API_URL, { productId, quantity });
   }
 
-  removeFromCart(productId: number): void {
-    let currentCart = this.getCartItems();
-    currentCart = currentCart.filter((item) => item.product.id !== productId);
-    this.cartItemsSubject.next(currentCart);
-    this.saveCartToLocalStorage(currentCart);
+  removeFromCart(productId: number): Observable<any> {
+    return this.http.delete(`${this.API_URL}/${productId}`);
   }
 
-  clearCart(): void {
-    try {
-      this.cartItemsSubject.next([]);
-      localStorage.removeItem('cart');
-    } catch (error) {
-      console.error('Failed to clear cart:', error);
-    }
+  clearCart(): Observable<any> {
+    return this.http.delete(this.API_URL);
   }
 
-  // Phương thức này vẫn hữu ích để lấy giá trị tức thời nếu cần
   getCartItems(): ICartItem[] {
     return this.cartItemsSubject.value;
-  }
-
-  // Thêm phương thức getCartCount để navbar và cart component sử dụng
-  getCartCount(): number {
-    return this.getCartItems().reduce(
-      (total, item) => total + item.quantity,
-      0,
-    );
-  }
-
-  // Thêm phương thức getCartTotal để checkout sử dụng
-  getCartTotal(): number {
-    return this.getCartItems().reduce(
-      (total, item) => total + (item.product.price ?? 0) * item.quantity,
-      0,
-    );
   }
 }

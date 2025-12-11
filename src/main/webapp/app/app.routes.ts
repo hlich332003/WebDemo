@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { Authority } from 'app/config/authority.constants';
 import { UserRouteAccessService } from 'app/core/auth/user-route-access.service';
 import { errorRoute } from './layouts/error/error.route';
+import { productResolve } from './entities/product/route/product-routing-resolve.service'; // Import productResolve
 
 const routes: Routes = [
   // Trang chủ
@@ -67,6 +68,9 @@ const routes: Routes = [
       import('./product-detail/product-detail.component').then(
         (m) => m.ProductDetailComponent,
       ),
+    resolve: {
+      product: productResolve, // Sử dụng resolver để tải dữ liệu sản phẩm
+    },
     title: 'Chi tiết sản phẩm',
   },
 
@@ -76,6 +80,7 @@ const routes: Routes = [
     loadComponent: () =>
       import('./cart/cart.component').then((m) => m.CartComponent),
     title: 'Giỏ hàng',
+    canActivate: [UserRouteAccessService],
   },
 
   // Trang danh sách yêu thích
@@ -84,6 +89,7 @@ const routes: Routes = [
     loadComponent: () =>
       import('./wishlist/wishlist.component').then((m) => m.WishlistComponent),
     title: 'Danh sách yêu thích',
+    canActivate: [UserRouteAccessService],
   },
 
   // Trang thanh toán
@@ -92,6 +98,7 @@ const routes: Routes = [
     loadComponent: () =>
       import('./checkout/checkout.component').then((m) => m.CheckoutComponent),
     title: 'Thanh toán',
+    canActivate: [UserRouteAccessService],
   },
 
   // Trang chi tiết đơn hàng

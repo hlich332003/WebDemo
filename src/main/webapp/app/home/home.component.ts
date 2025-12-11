@@ -13,7 +13,6 @@ import SharedModule from 'app/shared/shared.module';
 import { Account } from 'app/core/auth/account.model';
 import { AccountService } from 'app/core/auth/account.service';
 import { ProductService } from 'app/entities/product/product.service';
-import { HttpResponse } from '@angular/common/http';
 import { IProduct } from 'app/entities/product/product.model';
 import { CategoryService } from 'app/entities/category/category.service';
 import { ICategory } from 'app/entities/category/category.model';
@@ -23,6 +22,7 @@ import { CartService } from 'app/shared/services/cart.service';
 import { RecentlyViewedService } from 'app/shared/services/recently-viewed.service';
 import { WishlistService } from 'app/shared/services/wishlist.service';
 import { ProductComparisonService } from 'app/shared/services/product-comparison.service';
+import { LoginModalService } from 'app/core/login/login-modal.service';
 
 @Component({
   selector: 'jhi-home',
@@ -39,6 +39,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   bestSellerProducts: IProduct[] = [];
   recentlyViewedProducts: IProduct[] = [];
   isLoading = false;
+  bannerImageUrl =
+    'https://thuthuatnhanh.com/wp-content/uploads/2021/06/Hinh-anh-dan-PC-khung-dep-me-hon.jpg';
 
   private readonly destroy$ = new Subject<void>();
 
@@ -52,6 +54,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   private readonly recentlyViewedService = inject(RecentlyViewedService);
   public readonly wishlistService = inject(WishlistService);
   private readonly comparisonService = inject(ProductComparisonService);
+  private readonly loginModalService = inject(LoginModalService);
 
   isAdmin = computed(() => {
     const currentAccount = this.account();
@@ -64,10 +67,8 @@ export class HomeComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((account) => this.account.set(account));
 
-    // Load dữ liệu lần đầu
     this.loadAllData();
 
-    // Reload dữ liệu mỗi khi navigate đến trang home (sau khi checkout chẳng hạn)
     this.router.events
       .pipe(
         filter((event) => event instanceof NavigationEnd),
@@ -84,64 +85,34 @@ export class HomeComponent implements OnInit, OnDestroy {
   loadAllData(): void {
     this.isLoading = true;
     forkJoin([
-      this.categoryService
-        .query()
-        .pipe(map((res: HttpResponse<ICategory[]>) => res.body ?? [])),
-      this.productService
-        .query({ size: 1000, sort: ['id,desc'] })
-        .pipe(map((res: HttpResponse<IProduct[]>) => res.body ?? [])),
+      this.categoryService.query().pipe(map((res) => res.body ?? [])),
+      this.productService.query().pipe(map((res) => res.body ?? [])),
     ]).subscribe({
       next: ([featuredCats, allProducts]) => {
-        console.log('🔍 DEBUG - Total products loaded:', allProducts.length);
-        console.log('🔍 DEBUG - First 3 products:', allProducts.slice(0, 3));
-        console.log(
-          '🔍 DEBUG - Products with imageUrl:',
-          allProducts.filter((p) => p.imageUrl).length,
-        );
-        console.log(
-          '🔍 DEBUG - Products with isPinned=true:',
-          allProducts.filter((p) => p.isPinned).length,
-        );
-
         this.featuredCategories = featuredCats;
         this.products = allProducts;
-
-        // Lấy 12 sản phẩm mới nhất (sắp xếp theo id giảm dần)
         this.newProducts = allProducts.slice(0, 12);
-
-        // Best sellers: ưu tiên sản phẩm được GHIM (isPinned = true), sau đó theo salesCount giảm dần
         const pinned = allProducts.filter((p) => p.isPinned === true);
         const notPinned = allProducts.filter((p) => p.isPinned !== true);
-
-        // Sắp xếp notPinned theo salesCount giảm dần (null -> 0)
         notPinned.sort((a, b) => (b.salesCount ?? 0) - (a.salesCount ?? 0));
-
         const lowStockCandidates = notPinned.filter(
           (p) =>
             p.quantity !== null && p.quantity !== undefined && p.quantity < 50,
         );
-
-        // Ghép sản phẩm ghim + những sản phẩm bán chạy/low stock
         const combined: IProduct[] = [
           ...pinned,
           ...lowStockCandidates,
           ...notPinned,
         ];
-
-        // Lấy tối đa 8
         this.bestSellerProducts = combined.slice(0, 8);
-
         this.featuredCategories.forEach((category) => {
           category.products = this.products.filter(
             (product) => product.category?.id === category.id,
           );
         });
-
-        // THÊM MỚI: Load Recently Viewed Products
         this.recentlyViewedProducts = this.recentlyViewedService
           .getProducts()
           .slice(0, 6);
-
         this.isLoading = false;
       },
       error: () => {
@@ -160,36 +131,27 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   addToCart(product: IProduct): void {
-    // Kiểm tra số lượng tồn kho
+    if (!this.accountService.isAuthenticated()) {
+      this.loginModalService.open();
+      return;
+    }
     if (!product.quantity || product.quantity <= 0) {
       this.notify.error('❌ Sản phẩm đã hết hàng!');
       return;
     }
-
-    // Kiểm tra số lượng đang có trong giỏ
     const currentCartItem = this.cartService
       .getCartItems()
       .find((item) => item.product.id === product.id);
     const currentQtyInCart = currentCartItem ? currentCartItem.quantity : 0;
-
     if (currentQtyInCart >= product.quantity) {
       this.notify.error(
         `⚠️ Bạn đã có ${currentQtyInCart} sản phẩm này trong giỏ! Tồn kho chỉ còn ${product.quantity}.`,
       );
       return;
     }
-
-    const productToAdd: IProduct = {
-      ...product,
-      price: product.price ?? 0,
-    };
-
-    const success = this.cartService.addToCart(productToAdd);
-
-    if (success) {
+    this.cartService.addToCart(product.id!).subscribe(() => {
       const newTotal = currentQtyInCart + 1;
-      const remaining = product.quantity - newTotal;
-
+      const remaining = product.quantity! - newTotal;
       if (remaining <= 5 && remaining > 0) {
         this.notify.warning(
           `⚠️ Đã thêm vào giỏ hàng! Chỉ còn ${remaining} sản phẩm.`,
@@ -197,19 +159,30 @@ export class HomeComponent implements OnInit, OnDestroy {
       } else {
         this.notify.success('✅ Đã thêm sản phẩm vào giỏ hàng!');
       }
-    } else {
-      this.notify.error('⚠️ Không thể thêm sản phẩm vào giỏ hàng!');
-    }
+      this.cartService.loadCart();
+    });
   }
 
   toggleWishlist(product: IProduct, event: Event): void {
-    event.stopPropagation(); // Prevent navigation when clicking heart
-    const added = this.wishlistService.toggleWishlist(product);
-    if (added) {
-      this.notify.success('💖 Đã thêm vào danh sách yêu thích!');
-    } else {
-      this.notify.info('💔 Đã xóa khỏi danh sách yêu thích!');
+    event.stopPropagation();
+    if (!this.accountService.isAuthenticated()) {
+      this.loginModalService.open();
+      return;
     }
+    this.wishlistService.toggleWishlist(product).subscribe({
+      next: (added: boolean) => {
+        if (added) {
+          this.notify.success('💖 Đã thêm vào danh sách yêu thích!');
+        } else {
+          this.notify.info('💔 Đã xóa khỏi danh sách yêu thích!');
+        }
+      },
+      error: (error: Error) => {
+        this.notify.error(
+          `❌ Lỗi khi cập nhật danh sách yêu thích: ${error.message}`,
+        );
+      },
+    });
   }
 
   isInWishlist(productId: number): boolean {
@@ -219,7 +192,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   toggleComparison(product: IProduct, event: Event): void {
     event.stopPropagation();
     const added = this.comparisonService.toggleComparison(product);
-
     if (added) {
       this.notify.success('📊 Đã thêm vào danh sách so sánh!');
     } else {

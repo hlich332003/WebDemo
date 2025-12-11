@@ -1,88 +1,77 @@
-@use 'content/scss/variables' as *;
-@use '../layouts/theme' as *;
+// Wishlist Component - Modern Pink Purple Theme
+@use '../shared/styles/variables' as *;
 
 .wishlist-container {
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
-  min-height: 60vh;
+  min-height: 100vh;
+  background: #f8f9fa;
 }
 
 .wishlist-header {
+  background: linear-gradient(135deg, $primary 0%, $secondary 100%);
+  padding: 2rem;
+  border-radius: $border-radius-lg;
+  margin-bottom: 2rem;
+  box-shadow: $shadow-lg;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
 
   .page-title {
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: 700;
-    color: $light;
+    color: $white;
     display: flex;
     align-items: center;
     gap: 1rem;
     margin: 0;
 
     i {
-      color: #e74c3c;
+      color: $accent;
       font-size: 2.5rem;
     }
 
     .count-badge {
-      background: linear-gradient(135deg, #e74c3c, #c0392b);
-      color: white;
-      padding: 0.3rem 0.8rem;
-      border-radius: 20px;
+      background: $accent;
+      color: $dark;
+      padding: 0.4rem 1rem;
+      border-radius: 25px;
       font-size: 1rem;
       font-weight: 600;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
   }
 
-  .btn-clear-all {
-    background: rgba(231, 76, 60, 0.1);
-    border: 2px solid #e74c3c;
-    color: #e74c3c;
-    padding: 0.8rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
+  .header-actions {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-
-    &:hover {
-      background: #e74c3c;
-      color: white;
-      transform: translateY(-2px);
-    }
-
-    i {
-      font-size: 1.2rem;
-    }
+    gap: 1rem;
   }
 }
 
 .empty-wishlist {
   text-align: center;
   padding: 4rem 2rem;
+  background: $white;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-md;
 
   i {
     font-size: 5rem;
-    color: rgba(255, 255, 255, 0.3);
+    color: rgba($primary, 0.3);
     margin-bottom: 1.5rem;
   }
 
   h2 {
-    color: $light;
+    color: $text-primary;
     font-size: 1.8rem;
     margin-bottom: 0.5rem;
+    font-weight: 700;
   }
 
   p {
-    color: rgba(255, 255, 255, 0.6);
+    color: $text-secondary;
     font-size: 1.1rem;
     margin-bottom: 2rem;
   }
@@ -91,17 +80,18 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: linear-gradient(135deg, $primary-purple, $primary-pink);
-    color: white;
+    background: linear-gradient(135deg, $primary, $secondary);
+    color: $white;
     padding: 1rem 2rem;
-    border-radius: 8px;
+    border-radius: $border-radius-md;
     text-decoration: none;
     font-weight: 600;
-    transition: all 0.3s ease;
+    transition: $transition-base;
+    box-shadow: $shadow-md;
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(168, 85, 247, 0.4);
+      box-shadow: 0 10px 30px rgba($primary, 0.4);
     }
   }
 }
@@ -114,44 +104,21 @@
 }
 
 .wishlist-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  background: $white;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-lg;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: $transition-base;
   position: relative;
+  box-shadow: $shadow-sm;
 
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    border-color: rgba(168, 85, 247, 0.5);
-  }
+    box-shadow: $shadow-lg;
+    border-color: $primary;
 
-  .btn-remove {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 10;
-    background: rgba(231, 76, 60, 0.9);
-    border: none;
-    color: white;
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-
-    &:hover {
-      background: #e74c3c;
+    .product-image img {
       transform: scale(1.1);
-    }
-
-    i {
-      font-size: 1rem;
     }
   }
 
@@ -161,16 +128,13 @@
     height: 250px;
     overflow: hidden;
     cursor: pointer;
+    background: #f8f9fa;
 
     img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.3s ease;
-    }
-
-    &:hover img {
-      transform: scale(1.1);
+      transition: transform 0.4s ease;
     }
 
     .out-of-stock-badge,
@@ -179,7 +143,7 @@
       top: 10px;
       left: 10px;
       padding: 0.5rem 1rem;
-      border-radius: 6px;
+      border-radius: $border-radius-sm;
       font-weight: 600;
       font-size: 0.85rem;
       text-transform: uppercase;
@@ -187,12 +151,12 @@
     }
 
     .out-of-stock-badge {
-      background: rgba(231, 76, 60, 0.9);
+      background: rgba(220, 53, 69, 0.9);
       color: white;
     }
 
     .low-stock-badge {
-      background: rgba(243, 156, 18, 0.9);
+      background: rgba(255, 193, 7, 0.9);
       color: white;
     }
   }
@@ -203,7 +167,7 @@
     .product-name {
       font-size: 1.2rem;
       font-weight: 600;
-      color: $light;
+      color: $text-primary;
       margin-bottom: 0.5rem;
       cursor: pointer;
       transition: color 0.3s ease;
@@ -213,112 +177,82 @@
       overflow: hidden;
 
       &:hover {
-        color: $primary-purple;
-      }
-    }
-
-    .product-category {
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 0.9rem;
-      margin-bottom: 0.5rem;
-
-      i {
-        font-size: 0.85rem;
+        color: $primary;
       }
     }
 
     .product-price {
       font-size: 1.5rem;
       font-weight: 700;
-      background: linear-gradient(135deg, $primary-purple, $primary-pink);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: $primary;
       margin-bottom: 0.8rem;
     }
 
     .product-stock {
-      margin-bottom: 1rem;
       font-size: 0.9rem;
+      color: $text-secondary;
+      margin-bottom: 1rem;
 
-      .in-stock {
-        color: #2ecc71;
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
+      &.in-stock {
+        color: $success;
       }
 
-      .out-of-stock {
-        color: #e74c3c;
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
+      &.low-stock {
+        color: $warning;
+      }
+
+      &.out-of-stock {
+        color: $danger;
       }
     }
 
     .product-actions {
       display: flex;
       gap: 0.8rem;
-      margin-bottom: 1rem;
+      margin-top: 1rem;
 
       button {
         flex: 1;
-        padding: 0.8rem;
+        padding: 0.75rem 1rem;
         border: none;
-        border-radius: 8px;
+        border-radius: $border-radius-md;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: $transition-base;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
 
-        i {
-          font-size: 1.1rem;
+        &.btn-add-cart {
+          background: linear-gradient(135deg, $primary, $secondary);
+          color: $white;
+          box-shadow: $shadow-sm;
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: $shadow-md;
+          }
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+          }
         }
 
-        &:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
+        &.btn-remove {
+          background: $white;
+          color: $danger;
+          border: 2px solid $danger;
+
+          &:hover {
+            background: $danger;
+            color: $white;
+            transform: translateY(-2px);
+            box-shadow: $shadow-md;
+          }
         }
-      }
-
-      .btn-add-to-cart {
-        background: linear-gradient(135deg, $primary-purple, $primary-pink);
-        color: white;
-
-        &:not(:disabled):hover {
-          transform: translateY(-2px);
-          box-shadow: 0 5px 15px rgba(168, 85, 247, 0.4);
-        }
-      }
-
-      .btn-view-detail {
-        background: rgba(255, 255, 255, 0.1);
-        color: $light;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.15);
-          border-color: rgba(255, 255, 255, 0.3);
-        }
-      }
-    }
-
-    .added-date {
-      color: rgba(255, 255, 255, 0.5);
-      font-size: 0.85rem;
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-      padding-top: 0.8rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-
-      i {
-        font-size: 0.9rem;
       }
     }
   }
@@ -336,7 +270,7 @@
     align-items: flex-start;
 
     .page-title {
-      font-size: 1.5rem;
+      font-size: 1.8rem;
 
       i {
         font-size: 2rem;

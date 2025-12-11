@@ -1,14 +1,12 @@
 package com.mycompany.myapp.service.dto;
 
-import com.mycompany.myapp.config.Constants;
-import com.mycompany.myapp.domain.Authority;
 import com.mycompany.myapp.domain.User;
 import jakarta.validation.constraints.*;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-public class AdminUserDTO { // Xóa implements Serializable
+public class AdminUserDTO {
 
     private Long id;
 
@@ -59,7 +57,9 @@ public class AdminUserDTO { // Xóa implements Serializable
         this.createdDate = user.getCreatedDate();
         this.lastModifiedBy = user.getLastModifiedBy();
         this.lastModifiedDate = user.getLastModifiedDate();
-        this.authorities = user.getAuthorities().stream().map(Authority::getName).collect(Collectors.toSet());
+        if (user.getAuthority() != null) {
+            this.authorities = Collections.singleton(user.getAuthority().getName());
+        }
     }
 
     public Long getId() {

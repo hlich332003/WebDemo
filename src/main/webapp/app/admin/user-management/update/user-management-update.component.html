@@ -18,40 +18,6 @@
       </div>
 
       <div class="mb-3">
-        <label class="form-label" for="field_login">Tên đăng nhập</label>
-        <input
-          type="text"
-          id="field_login"
-          class="form-control"
-          name="login"
-          formControlName="login"
-        />
-
-        @let loginRef = editForm.get('login')!;
-        @if (loginRef.invalid && (loginRef.dirty || loginRef.touched)) {
-          <div>
-            @if (loginRef?.errors?.required) {
-              <small class="form-text text-danger"
-                >Trường này là bắt buộc.</small
-              >
-            }
-
-            @if (loginRef?.errors?.maxlength) {
-              <small class="form-text text-danger"
-                >Trường này không được dài quá 50 ký tự.</small
-              >
-            }
-
-            @if (loginRef?.errors?.pattern) {
-              <small class="form-text text-danger"
-                >Trường này chỉ chứa chữ cái, số và email.</small
-              >
-            }
-          </div>
-        }
-      </div>
-
-      <div class="mb-3">
         <label class="form-label" for="field_firstName">Họ</label>
         <input
           type="text"

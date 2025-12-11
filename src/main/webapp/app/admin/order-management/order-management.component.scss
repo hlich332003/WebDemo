@@ -1,35 +1,222 @@
-.badge {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-radius: 0.5rem;
+// Admin Order Management - Modern Theme
+@use 'sass:color';
+@use '../../shared/styles/variables' as *;
 
-  &.bg-warning {
-    background-color: #ffc107 !important;
-    color: #000 !important;
-  }
+:host {
+  display: block;
+  padding: 2rem;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
 
-  &.bg-info {
-    background-color: #0dcaf0 !important;
-    color: #000 !important;
-  }
+.admin-header {
+  background: linear-gradient(
+    135deg,
+    rgba($primary, 0.15),
+    rgba($secondary, 0.1)
+  );
+  padding: 2rem;
+  border-radius: $border-radius-lg;
+  margin-bottom: 2rem;
+  box-shadow: $shadow-lg;
+  color: $text-primary;
+  position: relative;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba($primary, 0.2);
+  background-size: cover;
+  background-position: center;
+  background-blend-mode: overlay;
 
-  &.bg-primary {
-    background-color: #0d6efd !important;
-    color: #fff !important;
-  }
+  h2 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
 
-  &.bg-success {
-    background-color: #198754 !important;
-    color: #fff !important;
-  }
-
-  &.bg-danger {
-    background-color: #dc3545 !important;
-    color: #fff !important;
+    i {
+      color: $primary;
+    }
   }
 }
 
-.table-active {
-  background-color: #f8f9fa !important;
+.filters-section {
+  background: $white;
+  padding: 1.5rem;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-md;
+  margin-bottom: 2rem;
+
+  .filter-controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+
+    .form-group {
+      margin-bottom: 0;
+    }
+
+    label {
+      font-weight: 600;
+      color: $text-primary;
+      margin-bottom: 0.5rem;
+    }
+
+    select,
+    input {
+      border: 1px solid $border-color;
+      border-radius: $border-radius-sm;
+      padding: 0.5rem 1rem;
+      transition: $transition-base;
+
+      &:focus {
+        border-color: $primary;
+        box-shadow: 0 0 0 0.2rem rgba($primary, 0.25);
+        outline: none;
+      }
+    }
+  }
+}
+
+.table-container {
+  background: $white;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-md;
+  overflow: hidden;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  table {
+    border-collapse: separate;
+    border-spacing: 0;
+
+    th,
+    td {
+      padding: 1rem;
+      color: $text-primary;
+      border-bottom: 1px solid $border-color;
+    }
+
+    thead th {
+      background: $primary;
+      color: $white;
+      font-weight: 600;
+      border-bottom: 2px solid color.adjust($primary, $lightness: -10%);
+    }
+
+    tbody tr {
+      transition: $transition-base;
+
+      &:hover {
+        background: linear-gradient(
+          135deg,
+          rgba($primary, 0.03),
+          rgba($secondary, 0.03)
+        );
+      }
+
+      &:last-child td {
+        border-bottom: none;
+      }
+    }
+  }
+}
+
+.badge {
+  padding: 0.5rem 0.75rem;
+  border-radius: $border-radius-sm;
+  font-weight: 600;
+  font-size: 0.875rem;
+
+  &.bg-warning {
+    background: $warning !important;
+    color: $white !important;
+  }
+
+  &.bg-info {
+    background: linear-gradient(135deg, $secondary, $primary) !important;
+    color: $white !important;
+  }
+
+  &.bg-primary {
+    background: #17a2b8 !important;
+    color: $white !important;
+  }
+
+  &.bg-success {
+    background: $success !important;
+    color: $white !important;
+  }
+
+  &.bg-danger {
+    background: $danger !important;
+    color: $white !important;
+  }
+}
+
+.btn-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+
+  .btn {
+    border-radius: $border-radius-sm;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    transition: $transition-base;
+    box-shadow: $shadow-sm;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-md;
+    }
+
+    &.btn-primary {
+      background: linear-gradient(135deg, $primary, $secondary);
+      border: none;
+    }
+
+    &.btn-info {
+      background: #17a2b8;
+      border: none;
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  :host {
+    padding: 1rem;
+  }
+
+  .admin-header {
+    padding: 1.5rem;
+
+    h2 {
+      font-size: 1.5rem;
+    }
+  }
+
+  .filters-section .filter-controls {
+    flex-direction: column;
+
+    .form-group {
+      width: 100%;
+    }
+  }
+
+  .btn-group {
+    flex-direction: column;
+
+    .btn {
+      width: 100%;
+    }
+  }
 }

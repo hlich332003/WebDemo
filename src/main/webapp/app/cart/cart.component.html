@@ -6,15 +6,6 @@
       <div class="alert alert-warning">Giỏ hàng của bạn đang trống.</div>
     } @else {
       <div class="cart-items">
-        <!-- Header cho các cột -->
-        <div class="cart-item cart-header">
-          <div class="item-image">Ảnh</div>
-          <div class="item-details">Sản phẩm</div>
-          <div class="item-quantity-controls">Số lượng</div>
-          <div class="item-total-price">Tổng tiền</div>
-          <div class="item-actions">Hành động</div>
-        </div>
-
         @for (item of cartItems; track item.product.id) {
           <div class="cart-item">
             <img
@@ -51,7 +42,7 @@
             <div class="item-quantity-controls">
               <button
                 (click)="decreaseQuantity(item.product.id, item.quantity)"
-                class="btn btn-sm btn-secondary"
+                class="btn btn-secondary btn-sm"
                 [disabled]="
                   item.quantity <= 1 ||
                   (item.product.quantity !== null &&
@@ -61,7 +52,7 @@
                 -
               </button>
               <input
-                type="number"
+                type="text"
                 [ngModel]="item.quantity"
                 (ngModelChange)="updateQuantity(item.product.id, $event)"
                 min="1"
@@ -73,7 +64,7 @@
               />
               <button
                 (click)="increaseQuantity(item.product.id, item.quantity)"
-                class="btn btn-sm btn-secondary"
+                class="btn btn-secondary btn-sm"
                 [disabled]="
                   item.quantity >= (item.product.quantity ?? 999) ||
                   (item.product.quantity !== null &&
@@ -92,11 +83,19 @@
               <button
                 type="button"
                 (click)="toggleWishlist(item.product, $event)"
-                class="btn btn-sm"
+                class="btn btn-sm wishlist-btn"
                 [class.btn-danger]="isInWishlist(item.product.id!)"
-                [class.btn-outline-danger]="!isInWishlist(item.product.id!)"
+                [class.btn-outline-secondary]="!isInWishlist(item.product.id!)"
+                title="{{
+                  isInWishlist(item.product.id!)
+                    ? 'Xóa khỏi yêu thích'
+                    : 'Thêm vào yêu thích'
+                }}"
               >
-                <fa-icon icon="heart"></fa-icon>
+                <fa-icon
+                  icon="heart"
+                  [class.text-danger]="!isInWishlist(item.product.id!)"
+                ></fa-icon>
               </button>
               <button
                 (click)="remove(item.product.id)"

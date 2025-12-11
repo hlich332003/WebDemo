@@ -17,8 +17,6 @@ import { NotificationService } from 'app/shared/notification/notification.servic
 import { AccountService } from 'app/core/auth/account.service';
 import { Account } from 'app/core/auth/account.model';
 import { OrderService } from 'app/entities/order/order.service';
-import { WishlistService } from 'app/shared/services/wishlist.service';
-import { IProduct } from 'app/entities/product/product.model';
 
 @Component({
   selector: 'jhi-checkout',
@@ -62,7 +60,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private accountService = inject(AccountService);
   private orderService = inject(OrderService);
-  public wishlistService = inject(WishlistService);
 
   ngOnInit(): void {
     this.loadCartAndAccount();
@@ -80,7 +77,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         this.cart = items;
       });
 
-    // Tối ưu: Lắng nghe totalPrice$
     this.cartService.totalPrice$
       .pipe(takeUntil(this.destroy$))
       .subscribe((total) => {
@@ -148,7 +144,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         quantity: item.quantity,
         price: item.product.price,
       })),
-      // Tối ưu: Sử dụng giá trị đã được cập nhật
       totalAmount: this.total,
       notes: formValue.notes || null,
     };
@@ -182,28 +177,12 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   goToHome(): void {
-    // Thêm query param để force reload dữ liệu sau khi checkout
     this.router.navigate(['/'], { queryParams: { reload: Date.now() } });
   }
 
   continueShopping(): void {
-    // Thêm query param để force reload dữ liệu sau khi checkout
     this.router.navigate(['/products'], {
       queryParams: { reload: Date.now() },
     });
-  }
-
-  toggleWishlist(product: IProduct, event: Event): void {
-    event.stopPropagation();
-    const added = this.wishlistService.toggleWishlist(product);
-    if (added) {
-      this.notify.success('💖 Đã thêm vào danh sách yêu thích!');
-    } else {
-      this.notify.info('💔 Đã xóa khỏi danh sách yêu thích!');
-    }
-  }
-
-  isInWishlist(productId: number): boolean {
-    return this.wishlistService.isInWishlist(productId);
   }
 }

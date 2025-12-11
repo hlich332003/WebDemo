@@ -27,16 +27,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findOneByPhone(String phone);
 
-    @EntityGraph(attributePaths = "authorities")
+    @EntityGraph(attributePaths = "authority")
     Optional<User> findOneWithAuthoritiesByEmailIgnoreCase(String email);
 
-    @EntityGraph(attributePaths = "authorities")
+    @EntityGraph(attributePaths = "authority")
     Optional<User> findOneWithAuthoritiesByPhone(String phone);
 
-    // Method để tìm user bằng email hoặc phone (cho đăng nhập)
-    @EntityGraph(attributePaths = "authorities")
+    @EntityGraph(attributePaths = "authority")
     default Optional<User> findOneWithAuthoritiesByEmailOrPhone(String emailOrPhone) {
-        // Kiểm tra xem có phải email không (chứa @)
         if (emailOrPhone.contains("@")) {
             return findOneWithAuthoritiesByEmailIgnoreCase(emailOrPhone);
         } else {
@@ -47,6 +45,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findAllByIdNotNullAndActivatedIsTrue(Pageable pageable);
 
     @Override
-    @EntityGraph(attributePaths = "authorities")
+    @EntityGraph(attributePaths = "authority")
     Page<User> findAll(Pageable pageable);
 }

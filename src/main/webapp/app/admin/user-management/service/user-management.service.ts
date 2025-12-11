@@ -23,8 +23,8 @@ export class UserManagementService {
     return this.http.put<IUser>(this.resourceUrl, user);
   }
 
-  find(login: string): Observable<IUser> {
-    return this.http.get<IUser>(`${this.resourceUrl}/${login}`);
+  find(email: string): Observable<IUser> {
+    return this.http.get<IUser>(`${this.resourceUrl}/${email}`);
   }
 
   query(req?: Pagination): Observable<HttpResponse<IUser[]>> {
@@ -35,8 +35,8 @@ export class UserManagementService {
     });
   }
 
-  delete(login: string): Observable<{}> {
-    return this.http.delete(`${this.resourceUrl}/${login}`);
+  delete(email: string): Observable<{}> {
+    return this.http.delete(`${this.resourceUrl}/${email}`);
   }
 
   authorities(): Observable<string[]> {

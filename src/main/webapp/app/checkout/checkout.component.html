@@ -59,15 +59,6 @@
         <span>{{
           formatPrice((item.product.price ?? 0) * item.quantity)
         }}</span>
-        <button
-          type="button"
-          (click)="toggleWishlist(item.product, $event)"
-          class="btn btn-sm"
-          [class.btn-danger]="isInWishlist(item.product.id!)"
-          [class.btn-outline-danger]="!isInWishlist(item.product.id!)"
-        >
-          <fa-icon icon="heart"></fa-icon>
-        </button>
       </div>
       <div class="order-total">
         <strong>Tổng cộng: {{ formatPrice(total) }}</strong>

@@ -1,32 +1,12 @@
-:host {
+@use 'app/shared/styles/variables' as *;
+
+.main-container {
   display: flex;
   flex-direction: column;
-  min-height: 100vh; /* Đảm bảo host chiếm ít nhất 100% chiều cao viewport */
+  min-height: 100vh;
 }
 
-.app-header {
-  flex-shrink: 0; /* Ngăn header co lại */
-}
-
-.app-content {
-  flex: 1 0 auto; /* Cho phép nội dung chính mở rộng và co lại, nhưng không co lại nhỏ hơn nội dung của nó */
-}
-
-.container-fluid {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 15px;
-}
-
-.jh-card {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  padding: 2rem;
-  margin-top: 2rem; /* Khoảng cách với header */
-  margin-bottom: 2rem; /* Khoảng cách với footer */
-}
-
-jhi-footer {
-  flex-shrink: 0; /* Ngăn footer co lại */
+.content-container {
+  flex: 1;
+  padding-top: 80px; /* Adjust based on navbar height */
 }

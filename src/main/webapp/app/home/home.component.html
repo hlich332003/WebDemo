@@ -1,6 +1,15 @@
-<section class="hero-section">
+<section
+  class="hero-section"
+  [style.background-image]="
+    'url(' +
+    (bannerImageUrl ||
+      'https://thuthuatnhanh.com/wp-content/uploads/2021/06/Hinh-anh-dan-PC-khung-dep-me-hon.jpg') +
+    ')'
+  "
+>
+  <div class="hero-overlay"></div>
   <div class="hero-content">
-    <h1 class="hero-title">Chào mừng đến với WebDemo</h1>
+    <h1 class="hero-title">WelCome</h1>
     <p class="hero-subtitle">Cửa hàng điện tử & công nghệ hàng đầu Việt Nam</p>
 
     @if (account()?.authorities?.includes('ROLE_ADMIN')) {
@@ -78,12 +87,10 @@
                 <p class="stock text-danger fw-bold">❌ Hết hàng</p>
               } @else if (product.quantity < 10) {
                 <p class="stock text-warning">
-                  ⚠️ Chỉ còn {{ product.quantity }} sản phẩm
+                  ⚠️ Chỉ còn {{ product.quantity }}
                 </p>
               } @else {
-                <p class="stock text-muted">
-                  Còn {{ product.quantity }} sản phẩm
-                </p>
+                <p class="stock text-muted">Còn {{ product.quantity }}</p>
               }
             }
             <div class="product-buttons">
@@ -141,9 +148,7 @@
                   ⚠️ Chỉ còn {{ product.quantity }}
                 </p>
               } @else {
-                <p class="stock text-muted">
-                  Kho: {{ product.quantity }}
-                </p>
+                <p class="stock text-muted">Kho: {{ product.quantity }}</p>
               }
             }
             <div class="product-buttons">
@@ -210,7 +215,9 @@
                         ⚠️ Còn {{ product.quantity }}
                       </p>
                     } @else {
-                      <p class="stock text-muted">Kho: {{ product.quantity }}</p>
+                      <p class="stock text-muted">
+                        Kho: {{ product.quantity }}
+                      </p>
                     }
                   }
                   <div class="product-buttons">

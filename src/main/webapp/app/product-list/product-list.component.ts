@@ -26,6 +26,8 @@ import { SORT } from 'app/config/navigation.constants';
 import { SortService, sortStateSignal } from 'app/shared/sort';
 import { ItemCountComponent } from 'app/shared/pagination';
 import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
+import { AccountService } from 'app/core/auth/account.service';
+import { LoginModalService } from 'app/core/login/login-modal.service';
 
 @Component({
   selector: 'jhi-product-list',
@@ -49,20 +51,18 @@ export class ProductListComponent implements OnInit, OnDestroy {
   selectedCategorySlug = 'all';
   searchTerm = '';
   isLoading = false;
-  isSearching = false; // Loading state riêng cho search
+  isSearching = false;
 
   totalItems = 0;
   itemsPerPage = ITEMS_PER_PAGE;
   page!: number;
   sortState = sortStateSignal({});
 
-  // Debounce search
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
 
-  // Cache - giảm xuống 30 giây
   private cache = new Map<string, { data: IProduct[]; timestamp: number }>();
-  private readonly CACHE_DURATION = 30 * 1000; // 30 seconds
+  private readonly CACHE_DURATION = 30 * 1000;
 
   private productService = inject(ProductService);
   private categoryService = inject(CategoryService);
@@ -74,25 +74,19 @@ export class ProductListComponent implements OnInit, OnDestroy {
   private readonly wishlistService = inject(WishlistService);
   private readonly comparisonService = inject(ProductComparisonService);
   private sortService = inject(SortService);
+  private accountService = inject(AccountService);
+  private loginModalService = inject(LoginModalService);
 
   ngOnInit(): void {
-    // Clear cache mỗi khi component được khởi tạo
     this.clearCache();
-
-    // Setup debounce cho search (chờ 500ms sau khi user gõ xong mới search)
     this.searchSubject
-      .pipe(
-        debounceTime(500), // Chờ 500ms
-        distinctUntilChanged(), // Chỉ trigger khi giá trị thay đổi
-        takeUntil(this.destroy$),
-      )
+      .pipe(debounceTime(500), distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((searchTerm) => {
         this.searchTerm = searchTerm;
-        this.page = 1; // Reset về trang 1
+        this.page = 1;
         this.isSearching = true;
         this.loadAll();
       });
-
     this.handleNavigation();
   }
 
@@ -101,17 +95,11 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  /**
-   * Được gọi khi user gõ vào ô search
-   */
   onSearchTermChange(event: Event): void {
     const term = (event.target as HTMLInputElement).value;
     this.searchSubject.next(term);
   }
 
-  /**
-   * Lấy tên danh mục từ slug
-   */
   getCategoryName(): string {
     const category = this.categories.find(
       (c) => c.slug === this.selectedCategorySlug,
@@ -119,17 +107,11 @@ export class ProductListComponent implements OnInit, OnDestroy {
     return category?.name || '';
   }
 
-  /**
-   * Clear search và reload tất cả sản phẩm
-   */
   clearSearch(): void {
     this.searchTerm = '';
     this.searchSubject.next('');
   }
 
-  /**
-   * Clear tất cả filters
-   */
   clearAllFilters(): void {
     this.searchTerm = '';
     this.selectedCategorySlug = 'all';
@@ -137,9 +119,6 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.searchSubject.next('');
   }
 
-  /**
-   * Clear all cache - dùng khi cần reload dữ liệu mới
-   */
   clearCache(): void {
     this.cache.clear();
   }
@@ -148,7 +127,6 @@ export class ProductListComponent implements OnInit, OnDestroy {
     const cacheKey = `${this.page}-${this.selectedCategorySlug}-${this.searchTerm}`;
     const cached = this.cache.get(cacheKey);
 
-    // Check cache
     if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
       this.filteredProducts = cached.data;
       this.isSearching = false;
@@ -163,7 +141,6 @@ export class ProductListComponent implements OnInit, OnDestroy {
           page: this.page - 1,
           size: this.itemsPerPage,
           sort: this.sortService.buildSortParam(this.sortState()),
-          // Sửa tên tham số lọc danh mục thành 'categorySlug'
           ...(this.selectedCategorySlug !== 'all' && {
             categorySlug: this.selectedCategorySlug,
           }),
@@ -178,15 +155,12 @@ export class ProductListComponent implements OnInit, OnDestroy {
     ]).subscribe({
       next: ([categories, products]) => {
         this.categories = categories;
-        this.allProducts = products;
+        this.allProducts = products as IProduct[];
         this.filteredProducts = this.allProducts;
-
-        // Save to cache
         this.cache.set(cacheKey, {
           data: this.allProducts,
           timestamp: Date.now(),
         });
-
         this.isLoading = false;
         this.isSearching = false;
       },
@@ -200,36 +174,27 @@ export class ProductListComponent implements OnInit, OnDestroy {
   }
 
   addToCart(product: IProduct): void {
-    // Kiểm tra số lượng tồn kho
+    if (!this.accountService.isAuthenticated()) {
+      this.loginModalService.open();
+      return;
+    }
     if (!product.quantity || product.quantity <= 0) {
       this.notify.error('❌ Sản phẩm đã hết hàng!');
       return;
     }
-
-    // Kiểm tra số lượng đang có trong giỏ
     const currentCartItem = this.cartService
       .getCartItems()
       .find((item) => item.product.id === product.id);
     const currentQtyInCart = currentCartItem ? currentCartItem.quantity : 0;
-
     if (currentQtyInCart >= product.quantity) {
       this.notify.error(
         `⚠️ Bạn đã có ${currentQtyInCart} sản phẩm này trong giỏ! Tồn kho chỉ còn ${product.quantity}.`,
       );
       return;
     }
-
-    const productToAdd: IProduct = {
-      ...product,
-      price: product.price ?? 0,
-    };
-
-    const success = this.cartService.addToCart(productToAdd);
-
-    if (success) {
+    this.cartService.addToCart(product.id!).subscribe(() => {
       const newTotal = currentQtyInCart + 1;
-      const remaining = product.quantity - newTotal;
-
+      const remaining = product.quantity! - newTotal;
       if (remaining <= 5 && remaining > 0) {
         this.notify.warning(
           `⚠️ Đã thêm vào giỏ hàng! Chỉ còn ${remaining} sản phẩm.`,
@@ -237,19 +202,30 @@ export class ProductListComponent implements OnInit, OnDestroy {
       } else {
         this.notify.success('✅ Đã thêm sản phẩm vào giỏ hàng!');
       }
-    } else {
-      this.notify.error('⚠️ Không thể thêm sản phẩm vào giỏ hàng!');
-    }
+      this.cartService.loadCart();
+    });
   }
 
   toggleWishlist(product: IProduct, event: Event): void {
-    event.stopPropagation(); // Prevent navigation when clicking heart
-    const added = this.wishlistService.toggleWishlist(product);
-    if (added) {
-      this.notify.success('💖 Đã thêm vào danh sách yêu thích!');
-    } else {
-      this.notify.info('💔 Đã xóa khỏi danh sách yêu thích!');
+    event.stopPropagation();
+    if (!this.accountService.isAuthenticated()) {
+      this.loginModalService.open();
+      return;
     }
+    this.wishlistService.toggleWishlist(product).subscribe({
+      next: (added: boolean) => {
+        if (added) {
+          this.notify.success('💖 Đã thêm vào danh sách yêu thích!');
+        } else {
+          this.notify.info('💔 Đã xóa khỏi danh sách yêu thích!');
+        }
+      },
+      error: (error: Error) => {
+        this.notify.error(
+          `❌ Lỗi khi cập nhật danh sách yêu thích: ${error.message}`,
+        );
+      },
+    });
   }
 
   isInWishlist(productId: number): boolean {
@@ -259,7 +235,6 @@ export class ProductListComponent implements OnInit, OnDestroy {
   toggleComparison(product: IProduct, event: Event): void {
     event.stopPropagation();
     const added = this.comparisonService.toggleComparison(product);
-
     if (added) {
       this.notify.success('📊 Đã thêm vào danh sách so sánh!');
     } else {

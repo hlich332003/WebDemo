@@ -13,12 +13,12 @@ import { IUser } from '../user-management.model';
 import { UserManagementService } from '../service/user-management.service';
 
 const userTemplate: IUser = {
-  imageUrl: null, // Thêm lại imageUrl
+  imageUrl: null,
 } as IUser;
 
 const newUser: IUser = {
   activated: true,
-  imageUrl: null, // Thêm lại imageUrl
+  imageUrl: null,
 } as IUser;
 
 @Component({
@@ -33,17 +33,6 @@ export default class UserManagementUpdateComponent implements OnInit {
 
   editForm = new FormGroup({
     id: new FormControl(userTemplate.id),
-    login: new FormControl(userTemplate.login, {
-      nonNullable: true,
-      validators: [
-        Validators.required,
-        Validators.minLength(1),
-        Validators.maxLength(50),
-        Validators.pattern(
-          '^[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$|^[_.@A-Za-z0-9-]+$',
-        ),
-      ],
-    }),
     firstName: new FormControl(userTemplate.firstName, {
       validators: [Validators.maxLength(50)],
     }),
@@ -53,6 +42,7 @@ export default class UserManagementUpdateComponent implements OnInit {
     email: new FormControl(userTemplate.email, {
       nonNullable: true,
       validators: [
+        Validators.required,
         Validators.minLength(5),
         Validators.maxLength(254),
         Validators.email,
@@ -68,7 +58,7 @@ export default class UserManagementUpdateComponent implements OnInit {
     }),
     imageUrl: new FormControl(userTemplate.imageUrl, {
       validators: [Validators.maxLength(256)],
-    }), // Thêm lại imageUrl
+    }),
   });
 
   private readonly userService = inject(UserManagementService);
@@ -119,13 +109,12 @@ export default class UserManagementUpdateComponent implements OnInit {
   private updateForm(user: IUser): void {
     this.editForm.patchValue({
       id: user.id,
-      login: user.login,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
       activated: user.activated,
       phone: user.phone,
-      imageUrl: user.imageUrl, // Thêm lại imageUrl
+      imageUrl: user.imageUrl,
       authority: user.authorities?.[0] ?? 'ROLE_USER',
     });
   }

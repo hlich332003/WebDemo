@@ -1,4 +1,4 @@
-@use 'variables' as *;
+@use 'variables' as vars; // Đã đổi alias thành vars
 @use 'sass:color';
 @use 'loading-states';
 
@@ -7,9 +7,9 @@
    ========================================================================== */
 
 body {
-  background-color: $body-bg;
-  color: $body-color;
-  font-family: $font-family-sans-serif;
+  background-color: vars.$body-bg; // Sử dụng vars.$body-bg
+  color: vars.$body-color; // Sử dụng vars.$body-color
+  font-family: vars.$font-family-sans-serif; // Sử dụng vars.$font-family-sans-serif
 }
 
 h1,
@@ -19,40 +19,124 @@ h4,
 h5,
 h6 {
   font-weight: 600;
-  color: $dark;
+  color: vars.$body-color; // Đổi sang màu tím đậm để dễ đọc trên nền hồng tím nhạt
+}
+
+/* Navbar overrides - FORCE white text with highest specificity */
+.navbar,
+.navbar-dark,
+.navbar-light,
+nav.navbar {
+  .nav-link,
+  .nav-link *,
+  .dropdown-toggle,
+  .dropdown-toggle *,
+  .navbar-brand,
+  .navbar-brand *,
+  a,
+  a *,
+  span,
+  fa-icon,
+  ::ng-deep * {
+    color: #ffffff !important;
+  }
+
+  .dropdown-toggle::after {
+    border-top-color: #ffffff !important;
+  }
+
+  .nav-link:hover,
+  .nav-link:hover *,
+  .dropdown-toggle:hover,
+  .dropdown-toggle:hover *,
+  a:hover,
+  a:hover * {
+    color: #ffc107 !important;
+  }
+
+  .dropdown-menu {
+    background: #2d3436 !important;
+
+    .dropdown-item,
+    .dropdown-item *,
+    a,
+    a * {
+      color: #ffffff !important;
+    }
+
+    .dropdown-item:hover,
+    .dropdown-item:hover * {
+      color: #ffffff !important;
+      background: #e91e63 !important;
+    }
+  }
+}
+
+/* Footer overrides - FORCE white text */
+.footer,
+footer,
+.page-footer {
+  color: #ffffff !important;
+
+  *:not(.btn):not(a.btn) {
+    color: #ffffff !important;
+  }
+
+  a:not(.btn) {
+    color: #ffffff !important;
+
+    &:hover {
+      color: #ffc107 !important;
+    }
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  span,
+  div,
+  li {
+    color: #ffffff !important;
+  }
 }
 
 .btn {
-  border-radius: $btn-border-radius;
+  border-radius: vars.$btn-border-radius; // Sử dụng vars.$btn-border-radius
   font-weight: 600;
   padding: 0.75rem 1.5rem;
   transition: all 0.2s ease-in-out;
 }
 
 .btn-primary {
-  background-color: $primary;
-  border-color: $primary;
+  background-color: vars.$primary; // Sử dụng vars.$primary
+  border-color: vars.$primary; // Sử dụng vars.$primary
+  color: vars.$light; // Đảm bảo chữ trên nút primary là màu sáng
 
   &:hover {
-    background-color: color.adjust($primary, $lightness: -10%);
-    border-color: color.adjust($primary, $lightness: -10%);
+    background-color: color.adjust(vars.$primary, $lightness: -10%);
+    border-color: color.adjust(vars.$primary, $lightness: -10%);
   }
 }
 
 .btn-secondary {
-  background-color: $secondary;
-  border-color: $secondary;
+  background-color: vars.$secondary; // Sử dụng vars.$secondary
+  border-color: vars.$secondary; // Sử dụng vars.$secondary
+  color: vars.$light; // Đảm bảo chữ trên nút secondary là màu sáng
 
   &:hover {
-    background-color: color.adjust($secondary, $lightness: -10%);
-    border-color: color.adjust($secondary, $lightness: -10%);
+    background-color: color.adjust(vars.$secondary, $lightness: -10%);
+    border-color: color.adjust(vars.$secondary, $lightness: -10%);
   }
 }
 
 .card {
-  background-color: $card-bg;
-  border-radius: $card-border-radius;
-  box-shadow: $card-box-shadow;
+  background-color: vars.$card-bg; // Sử dụng vars.$card-bg
+  border-radius: vars.$card-border-radius; // Sử dụng vars.$card-border-radius
+  box-shadow: vars.$card-box-shadow; // Sử dụng vars.$card-box-shadow
   border: none;
 }
 
@@ -77,7 +161,7 @@ h6 {
   right: 20px;
   padding: 1rem 1.5rem;
   border-radius: 8px;
-  color: #fff;
+  color: #fff; // Giữ nguyên màu trắng cho notification text
   font-weight: 600;
   z-index: 1050;
   transition:
@@ -94,18 +178,88 @@ h6 {
   }
 
   &.success {
-    background-color: $success;
+    background-color: vars.$success; // Sử dụng vars.$success
   }
 
   &.error {
-    background-color: $danger;
+    background-color: vars.$danger; // Sử dụng vars.$danger
   }
 
   &.info {
-    background-color: $info;
+    background-color: vars.$info; // Sử dụng vars.$info
   }
 
   &.warning {
-    background-color: $warning;
+    background-color: vars.$warning; // Sử dụng vars.$warning
+  }
+}
+
+/* ==========================================================================
+   Global text color overrides for light purple background
+   ========================================================================== */
+
+// Màu chữ mặc định cho nền hồng tím nhạt
+body,
+p,
+span,
+div,
+label,
+li,
+td,
+th,
+input,
+textarea,
+select {
+  color: #2d1b47 !important; // Màu tím đậm hơn để dễ đọc
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: #1a0d2e !important; // Màu tím rất đậm cho heading
+}
+
+a {
+  color: #6a1b9a !important; // Link màu tím đậm
+
+  &:hover {
+    color: #8e24aa !important; // Hover sáng hơn
+  }
+}
+
+// Button text - giữ màu trắng
+.btn {
+  color: #fff !important;
+}
+
+// Card text
+.card,
+.jh-card {
+  p,
+  span,
+  div,
+  label,
+  li,
+  td,
+  th,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: #2d1b47 !important;
+  }
+}
+
+// Navbar text
+.navbar {
+  a,
+  span,
+  div {
+    color: #2d1b47 !important;
   }
 }

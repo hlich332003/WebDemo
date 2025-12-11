@@ -27,12 +27,6 @@
       </div>
     </div>
 
-    <div *ngIf="errorUserExists()">
-      <div class="alert alert-danger">
-        <strong>Email này đã được đăng ký!</strong> Vui lòng chọn email khác.
-      </div>
-    </div>
-
     <div *ngIf="errorEmailExists()">
       <div class="alert alert-danger">
         <strong>Email này đã được sử dụng!</strong> Vui lòng chọn email khác.
@@ -105,7 +99,6 @@
             formControlName="password"
             data-cy="firstPassword"
           />
-          <!-- <jhi-password-strength-bar [passwordToCheck]="registerForm.get('password')!.value" /> -->
         </div>
 
         <div class="form-group">

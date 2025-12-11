@@ -3,7 +3,7 @@ import { Routes } from '@angular/router';
 import ProductManagementComponent from './list/product-management.component';
 // import ProductManagementDetailComponent from './detail/product-detail.component'; // Không cần nữa
 import ProductManagementUpdateComponent from './update/product-update.component';
-import productResolve from 'app/entities/product/route/product-routing-resolve.service';
+import { productResolve } from 'app/entities/product/route/product-routing-resolve.service'; // Đã sửa import
 
 const productManagementRoutes: Routes = [
   {

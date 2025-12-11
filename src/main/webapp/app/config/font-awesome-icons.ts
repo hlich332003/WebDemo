@@ -37,10 +37,13 @@ import {
   faReceipt,
   faSync,
   faTimes,
-  faCartShopping, // Thêm icon này
-  faDollarSign, // Thêm icon này
-  faCheck, // Thêm icon này
+  faCartShopping,
+  faDollarSign,
+  faCheck,
   faTags,
+  faTrash,
+  faHeartCrack,
+  faShippingFast,
   // jhipster-needle-add-icon-import
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -87,5 +90,8 @@ export const fontAwesomeIcons = [
   faDollarSign,
   faCheck,
   faTags,
+  faTrash,
+  faHeartCrack,
+  faShippingFast,
   // jhipster-needle-add-icon-import
 ];

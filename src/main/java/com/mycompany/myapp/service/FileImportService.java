@@ -5,7 +5,7 @@ import com.mycompany.myapp.domain.Category;
 import com.mycompany.myapp.domain.Product;
 import com.mycompany.myapp.domain.User;
 import com.mycompany.myapp.repository.AuthorityRepository;
-import com.mycompany.myapp.repository.CategoryRepository; // Import CategoryRepository
+import com.mycompany.myapp.repository.CategoryRepository;
 import com.mycompany.myapp.repository.ProductRepository;
 import com.mycompany.myapp.repository.UserRepository;
 import com.mycompany.myapp.security.AuthoritiesConstants;
@@ -34,14 +34,14 @@ public class FileImportService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthorityRepository authorityRepository;
-    private final CategoryRepository categoryRepository; // Inject CategoryRepository
+    private final CategoryRepository categoryRepository;
 
     public FileImportService(
         ProductRepository productRepository,
         UserRepository userRepository,
         PasswordEncoder passwordEncoder,
         AuthorityRepository authorityRepository,
-        CategoryRepository categoryRepository // Thêm vào constructor
+        CategoryRepository categoryRepository
     ) {
         this.productRepository = productRepository;
         this.userRepository = userRepository;
@@ -85,7 +85,7 @@ public class FileImportService {
 
             while (rows.hasNext()) {
                 Row currentRow = rows.next();
-                if (rowNumber == 0) { // Skip header row
+                if (rowNumber == 0) {
                     rowNumber++;
                     continue;
                 }
@@ -97,25 +97,21 @@ public class FileImportService {
                 }
 
                 try {
-                    // Tên sản phẩm (BẮT BUỘC)
                     String name = getCellValue(currentRow.getCell(1));
                     if (name == null || name.trim().isEmpty()) {
                         throw new IllegalArgumentException("Tên sản phẩm không được để trống");
                     }
                     product.setName(name.trim());
 
-                    // Mô tả (KHÔNG BẮT BUỘC - mặc định "Chưa có mô tả")
                     String description = getCellValue(currentRow.getCell(2));
                     product.setDescription((description == null || description.trim().isEmpty()) ? "Chưa có mô tả" : description.trim());
 
-                    // Giá (BẮT BUỘC)
                     Cell priceCell = currentRow.getCell(3);
                     if (priceCell == null || priceCell.getCellType() != CellType.NUMERIC) {
                         throw new IllegalArgumentException("Giá sản phẩm không được để trống và phải là số");
                     }
                     product.setPrice(priceCell.getNumericCellValue());
 
-                    // Số lượng (KHÔNG BẮT BUỘC - mặc định 0)
                     Cell quantityCell = currentRow.getCell(4);
                     if (quantityCell != null && quantityCell.getCellType() == CellType.NUMERIC) {
                         product.setQuantity((int) quantityCell.getNumericCellValue());
@@ -123,7 +119,6 @@ public class FileImportService {
                         product.setQuantity(0);
                     }
 
-                    // Link ảnh (KHÔNG BẮT BUỘC - mặc định ảnh placeholder)
                     String imageUrl = getCellValue(currentRow.getCell(5));
                     product.setImageUrl(
                         (imageUrl == null || imageUrl.trim().isEmpty())
@@ -131,12 +126,10 @@ public class FileImportService {
                             : imageUrl.trim()
                     );
 
-                    // Danh mục (KHÔNG BẮT BUỘC - mặc định "Chưa phân loại")
                     String categoryInput = getCellValue(currentRow.getCell(7));
                     Category category;
 
                     if (categoryInput == null || categoryInput.trim().isEmpty()) {
-                        // Không điền danh mục → Tìm hoặc tạo "Chưa phân loại"
                         category = categoryRepository
                             .findBySlug("chua-phan-loai")
                             .orElseGet(() -> {
@@ -146,7 +139,6 @@ public class FileImportService {
                                 return categoryRepository.save(defaultCategory);
                             });
                     } else {
-                        // Có điền danh mục → Tìm theo tên hoặc slug
                         category = categoryRepository
                             .findByName(categoryInput.trim())
                             .or(() -> categoryRepository.findBySlug(categoryInput.trim()))
@@ -169,9 +161,7 @@ public class FileImportService {
                     );
                 }
 
-                // Validation: Kiểm tra ID và tên sản phẩm
                 if (product.getId() != null) {
-                    // Có ID → Cập nhật sản phẩm
                     Optional<Product> existingProductOpt = productRepository.findById(product.getId());
                     if (existingProductOpt.isEmpty()) {
                         throw new IllegalArgumentException(
@@ -181,7 +171,6 @@ public class FileImportService {
 
                     Product existingProduct = existingProductOpt.get();
 
-                    // Cảnh báo nếu đổi tên
                     if (!existingProduct.getName().equals(product.getName())) {
                         log.warn(
                             "Cảnh báo: Sản phẩm ID={} đang đổi tên từ '{}' thành '{}'",
@@ -191,11 +180,9 @@ public class FileImportService {
                         );
                     }
 
-                    // Giữ lại thông tin audit
                     product.setCreatedBy(existingProduct.getCreatedBy());
                     product.setCreatedDate(existingProduct.getCreatedDate());
                 } else {
-                    // Không có ID → Tạo mới → Kiểm tra trùng tên
                     Optional<Product> duplicateProduct = productRepository.findFirstByName(product.getName());
                     if (duplicateProduct.isPresent()) {
                         throw new IllegalArgumentException(
@@ -254,11 +241,10 @@ public class FileImportService {
             if (userAuthority.isEmpty()) {
                 throw new BadRequestAlertException("Không tìm thấy quyền USER mặc định", "fileImport", "userAuthorityNotFound");
             }
-            Set<Authority> defaultAuthorities = Collections.singleton(userAuthority.get());
 
             while (rows.hasNext()) {
                 Row currentRow = rows.next();
-                if (rowNumber == 0) { // Skip header row
+                if (rowNumber == 0) {
                     rowNumber++;
                     continue;
                 }
@@ -276,7 +262,7 @@ public class FileImportService {
                     user.setEmail(getCellValue(currentRow.getCell(5)));
                     user.setPhone(getCellValue(currentRow.getCell(6)));
                     user.setActivated(true);
-                    user.setAuthorities(defaultAuthorities);
+                    user.setAuthority(userAuthority.get());
                 } catch (Exception e) {
                     throw new BadRequestAlertException(
                         "Lỗi đọc dữ liệu người dùng tại dòng " + (rowNumber + 1) + ": " + e.getMessage(),
@@ -317,40 +303,5 @@ public class FileImportService {
         } else {
             return null;
         }
-    }
-
-    private double getNumericCellValue(Cell cell) {
-        if (cell == null || cell.getCellType() != CellType.NUMERIC) {
-            throw new IllegalArgumentException("Giá trị không phải là số.");
-        }
-        return cell.getNumericCellValue();
-    }
-
-    private Boolean getBooleanCellValue(Cell cell) {
-        if (cell == null) {
-            return false; // Mặc định là false nếu ô trống
-        }
-        if (cell.getCellType() == CellType.BOOLEAN) {
-            return cell.getBooleanCellValue();
-        } else if (cell.getCellType() == CellType.STRING) {
-            return Boolean.parseBoolean(cell.getStringCellValue());
-        } else if (cell.getCellType() == CellType.NUMERIC) {
-            return cell.getNumericCellValue() == 1; // Coi 1 là true, 0 là false
-        }
-        return false;
-    }
-
-    private String generateSlug(String text) {
-        String slug = text.toLowerCase();
-        slug = slug.replaceAll("[àáạảãâầấậẩẫăằắặẳẵ]", "a");
-        slug = slug.replaceAll("[èéẹẻẽêềếệểễ]", "e");
-        slug = slug.replaceAll("[ìíịỉĩ]", "i");
-        slug = slug.replaceAll("[òóọỏõôồốộổỗơờớợởỡ]", "o");
-        slug = slug.replaceAll("[ùúụủũưừứựửữ]", "u");
-        slug = slug.replaceAll("[ỳýỵỷỹ]", "y");
-        slug = slug.replaceAll("đ", "d");
-        slug = slug.replaceAll("[^a-z0-9\\s-]", "");
-        slug = slug.trim().replaceAll("\\s+", "-");
-        return slug;
     }
 }

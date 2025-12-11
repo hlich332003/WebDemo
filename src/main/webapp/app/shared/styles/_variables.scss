@@ -1,0 +1,44 @@
+// Global Theme Variables - Soft Pink Purple Theme
+$primary: #e91e63;
+$primary-dark: #c2185b;
+$primary-light: #f48fb1;
+
+$secondary: #9c27b0;
+$secondary-dark: #7b1fa2;
+$secondary-light: #ce93d8;
+
+$accent: #ffc107;
+$accent-dark: #ffa000;
+$accent-light: #ffecb3;
+
+$dark: #2d3436;
+$light: #f3e5f5; // Màu hồng tím nhạt cho nền chính
+$white: #ffffff;
+
+$success: #28a745;
+$warning: #ffc107;
+$danger: #dc3545;
+$info: #17a2b8;
+
+$text-primary: #4a148c; // Màu tím đậm cho chữ chính
+$text-secondary: #6a1b9a; // Màu tím vừa cho chữ phụ
+$text-light: #ffffff;
+
+$border-color: #e1e8ed;
+$border-light: #f1f3f5;
+
+$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+$shadow-md: 0 4px 15px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.15);
+
+$gradient-primary: linear-gradient(135deg, $primary 0%, $secondary 100%);
+$gradient-accent: linear-gradient(135deg, $accent 0%, #ff9800 100%);
+
+$border-radius-sm: 8px;
+$border-radius-md: 12px;
+$border-radius-lg: 15px;
+$border-radius-xl: 20px;
+
+$transition-base: all 0.3s ease;
+$transition-fast: all 0.2s ease;
+$transition-slow: all 0.4s ease;

@@ -32,9 +32,9 @@ export default class UserManagementComponent implements OnInit {
   users = signal<User[] | null>(null);
   isLoading = signal(false);
   totalItems = signal(0);
-  page = 0;
+  page = 1; // Start with page 1
   itemsPerPage = 20;
-  sortState = sortStateSignal({});
+  sortState = sortStateSignal({ predicate: 'id', order: 'asc' });
   searchTerm = signal('');
   private searchTimeout: any;
 
@@ -51,56 +51,31 @@ export default class UserManagementComponent implements OnInit {
       .subscribe(() => this.loadAll());
   }
 
-  trackIdentity(item: User): number;
-  trackIdentity(index: number, item: User): number;
-  trackIdentity(a: any, b?: any): number {
-    const item: User = b ?? a;
-    return item.id!;
-  }
-
   loadAll(): void {
     this.isLoading.set(true);
-
-    const params: any = {
-      page: 0,
-      size: 1000,
-      sort: this.sortService.buildSortParam(this.sortState(), 'id'),
-    };
-
-    // Thêm tham số tìm kiếm nếu có
-    if (this.searchTerm()) {
-      params.login = this.searchTerm();
-    }
-
-    this.userService.query(params).subscribe({
-      next: (res: HttpResponse<User[]>) => {
-        this.isLoading.set(false);
-        this.onSuccess(res.body, res.headers);
-      },
-      error: () => this.isLoading.set(false),
-    });
-  }
-
-  // Public interaction methods (search + navigation)
-  onSearchChange(): void {
-    // Debounce search
-    if (this.searchTimeout) {
-      clearTimeout(this.searchTimeout);
-    }
-    this.searchTimeout = setTimeout(() => {
-      this.loadAll();
-    }, 300);
+    this.userService
+      .query({
+        page: this.page - 1,
+        size: this.itemsPerPage,
+        sort: this.sortService.buildSortParam(this.sortState()),
+      })
+      .subscribe({
+        next: (res: HttpResponse<User[]>) => {
+          this.isLoading.set(false);
+          this.onSuccess(res.body, res.headers);
+        },
+        error: () => this.isLoading.set(false),
+      });
   }
 
   onSearchInput(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
-    this.onSearchChange();
+    // No need to call loadAll, filtering is done on the client side
   }
 
   onClearSearch(): void {
     this.searchTerm.set('');
-    this.loadAll();
   }
 
   transition(): void {
@@ -109,21 +84,24 @@ export default class UserManagementComponent implements OnInit {
 
   private onSuccess(users: User[] | null, headers: HttpHeaders): void {
     this.totalItems.set(Number(headers.get('X-Total-Count')));
-
-    // Lọc người dùng dựa trên searchTerm nếu có
-    if (users && this.searchTerm()) {
-      const term = this.searchTerm().toLowerCase();
-      const filtered = users.filter(
-        (user) =>
-          (user.login?.toLowerCase() ?? '').includes(term) ||
-          (user.email?.toLowerCase() ?? '').includes(term) ||
-          (user.firstName?.toLowerCase() ?? '').includes(term) ||
-          (user.lastName?.toLowerCase() ?? '').includes(term) ||
-          (user.phone?.toLowerCase() ?? '').includes(term),
-      );
-      this.users.set(filtered);
-    } else {
-      this.users.set(users);
-    }
+    // The filtering logic will be handled by a computed signal or a pipe in the template
+    this.users.set(users);
   }
+
+  // We need a computed signal to handle filtering
+  filteredUsers = () => {
+    const usersList = this.users();
+    const term = this.searchTerm().toLowerCase();
+    if (!usersList || !term) {
+      return usersList;
+    }
+    return usersList.filter(
+      (user) =>
+        (user.login?.toLowerCase() ?? '').includes(term) ||
+        (user.email?.toLowerCase() ?? '').includes(term) ||
+        (user.firstName?.toLowerCase() ?? '').includes(term) ||
+        (user.lastName?.toLowerCase() ?? '').includes(term) ||
+        (user.phone?.toLowerCase() ?? '').includes(term),
+    );
+  };
 }

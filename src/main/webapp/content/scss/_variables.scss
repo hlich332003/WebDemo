@@ -2,19 +2,21 @@
    Variables
    ========================================================================== */
 
+@use '../../app/layouts/_theme.scss' as theme; // Import theme variables
+
 // Colors
-$primary: #007bff; // Màu xanh dương chủ đạo
-$secondary: #6c757d; // Màu xám phụ
-$success: #28a745; // Màu xanh lá cây thành công
+$primary: theme.$primary-purple; // Màu tím chủ đạo
+$secondary: theme.$primary-pink; // Màu hồng phụ
+$success: #28a745; // Giữ nguyên màu xanh lá cây thành công
 $info: #17a2b8; // Màu xanh ngọc thông tin
-$warning: #ffc107; // Màu vàng cảnh báo
+$warning: theme.$accent-color; // Màu vàng cảnh báo từ theme
 $danger: #dc3545; // Màu đỏ nguy hiểm
-$light: #f8f9fa; // Màu sáng (nền)
-$dark: #343a40; // Màu tối (chữ)
+$light: #ffffff; // Màu sáng (trắng)
+$dark: theme.$dark-background; // Màu tối (nền) từ theme
 
 // Body
-$body-bg: #f4f7f9; // Màu nền chính của trang
-$body-color: $dark;
+$body-bg: #f3e5f5; // Màu nền hồng tím nhạt cho toàn trang
+$body-color: #4a148c; // Màu chữ tím đậm, dễ đọc
 
 // Typography
 $font-family-sans-serif:
@@ -34,7 +36,7 @@ $font-family-sans-serif:
 
 // Borders
 $border-radius: 0.375rem;
-$border-color: #dee2e6;
+$border-color: #e1e8ed; // Màu viền sáng, dễ nhìn
 
 // Box shadow
 $box-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
@@ -42,7 +44,7 @@ $box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 $box-shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
 
 // Card
-$card-bg: #ffffff;
+$card-bg: theme.$card-background; // Màu nền card từ theme
 $card-border-radius: $border-radius;
 $card-box-shadow: $box-shadow-sm;
 

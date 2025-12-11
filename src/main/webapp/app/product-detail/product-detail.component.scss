@@ -1,20 +1,11 @@
 // Product Detail Component - Pink Purple Theme
-:host {
-  --primary: #e91e63;
-  --purple: #9c27b0;
-  --accent: #ffc107;
-  --dark: #231c3d;
-  --light: #f5f5f5;
-  --white: #ffffff;
-  --success: #28a745;
-  --warning: #ffc107;
-  --error: #dc3545;
-}
+@use 'sass:color';
+@use '../shared/styles/variables' as *;
 
 .product-detail-container {
   padding: 2rem 0;
   min-height: 100vh;
-  background: var(--light);
+  background: $light;
 }
 
 .product-detail-page {
@@ -27,10 +18,10 @@
   display: grid;
   grid-template-columns: 1fr 1.5fr;
   gap: 2rem;
-  background: var(--white);
+  background: $white;
   padding: 2rem;
   border-radius: 15px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
@@ -41,7 +32,7 @@
 .product-image-section {
   .main-image {
     width: 100%;
-    max-height: 400px;
+    max-height: 450px;
     object-fit: cover;
     border-radius: 15px;
     margin-bottom: 1rem;
@@ -64,7 +55,7 @@
 
       &:hover,
       &.active {
-        border-color: var(--primary);
+        border-color: $primary;
         transform: scale(1.05);
       }
     }
@@ -76,6 +67,7 @@
     font-size: 2rem;
     font-weight: 700;
     margin-bottom: 1rem;
+    color: $text-primary;
 
     @media (max-width: 768px) {
       font-size: 1.5rem;
@@ -85,7 +77,7 @@
   .product-price {
     font-size: 2.5rem;
     font-weight: 700;
-    color: var(--primary);
+    color: $primary;
     margin-bottom: 1.5rem;
 
     @media (max-width: 768px) {
@@ -100,19 +92,20 @@
       display: flex;
       margin-bottom: 0.75rem;
       padding-bottom: 0.75rem;
-      border-bottom: 1px solid var(--light);
+      border-bottom: 1px solid $border-color;
 
       .meta-label {
         font-weight: 600;
         min-width: 120px;
         margin-right: 1rem;
+        color: $text-primary;
       }
 
       .meta-value {
-        color: #666;
+        color: $text-secondary;
 
         &.category-link {
-          color: var(--primary);
+          color: $primary;
           text-decoration: none;
 
           &:hover {
@@ -133,26 +126,26 @@
 
     &.in-stock {
       background: rgba(40, 167, 69, 0.1);
-      color: var(--success);
-      border: 2px solid var(--success);
+      color: $success;
+      border: 2px solid $success;
     }
 
     &.low-stock {
       background: rgba(255, 193, 7, 0.1);
-      color: var(--warning);
-      border: 2px solid var(--warning);
+      color: $warning;
+      border: 2px solid $warning;
     }
 
     &.out-of-stock {
       background: rgba(220, 53, 69, 0.1);
-      color: var(--error);
-      border: 2px solid var(--error);
+      color: $danger;
+      border: 2px solid $danger;
     }
   }
 }
 
 .purchase-section {
-  background: var(--white);
+  background: $white;
   border-radius: 15px;
   padding: 2rem;
   margin-top: 2rem;
@@ -164,7 +157,7 @@
     margin-bottom: 1.5rem;
     text-align: center;
     padding-bottom: 1rem;
-    border-bottom: 2px solid var(--primary);
+    border-bottom: 2px solid $primary;
   }
 
   .quantity-controls {
@@ -177,9 +170,9 @@
     .quantity-btn {
       width: 40px;
       height: 40px;
-      border: 2px solid var(--primary);
-      background: var(--white);
-      color: var(--primary);
+      border: 2px solid $primary;
+      background: $white;
+      color: $primary;
       border-radius: 50%;
       cursor: pointer;
       transition: all 0.3s ease;
@@ -189,15 +182,15 @@
       font-weight: 600;
 
       &:hover {
-        background: var(--primary);
-        color: var(--white);
+        background: $primary;
+        color: $white;
       }
     }
 
     .quantity-input {
       width: 80px;
       padding: 0.75rem;
-      border: 2px solid var(--light);
+      border: 2px solid $light;
       border-radius: 10px;
       text-align: center;
       font-weight: 600;
@@ -205,7 +198,7 @@
 
       &:focus {
         outline: none;
-        border-color: var(--primary);
+        border-color: $primary;
       }
     }
   }
@@ -222,12 +215,8 @@
     margin-bottom: 1rem;
 
     &.btn-add-cart {
-      background: linear-gradient(
-        135deg,
-        var(--primary) 0%,
-        var(--purple) 100%
-      );
-      color: var(--white);
+      background: linear-gradient(135deg, $primary 0%, $secondary 100%);
+      color: $white;
 
       &:hover {
         transform: translateY(-2px);
@@ -236,12 +225,46 @@
     }
 
     &.btn-buy-now {
-      background: var(--accent);
-      color: var(--dark);
+      background: $accent;
+      color: $dark;
 
       &:hover {
         background: #e0a800;
         transform: translateY(-2px);
+      }
+    }
+
+    &.btn-danger {
+      background: $danger;
+      color: $white;
+      border: 1px solid $danger;
+
+      fa-icon {
+        color: $white !important;
+      }
+
+      &:hover {
+        background: color.adjust($danger, $lightness: -10%);
+        border-color: color.adjust($danger, $lightness: -10%);
+      }
+    }
+
+    &.btn-outline-danger {
+      background: transparent;
+      color: $danger;
+      border: 1px solid $danger;
+
+      fa-icon {
+        color: $danger !important;
+      }
+
+      &:hover {
+        background: $danger;
+        color: $white;
+
+        fa-icon {
+          color: $white !important;
+        }
       }
     }
   }
@@ -250,12 +273,12 @@
     text-align: center;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 2px solid var(--light);
+    border-top: 2px solid $light;
 
     .total-amount {
       font-size: 1.8rem;
       font-weight: 700;
-      color: var(--primary);
+      color: $primary;
     }
   }
 }
@@ -269,8 +292,8 @@
   .loading-spinner {
     width: 50px;
     height: 50px;
-    border: 4px solid var(--light);
-    border-top: 4px solid var(--primary);
+    border: 4px solid $light;
+    border-top: 4px solid $primary;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
@@ -291,12 +314,12 @@
   margin-top: auto;
 
   .btn-primary {
-    background-color: var(--primary);
-    border-color: var(--primary);
+    background-color: $primary;
+    border-color: $primary;
 
     &:hover {
-      background-color: var(--purple);
-      border-color: var(--purple);
+      background-color: $secondary;
+      border-color: $secondary;
     }
   }
 }

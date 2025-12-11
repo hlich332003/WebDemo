@@ -81,6 +81,18 @@
           </a>
         </li>
 
+        <!-- Wishlist (hidden for admin) -->
+        <li
+          *ngIf="showCart()"
+          class="nav-item wishlist-item"
+          routerLinkActive="active"
+        >
+          <a class="nav-link" routerLink="/wishlist" (click)="collapseNavbar()">
+            <fa-icon icon="heart" class="nav-icon"></fa-icon>
+            <span class="nav-text">Yêu thích</span>
+          </a>
+        </li>
+
         <!-- Cart (hidden for admin) -->
         <li
           *ngIf="showCart()"
@@ -98,22 +110,6 @@
           </a>
         </li>
 
-        <!-- Wishlist (hidden for admin) -->
-        <li
-          *ngIf="showCart()"
-          class="nav-item wishlist-item"
-          routerLinkActive="active"
-        >
-          <a class="nav-link" routerLink="/wishlist" (click)="collapseNavbar()">
-            <fa-icon icon="heart" class="nav-icon"></fa-icon>
-            <span class="nav-text">Yêu thích</span>
-            <span
-              *ngIf="(wishlistItemCount$ | async) ?? 0 > 0"
-              class="wishlist-badge"
-              >{{ wishlistItemCount$ | async }}</span
-            >
-          </a>
-        </li>
         <!-- jhipster-needle-add-element-to-menu - JHipster will add new menu items here -->
         <li
           *jhiHasAnyAuthority="'ROLE_ADMIN'"
@@ -198,7 +194,7 @@
             } @else {
               <span>
                 <img
-                  [src]="accountRef!.imageUrl"
+                  [ngSrc]="accountRef!.imageUrl || ''"
                   class="profile-image rounded-circle"
                   alt="Avatar"
                 />

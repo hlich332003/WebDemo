@@ -1,37 +1,39 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
+import { RouterOutlet } from '@angular/router';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 import { AccountService } from 'app/core/auth/account.service';
-import { AppPageTitleStrategy } from 'app/app-page-title-strategy';
-import FooterComponent from '../footer/footer.component';
 import PageRibbonComponent from '../profiles/page-ribbon.component';
+import FooterComponent from '../footer/footer.component';
+import { NavbarComponent } from '../navbar/navbar.component';
 
 @Component({
   selector: 'jhi-main',
   standalone: true,
   templateUrl: './main.component.html',
-  providers: [AppPageTitleStrategy],
-  imports: [RouterOutlet, FooterComponent],
+  styleUrls: ['./main.component.scss'],
+  imports: [
+    RouterOutlet,
+    PageRibbonComponent,
+    NavbarComponent,
+    FooterComponent,
+  ],
 })
 export default class MainComponent implements OnInit {
-  private readonly router = inject(Router);
-  private readonly appPageTitleStrategy = inject(AppPageTitleStrategy);
   private readonly accountService = inject(AccountService);
+  private readonly destroy$ = new Subject<void>();
 
   ngOnInit(): void {
-    // Try to log in automatically if token exists
-    this.accountService.identity().subscribe({
-      next: (account) => {
+    this.accountService
+      .getAuthenticationState()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((account) => {
         if (account) {
-          console.log('✅ User authenticated on init:', account.login);
+          console.log('✅ User authenticated on init:', account.email);
         } else {
-          console.log('ℹ️ No user authenticated');
+          console.log('User not authenticated on init.');
         }
-      },
-      error: (error) => {
-        console.error('❌ Authentication failed on init:', error.status);
-        // Ignore 401 error when not logged in
-      },
-    });
+      });
   }
 }

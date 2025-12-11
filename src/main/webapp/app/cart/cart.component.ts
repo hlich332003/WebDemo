@@ -106,12 +106,21 @@ export class CartComponent {
 
   toggleWishlist(product: IProduct, event: Event): void {
     event.stopPropagation();
-    const added = this.wishlistService.toggleWishlist(product);
-    if (added) {
-      this.notify.success('💖 Đã thêm vào danh sách yêu thích!');
-    } else {
-      this.notify.info('💔 Đã xóa khỏi danh sách yêu thích!');
-    }
+    this.wishlistService.toggleWishlist(product).subscribe({
+      next: (added: boolean) => {
+        if (added) {
+          this.notify.success('💖 Đã thêm vào danh sách yêu thích!');
+        } else {
+          this.notify.info('💔 Đã xóa khỏi danh sách yêu thích!');
+        }
+      },
+      error: (error: Error) => {
+        // Explicitly type error
+        this.notify.error(
+          `❌ Lỗi khi cập nhật danh sách yêu thích: ${error.message}`,
+        );
+      },
+    });
   }
 
   isInWishlist(productId: number): boolean {

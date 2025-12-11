@@ -36,6 +36,17 @@ public class CacheConfiguration {
         // Cấu hình TTL riêng cho từng cache
         Map<String, RedisCacheConfiguration> cacheConfigs = new HashMap<>();
 
+        // Product cache: 5 phút
+        cacheConfigs.put(
+            "com.mycompany.myapp.domain.Product",
+            RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(5))
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(
+                    RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper))
+                )
+        );
+
         // Featured products: cache lâu hơn (30 phút)
         cacheConfigs.put(
             "featuredProducts",

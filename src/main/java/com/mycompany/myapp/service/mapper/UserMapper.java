@@ -5,7 +5,6 @@ import com.mycompany.myapp.domain.User;
 import com.mycompany.myapp.service.dto.AdminUserDTO;
 import com.mycompany.myapp.service.dto.UserDTO;
 import java.util.*;
-import java.util.stream.Collectors;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -56,27 +55,13 @@ public class UserMapper {
             user.setLastModifiedDate(userDTO.getLastModifiedDate());
             user.setActivated(userDTO.isActivated());
             user.setLangKey(userDTO.getLangKey());
-            Set<Authority> authorities = this.authoritiesFromStrings(userDTO.getAuthorities());
-            user.setAuthorities(authorities);
+            if (userDTO.getAuthorities() != null && !userDTO.getAuthorities().isEmpty()) {
+                Authority auth = new Authority();
+                auth.setName(userDTO.getAuthorities().iterator().next());
+                user.setAuthority(auth);
+            }
             return user;
         }
-    }
-
-    private Set<Authority> authoritiesFromStrings(Set<String> authoritiesAsString) {
-        Set<Authority> authorities = new HashSet<>();
-
-        if (authoritiesAsString != null) {
-            authorities = authoritiesAsString
-                .stream()
-                .map(string -> {
-                    Authority auth = new Authority();
-                    auth.setName(string);
-                    return auth;
-                })
-                .collect(Collectors.toSet());
-        }
-
-        return authorities;
     }
 
     public User userFromId(Long id) {

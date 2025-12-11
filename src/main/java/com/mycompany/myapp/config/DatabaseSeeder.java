@@ -9,9 +9,7 @@ import com.mycompany.myapp.repository.CategoryRepository;
 import com.mycompany.myapp.repository.ProductRepository;
 import com.mycompany.myapp.repository.UserRepository;
 import com.mycompany.myapp.security.AuthoritiesConstants;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -49,7 +47,6 @@ public class DatabaseSeeder implements CommandLineRunner {
     public void run(String... args) throws Exception {
         log.info("Seeding initial data...");
 
-        // Create default authorities if they don't exist
         if (authorityRepository.findById(AuthoritiesConstants.ADMIN).isEmpty()) {
             Authority adminAuthority = new Authority();
             adminAuthority.setName(AuthoritiesConstants.ADMIN);
@@ -61,42 +58,34 @@ public class DatabaseSeeder implements CommandLineRunner {
             authorityRepository.save(userAuthority);
         }
 
-        // Create admin user if not exists
         if (userRepository.findOneByEmailIgnoreCase("admin@localhost").isEmpty()) {
             User adminUser = new User();
-            adminUser.setPassword(passwordEncoder.encode("admin")); // Mã hóa mật khẩu
+            adminUser.setPassword(passwordEncoder.encode("admin"));
             adminUser.setFirstName("Admin");
             adminUser.setLastName("User");
             adminUser.setEmail("admin@localhost");
             adminUser.setPhone("0123456789");
             adminUser.setActivated(true);
             adminUser.setLangKey("en");
-            Set<Authority> authorities = new HashSet<>();
-            authorityRepository.findById(AuthoritiesConstants.ADMIN).ifPresent(authorities::add);
-            authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
-            adminUser.setAuthorities(authorities);
+            authorityRepository.findById(AuthoritiesConstants.ADMIN).ifPresent(adminUser::setAuthority);
             userRepository.save(adminUser);
             log.info("Created default admin user.");
         }
 
-        // Create a regular user if not exists
         if (userRepository.findOneByEmailIgnoreCase("user@localhost").isEmpty()) {
             User regularUser = new User();
-            regularUser.setPassword(passwordEncoder.encode("user")); // Mã hóa mật khẩu
+            regularUser.setPassword(passwordEncoder.encode("user"));
             regularUser.setFirstName("Regular");
             regularUser.setLastName("User");
             regularUser.setEmail("user@localhost");
             regularUser.setPhone("0987654321");
             regularUser.setActivated(true);
             regularUser.setLangKey("en");
-            Set<Authority> authorities = new HashSet<>();
-            authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
-            regularUser.setAuthorities(authorities);
+            authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(regularUser::setAuthority);
             userRepository.save(regularUser);
             log.info("Created default regular user.");
         }
 
-        // Create sample categories if not exists
         if (categoryRepository.findByName("Electronics").isEmpty()) {
             Category electronics = new Category();
             electronics.setName("Electronics");
@@ -113,7 +102,6 @@ public class DatabaseSeeder implements CommandLineRunner {
             log.info("Created category: Books");
         }
 
-        // Create sample products if not exists
         Optional<Category> electronicsCategory = categoryRepository.findByName("Electronics");
         if (electronicsCategory.isPresent() && productRepository.findFirstByName("Laptop").isEmpty()) {
             Product laptop = new Product();

@@ -60,12 +60,10 @@ public class RefreshTokenResource {
             .map(refreshTokenService::verifyExpiration)
             .map(RefreshToken::getUser)
             .map(user -> {
-                // Convert authorities từ Set<Authority> sang List<GrantedAuthority>
-                java.util.List<org.springframework.security.core.GrantedAuthority> authorities = user
-                    .getAuthorities()
-                    .stream()
-                    .map(authority -> new org.springframework.security.core.authority.SimpleGrantedAuthority(authority.getName()))
-                    .collect(java.util.stream.Collectors.toList());
+                // Convert authority to GrantedAuthority
+                java.util.List<org.springframework.security.core.GrantedAuthority> authorities = java.util.Collections.singletonList(
+                    new org.springframework.security.core.authority.SimpleGrantedAuthority(user.getAuthority().getName())
+                );
 
                 // Tạo Authentication object từ user
                 Authentication authentication = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(

@@ -1,137 +1,93 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { IProduct } from 'app/entities/product/product.model';
-
-export interface WishlistItem {
-  product: IProduct;
-  addedAt: Date;
-}
+import { AccountService } from 'app/core/auth/account.service';
+import { Observable, of, BehaviorSubject, forkJoin, Subject } from 'rxjs';
+import {
+  tap,
+  catchError,
+  map,
+  shareReplay,
+  switchMap,
+  takeUntil,
+} from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
 })
 export class WishlistService {
-  private readonly STORAGE_KEY = 'webdemo_wishlist';
+  private readonly API_URL = 'api/wishlist';
+  private readonly PRODUCT_API_URL = 'api/products';
 
-  // Signal để reactive updates
-  private wishlistItems = signal<WishlistItem[]>([]);
+  private http = inject(HttpClient);
+  private accountService = inject(AccountService);
 
-  // Computed signals
-  public items = computed(() => this.wishlistItems());
-  public count = computed(() => this.wishlistItems().length);
+  private _wishlistItemsSubject = new BehaviorSubject<IProduct[]>([]);
+  public items$ = this._wishlistItemsSubject.asObservable();
+  public count$ = this.items$.pipe(
+    map((items) => items.length),
+    shareReplay(1),
+  );
+  private destroy$ = new Subject<void>();
 
   constructor() {
-    this.loadFromStorage();
+    this.accountService
+      .getAuthenticationState()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((account) => {
+        if (account) {
+          this.loadWishlist();
+        } else {
+          this._wishlistItemsSubject.next([]); // Clear wishlist on logout
+        }
+      });
   }
 
-  /**
-   * Load wishlist từ localStorage
-   */
-  private loadFromStorage(): void {
-    try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
-      if (stored) {
-        const items: WishlistItem[] = JSON.parse(stored);
-        // Convert string dates back to Date objects
-        items.forEach((item) => {
-          item.addedAt = new Date(item.addedAt);
-        });
-        this.wishlistItems.set(items);
-      }
-    } catch (error) {
-      console.error('Error loading wishlist from storage:', error);
-      this.wishlistItems.set([]);
-    }
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  /**
-   * Save wishlist vào localStorage
-   */
-  private saveToStorage(): void {
-    try {
-      localStorage.setItem(
-        this.STORAGE_KEY,
-        JSON.stringify(this.wishlistItems()),
-      );
-    } catch (error) {
-      console.error('Error saving wishlist to storage:', error);
-    }
+  loadWishlist(): void {
+    this.http
+      .get<IProduct[]>(this.API_URL)
+      .pipe(
+        switchMap((wishlistProducts: IProduct[]) => {
+          if (wishlistProducts.length === 0) {
+            return of([]);
+          }
+          const productRequests: Observable<IProduct>[] = wishlistProducts.map(
+            (p) => this.http.get<IProduct>(`${this.PRODUCT_API_URL}/${p.id}`),
+          );
+          return forkJoin(productRequests);
+        }),
+        catchError(() => of([])),
+      )
+      .subscribe((fullProducts) => {
+        this._wishlistItemsSubject.next(fullProducts);
+      });
   }
 
-  /**
-   * Thêm sản phẩm vào wishlist
-   */
-  addToWishlist(product: IProduct): boolean {
+  toggleWishlist(product: IProduct): Observable<boolean> {
     if (!product.id) {
-      return false;
+      return of(false);
     }
+    const isInWishlist = this.isInWishlist(product.id);
+    const apiCall = isInWishlist
+      ? this.http.delete(`${this.API_URL}/${product.id}`)
+      : this.http.post(`${this.API_URL}/${product.id}`, {});
 
-    // Kiểm tra xem sản phẩm đã có trong wishlist chưa
-    if (this.isInWishlist(product.id)) {
-      return false;
-    }
-
-    const newItem: WishlistItem = {
-      product,
-      addedAt: new Date(),
-    };
-
-    this.wishlistItems.update((items) => [...items, newItem]);
-    this.saveToStorage();
-    return true;
-  }
-
-  /**
-   * Xóa sản phẩm khỏi wishlist
-   */
-  removeFromWishlist(productId: number): void {
-    this.wishlistItems.update((items) =>
-      items.filter((item) => item.product.id !== productId),
+    return apiCall.pipe(
+      tap(() => this.loadWishlist()),
+      map(() => !isInWishlist),
+      catchError((err) => {
+        this.loadWishlist();
+        throw err;
+      }),
     );
-    this.saveToStorage();
   }
 
-  /**
-   * Toggle sản phẩm trong wishlist
-   */
-  toggleWishlist(product: IProduct): boolean {
-    if (!product.id) {
-      return false;
-    }
-
-    if (this.isInWishlist(product.id)) {
-      this.removeFromWishlist(product.id);
-      return false;
-    } else {
-      return this.addToWishlist(product);
-    }
-  }
-
-  /**
-   * Kiểm tra sản phẩm có trong wishlist không
-   */
   isInWishlist(productId: number): boolean {
-    return this.wishlistItems().some((item) => item.product.id === productId);
-  }
-
-  /**
-   * Lấy tất cả items trong wishlist
-   */
-  getWishlistItems(): WishlistItem[] {
-    return this.wishlistItems();
-  }
-
-  /**
-   * Xóa toàn bộ wishlist
-   */
-  clearWishlist(): void {
-    this.wishlistItems.set([]);
-    this.saveToStorage();
-  }
-
-  /**
-   * Lấy số lượng items trong wishlist
-   */
-  getWishlistCount(): number {
-    return this.wishlistItems().length;
+    return this._wishlistItemsSubject.value.some((p) => p.id === productId);
   }
 }
