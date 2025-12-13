@@ -1,51 +1,66 @@
 <div class="wishlist-container">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Danh sách yêu thích</h1>
-    <!-- Button to clear wishlist removed as the method was removed from the service -->
+  <div class="wishlist-header">
+    <h1 class="page-title">
+      <fa-icon icon="heart"></fa-icon>
+      <span>Danh sách yêu thích</span>
+      @if (wishlistItems$ | async; as products) {
+        <span class="count-badge">{{ products.length }}</span>
+      }
+    </h1>
   </div>
 
   @if (wishlistItems$ | async; as products) {
     @if (products.length > 0) {
       <div class="wishlist-grid">
         @for (product of products; track product.id) {
-          <div class="product-card">
-            <img
-              [src]="product.imageUrl || 'content/images/default-product.svg'"
-              [alt]="product.name"
-              class="product-image"
-              (click)="viewProductDetail(product.id!)"
-              (error)="onImageError($event)"
-            />
+          <div class="wishlist-card">
+            <div class="product-image" (click)="viewProductDetail(product.id!)">
+              <img
+                [src]="product.imageUrl || 'content/images/default-product.svg'"
+                [alt]="product.name"
+                (error)="onImageError($event)"
+              />
+              @if (product.quantity === 0) {
+                <span class="out-of-stock-badge">Hết hàng</span>
+              } @else if (product.quantity && product.quantity < 10) {
+                <span class="low-stock-badge">Sắp hết</span>
+              }
+            </div>
             <div class="product-info">
               <h4 class="product-name" (click)="viewProductDetail(product.id!)">
                 {{ product.name }}
               </h4>
               <p class="product-price">{{ formatPrice(product.price) }}</p>
-            </div>
-            <div class="product-actions">
-              <button
-                class="btn btn-primary btn-sm"
-                (click)="addToCart(product)"
-                [disabled]="!product.quantity || product.quantity <= 0"
-              >
-                <fa-icon icon="shopping-cart" class="me-1"></fa-icon>
-                Thêm vào giỏ
-              </button>
-              <button
-                class="btn btn-danger btn-sm"
-                (click)="removeFromWishlist(product)"
-              >
-                <fa-icon icon="trash" class="me-1"></fa-icon>
-                Xóa
-              </button>
+              <div class="product-buttons">
+                <button
+                  class="btn-wishlist in-wishlist"
+                  (click)="removeFromWishlist(product)"
+                  title="Bỏ thích"
+                >
+                  <fa-icon icon="heart"></fa-icon>
+                </button>
+                <button
+                  class="btn btn-sm btn-success flex-grow-1"
+                  (click)="addToCart(product)"
+                  [disabled]="!product.quantity || product.quantity <= 0"
+                >
+                  <fa-icon [icon]="isInCart(product.id!) ? 'check' : 'cart-plus'"></fa-icon>
+                  <span>{{ isInCart(product.id!) ? 'Đã trong giỏ' : 'Thêm vào giỏ' }}</span>
+                </button>
+              </div>
             </div>
           </div>
         }
       </div>
     } @else {
-      <div class="alert alert-warning">
-        <fa-icon icon="heart-crack" class="me-2"></fa-icon>
-        Danh sách yêu thích của bạn đang trống.
+      <div class="empty-wishlist">
+        <fa-icon icon="heart-crack"></fa-icon>
+        <h2>Danh sách trống</h2>
+        <p>Bạn chưa có sản phẩm yêu thích nào. Hãy khám phá cửa hàng nhé!</p>
+        <a routerLink="/products" class="btn-primary">
+          <fa-icon icon="shopping-cart"></fa-icon>
+          <span>Mua sắm ngay</span>
+        </a>
       </div>
     }
   } @else {

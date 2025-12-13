@@ -97,7 +97,7 @@ export default class ProductManagementComponent implements OnInit {
         this.isLoading.set(false);
         this.onSuccess(res.body, res.headers);
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Failed to load products:', error);
         this.isLoading.set(false);
         this.notify.error('Không thể tải danh sách sản phẩm.');
@@ -157,7 +157,7 @@ export default class ProductManagementComponent implements OnInit {
         this.loadAll();
         this.notify.success('Sản phẩm đã được cập nhật.');
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Failed to toggle featured status:', error);
         this.notify.error('Cập nhật trạng thái nổi bật thất bại!');
       },
@@ -177,7 +177,7 @@ export default class ProductManagementComponent implements OnInit {
           this.downloadFile(data, 'products.xlsx');
           this.notify.success('Export sản phẩm thành công!');
         },
-        error: (error) => {
+        error: (error: HttpErrorResponse) => {
           console.error('Failed to export products:', error);
           this.notify.error('Export sản phẩm thất bại!');
         },

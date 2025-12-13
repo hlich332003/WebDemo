@@ -23,15 +23,29 @@ export class CartComponent {
   private notify = inject(NotificationService);
   public wishlistService = inject(WishlistService);
 
-  updateQuantity(productId: number, quantity: number | string): void {
-    const q = Number(quantity);
-    if (!Number.isFinite(q) || q < 0) {
-      this.notify.error('❌ Số lượng không hợp lệ!');
+  onQuantityBlur(productId: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const quantity = input.value.trim();
+
+    // Nếu empty, restore giá trị cũ
+    if (quantity === '' || quantity === '0') {
+      const item = this.cartService
+        .getCartItems()
+        .find((i) => i.product.id === productId);
+      if (item) {
+        input.value = item.quantity.toString();
+      }
       return;
     }
 
-    if (q === 0) {
-      this.cartService.removeFromCart(productId);
+    this.updateQuantity(productId, quantity);
+  }
+
+  updateQuantity(productId: number, quantity: number | string): void {
+    const q = Number(quantity);
+    if (!Number.isFinite(q) || q < 1) {
+      this.notify.error('❌ Số lượng phải lớn hơn 0!');
+      this.cartService.loadCart(); // Reload để restore giá trị
       return;
     }
 
@@ -45,14 +59,16 @@ export class CartComponent {
     const availableStock = item.product.quantity ?? 0;
     if (q > availableStock) {
       this.notify.error('⚠️ Đã đạt giới hạn số lượng!');
-      this.cartService.updateQuantity(productId, availableStock);
+      this.cartService
+        .updateQuantity(productId, availableStock)
+        .subscribe(() => this.cartService.loadCart());
       return;
     }
 
-    const success = this.cartService.updateQuantity(productId, q);
-    if (!success) {
-      this.notify.error('❌ Không thể cập nhật số lượng!');
-    }
+    this.cartService.updateQuantity(productId, q).subscribe({
+      next: () => this.cartService.loadCart(),
+      error: () => this.notify.error('❌ Không thể cập nhật số lượng!'),
+    });
   }
 
   increaseQuantity(productId: number, currentQuantity: number): void {
@@ -69,18 +85,12 @@ export class CartComponent {
       return;
     }
 
-    const success = this.cartService.updateQuantity(
-      productId,
-      currentQuantity + 1,
-    );
-    if (!success) {
-      this.notify.error('⚠️ Không thể tăng số lượng!');
-    }
+    this.updateQuantity(productId, currentQuantity + 1);
   }
 
   decreaseQuantity(productId: number, currentQuantity: number): void {
     if (currentQuantity > 1) {
-      this.cartService.updateQuantity(productId, currentQuantity - 1);
+      this.updateQuantity(productId, currentQuantity - 1);
     } else {
       this.notify.info(
         '💡 Số lượng tối thiểu là 1. Dùng nút xóa nếu muốn bỏ sản phẩm.',
@@ -89,7 +99,13 @@ export class CartComponent {
   }
 
   remove(productId: number): void {
-    this.cartService.removeFromCart(productId);
+    this.cartService.removeFromCart(productId).subscribe({
+      next: () => {
+        this.notify.success('Đã xóa sản phẩm khỏi giỏ hàng.');
+        this.cartService.loadCart();
+      },
+      error: () => this.notify.error('❌ Không thể xóa sản phẩm!'),
+    });
   }
 
   formatPrice(price: number | null | undefined): string {

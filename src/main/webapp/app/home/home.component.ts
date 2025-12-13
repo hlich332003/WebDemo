@@ -7,15 +7,14 @@ import {
   inject,
 } from '@angular/core';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
-import { Subject, forkJoin } from 'rxjs';
-import { takeUntil, filter, map } from 'rxjs/operators';
+import { Subject, forkJoin, of } from 'rxjs';
+import { takeUntil, filter, map, switchMap } from 'rxjs/operators';
 import SharedModule from 'app/shared/shared.module';
 import { Account } from 'app/core/auth/account.model';
 import { AccountService } from 'app/core/auth/account.service';
 import { ProductService } from 'app/entities/product/product.service';
 import { IProduct } from 'app/entities/product/product.model';
-import { CategoryService } from 'app/entities/category/category.service';
-import { ICategory } from 'app/entities/category/category.model';
+import { ICategory } from 'app/entities/product/category.model';
 import { UtilsService } from 'app/shared/utils/utils.service';
 import { NotificationService } from 'app/shared/notification/notification.service';
 import { CartService } from 'app/shared/services/cart.service';
@@ -23,6 +22,8 @@ import { RecentlyViewedService } from 'app/shared/services/recently-viewed.servi
 import { WishlistService } from 'app/shared/services/wishlist.service';
 import { ProductComparisonService } from 'app/shared/services/product-comparison.service';
 import { LoginModalService } from 'app/core/login/login-modal.service';
+import { IconName } from '@fortawesome/fontawesome-svg-core';
+import { HttpResponse } from '@angular/common/http';
 
 @Component({
   selector: 'jhi-home',
@@ -34,7 +35,6 @@ import { LoginModalService } from 'app/core/login/login-modal.service';
 export class HomeComponent implements OnInit, OnDestroy {
   account = signal<Account | null>(null);
   featuredCategories: ICategory[] = [];
-  products: IProduct[] = [];
   newProducts: IProduct[] = [];
   bestSellerProducts: IProduct[] = [];
   recentlyViewedProducts: IProduct[] = [];
@@ -42,12 +42,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   bannerImageUrl =
     'https://thuthuatnhanh.com/wp-content/uploads/2021/06/Hinh-anh-dan-PC-khung-dep-me-hon.jpg';
 
+  // Track wishlist items for realtime updates
+  wishlistItems = signal<IProduct[]>([]);
+
   private readonly destroy$ = new Subject<void>();
 
   private readonly accountService = inject(AccountService);
   private readonly router = inject(Router);
   private readonly productService = inject(ProductService);
-  private readonly categoryService = inject(CategoryService);
   private readonly utils = inject(UtilsService);
   private readonly notify = inject(NotificationService);
   private readonly cartService = inject(CartService);
@@ -62,16 +64,30 @@ export class HomeComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    console.warn('🎯 HomeComponent ngOnInit called');
+
+    // Load data immediately on init
+    this.loadAllData();
+
     this.accountService
       .getAuthenticationState()
       .pipe(takeUntil(this.destroy$))
-      .subscribe((account) => this.account.set(account));
+      .subscribe((account) => {
+        this.account.set(account);
+      });
 
-    this.loadAllData();
+    // Subscribe to wishlist changes for realtime updates
+    this.wishlistService.items$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((items) => {
+        this.wishlistItems.set(items);
+      });
 
     this.router.events
       .pipe(
-        filter((event) => event instanceof NavigationEnd),
+        filter(
+          (event): event is NavigationEnd => event instanceof NavigationEnd,
+        ),
         filter(
           (event: NavigationEnd) => event.url === '/' || event.url === '/home',
         ),
@@ -83,43 +99,109 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   loadAllData(): void {
+    console.warn('🚀 loadAllData() called');
     this.isLoading = true;
-    forkJoin([
-      this.categoryService.query().pipe(map((res) => res.body ?? [])),
-      this.productService.query().pipe(map((res) => res.body ?? [])),
-    ]).subscribe({
-      next: ([featuredCats, allProducts]) => {
-        this.featuredCategories = featuredCats;
-        this.products = allProducts;
-        this.newProducts = allProducts.slice(0, 12);
-        const pinned = allProducts.filter((p) => p.isPinned === true);
-        const notPinned = allProducts.filter((p) => p.isPinned !== true);
-        notPinned.sort((a, b) => (b.salesCount ?? 0) - (a.salesCount ?? 0));
-        const lowStockCandidates = notPinned.filter(
-          (p) =>
-            p.quantity !== null && p.quantity !== undefined && p.quantity < 50,
+    const productService = this.productService;
+
+    // Use main endpoints as they are already public in SecurityConfiguration
+    const query = productService.query.bind(productService);
+    const getCategories = productService.getCategories.bind(productService);
+
+    console.warn('📡 Starting to load data...');
+
+    const newProducts$ = query({
+      page: 0,
+      size: 10,
+      sort: ['id,desc'],
+    }).pipe(map((res: HttpResponse<IProduct[]>) => res.body ?? []));
+
+    const bestSellerProducts$ = query({
+      page: 0,
+      size: 10,
+      sort: ['salesCount,desc'],
+    }).pipe(map((res: HttpResponse<IProduct[]>) => res.body ?? []));
+
+    const categoriesWithProducts$ = getCategories().pipe(
+      map((res: HttpResponse<ICategory[]>) => res.body ?? []),
+      switchMap((categories) => {
+        if (!categories || categories.length === 0) {
+          return of([]);
+        }
+        const categoryProductRequests = categories.map((category) =>
+          query({
+            categorySlug: category.slug,
+            page: 0,
+            size: 5,
+            sort: ['id,desc'],
+          }).pipe(
+            map((res: HttpResponse<IProduct[]>) => {
+              (category as any).products = res.body ?? [];
+              return category;
+            }),
+          ),
         );
-        const combined: IProduct[] = [
-          ...pinned,
-          ...lowStockCandidates,
-          ...notPinned,
-        ];
-        this.bestSellerProducts = combined.slice(0, 8);
-        this.featuredCategories.forEach((category) => {
-          category.products = this.products.filter(
-            (product) => product.category?.id === category.id,
-          );
+        return forkJoin(categoryProductRequests);
+      }),
+      map((categoriesWithProducts) =>
+        categoriesWithProducts.filter((c) => (c as any).products.length > 0),
+      ),
+    );
+
+    forkJoin({
+      newProducts: newProducts$,
+      bestSellerProducts: bestSellerProducts$,
+      featuredCategories: categoriesWithProducts$,
+    }).subscribe({
+      next: ({ newProducts, bestSellerProducts, featuredCategories }) => {
+        console.warn('✅ Data loaded:', {
+          newProducts: newProducts.length,
+          bestSellerProducts: bestSellerProducts.length,
+          featuredCategories: featuredCategories.length,
         });
+
+        this.newProducts = newProducts;
+        this.bestSellerProducts = bestSellerProducts;
+
+        const unclassified = featuredCategories.find(
+          (c: ICategory) => c.slug === 'chua-phan-loai',
+        );
+        const others = featuredCategories.filter(
+          (c: ICategory) => c.slug !== 'chua-phan-loai',
+        );
+        this.featuredCategories = unclassified
+          ? [...others, unclassified]
+          : others;
+
+        console.warn('✅ Featured categories:', this.featuredCategories);
+
         this.recentlyViewedProducts = this.recentlyViewedService
           .getProducts()
-          .slice(0, 6);
+          .slice(0, 10);
         this.isLoading = false;
       },
-      error: () => {
+      error: (err) => {
         this.isLoading = false;
-        console.error('Error loading home page data');
+        console.error('❌ Error loading home page data', err);
+        this.notify.error('❌ Đã có lỗi xảy ra khi tải dữ liệu trang chủ.');
       },
     });
+  }
+
+  getCategoryIcon(slug: string | null | undefined): IconName {
+    switch (slug) {
+      case 'man-hinh':
+        return 'desktop';
+      case 'pc-gaming':
+        return 'gamepad';
+      case 'linh-kien':
+        return 'microchip';
+      case 'electronics':
+        return 'plug';
+      case 'books':
+        return 'book';
+      default:
+        return 'tags';
+    }
   }
 
   login(): void {
@@ -139,26 +221,8 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.notify.error('❌ Sản phẩm đã hết hàng!');
       return;
     }
-    const currentCartItem = this.cartService
-      .getCartItems()
-      .find((item) => item.product.id === product.id);
-    const currentQtyInCart = currentCartItem ? currentCartItem.quantity : 0;
-    if (currentQtyInCart >= product.quantity) {
-      this.notify.error(
-        `⚠️ Bạn đã có ${currentQtyInCart} sản phẩm này trong giỏ! Tồn kho chỉ còn ${product.quantity}.`,
-      );
-      return;
-    }
     this.cartService.addToCart(product.id!).subscribe(() => {
-      const newTotal = currentQtyInCart + 1;
-      const remaining = product.quantity! - newTotal;
-      if (remaining <= 5 && remaining > 0) {
-        this.notify.warning(
-          `⚠️ Đã thêm vào giỏ hàng! Chỉ còn ${remaining} sản phẩm.`,
-        );
-      } else {
-        this.notify.success('✅ Đã thêm sản phẩm vào giỏ hàng!');
-      }
+      this.notify.success('✅ Đã thêm sản phẩm vào giỏ hàng!');
       this.cartService.loadCart();
     });
   }
@@ -169,24 +233,20 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.loginModalService.open();
       return;
     }
+    const isInWishlist = this.wishlistService.isInWishlist(product.id!);
     this.wishlistService.toggleWishlist(product).subscribe({
-      next: (added: boolean) => {
-        if (added) {
-          this.notify.success('💖 Đã thêm vào danh sách yêu thích!');
-        } else {
+      next: () => {
+        if (isInWishlist) {
           this.notify.info('💔 Đã xóa khỏi danh sách yêu thích!');
+        } else {
+          this.notify.success('💖 Đã thêm vào danh sách yêu thích!');
         }
-      },
-      error: (error: Error) => {
-        this.notify.error(
-          `❌ Lỗi khi cập nhật danh sách yêu thích: ${error.message}`,
-        );
       },
     });
   }
 
   isInWishlist(productId: number): boolean {
-    return this.wishlistService.isInWishlist(productId);
+    return this.wishlistItems().some((item) => item.id === productId);
   }
 
   toggleComparison(product: IProduct, event: Event): void {
@@ -208,10 +268,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   formatPrice(price: number | null | undefined): string {
-    if (price === null || price === undefined) {
-      return this.utils.formatPrice(0);
-    }
-    return this.utils.formatPrice(price);
+    return this.utils.formatPrice(price ?? 0);
   }
 
   getProxiedImageUrl(imageUrl: string | null | undefined): string {

@@ -274,6 +274,11 @@ CREATE TABLE [dbo].[jhi_wishlist_item](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
+-- Seed default authorities
+IF NOT EXISTS (SELECT 1 FROM dbo.jhi_authority WHERE name = N'ROLE_USER')
+    INSERT INTO dbo.jhi_authority(name) VALUES (N'ROLE_USER');
+IF NOT EXISTS (SELECT 1 FROM dbo.jhi_authority WHERE name = N'ROLE_ADMIN')
+    INSERT INTO dbo.jhi_authority(name) VALUES (N'ROLE_ADMIN');
 ALTER TABLE [dbo].[jhi_cart]  WITH CHECK ADD FOREIGN KEY([user_id])
   REFERENCES [dbo].[jhi_user] ([id])
   GO
@@ -355,3 +360,30 @@ ALTER TABLE [dbo].[jhi_review]  WITH CHECK ADD  CONSTRAINT [CHK_review_rating_ra
   GO
 ALTER TABLE [dbo].[jhi_review] CHECK CONSTRAINT [CHK_review_rating_range]
   GO
+
+-- Add indexes for performance
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'idx_product_price' AND object_id = OBJECT_ID('dbo.jhi_product'))
+BEGIN
+    CREATE INDEX idx_product_price ON [dbo].[jhi_product]([price]);
+END
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'idx_product_quantity' AND object_id = OBJECT_ID('dbo.jhi_product'))
+BEGIN
+    CREATE INDEX idx_product_quantity ON [dbo].[jhi_product]([quantity]);
+END
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'idx_product_is_active' AND object_id = OBJECT_ID('dbo.jhi_product'))
+BEGIN
+    CREATE INDEX idx_product_is_active ON [dbo].[jhi_product]([is_active]);
+END
+GO
+
+-- For SQL Server, a full-text index is better for name searching if available.
+-- As a fallback, a non-clustered index can provide some benefit.
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'idx_product_name' AND object_id = OBJECT_ID('dbo.jhi_product'))
+BEGIN
+    CREATE INDEX idx_product_name ON [dbo].[jhi_product]([name]);
+END
+GO

@@ -2,28 +2,25 @@ import { Component, OnInit, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
-import { combineLatest, forkJoin, Subject } from 'rxjs';
+import { combineLatest, Subject } from 'rxjs';
 import {
   map,
   debounceTime,
   distinctUntilChanged,
   takeUntil,
+  tap,
 } from 'rxjs/operators';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import { ProductService } from 'app/entities/product/product.service';
 import { IProduct } from 'app/entities/product/product.model';
-import { CategoryService } from 'app/entities/category/category.service';
-import { ICategory } from 'app/entities/category/category.model';
+import { ICategory } from 'app/entities/product/category.model';
 import { UtilsService } from 'app/shared/utils/utils.service';
 import { NotificationService } from 'app/shared/notification/notification.service';
 import { CartService } from 'app/shared/services/cart.service';
 import { WishlistService } from 'app/shared/services/wishlist.service';
-import { ProductComparisonService } from 'app/shared/services/product-comparison.service';
 import { LazyLoadImageDirective } from 'app/shared/directives/lazy-load-image.directive';
 import { ITEMS_PER_PAGE } from 'app/config/pagination.constants';
-import { SORT } from 'app/config/navigation.constants';
-import { SortService, sortStateSignal } from 'app/shared/sort';
 import { ItemCountComponent } from 'app/shared/pagination';
 import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import { AccountService } from 'app/core/auth/account.service';
@@ -45,48 +42,59 @@ import { LoginModalService } from 'app/core/login/login-modal.service';
   ],
 })
 export class ProductListComponent implements OnInit, OnDestroy {
-  allProducts: IProduct[] = [];
   filteredProducts: IProduct[] = [];
   categories: ICategory[] = [];
+
+  // Filter state
   selectedCategorySlug = 'all';
   searchTerm = '';
+  minPrice: number | null = null;
+  maxPrice: number | null = null;
+  inStockOnly = false;
+  sortOption = 'createdDate,desc';
+
   isLoading = false;
   isSearching = false;
 
   totalItems = 0;
   itemsPerPage = ITEMS_PER_PAGE;
   page!: number;
-  sortState = sortStateSignal({});
+
+  // Track wishlist items for realtime updates
+  private wishlistProductIds = new Set<number>();
 
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
 
-  private cache = new Map<string, { data: IProduct[]; timestamp: number }>();
-  private readonly CACHE_DURATION = 30 * 1000;
-
   private productService = inject(ProductService);
-  private categoryService = inject(CategoryService);
   private utils = inject(UtilsService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private notify = inject(NotificationService);
   private readonly cartService = inject(CartService);
-  private readonly wishlistService = inject(WishlistService);
-  private readonly comparisonService = inject(ProductComparisonService);
-  private sortService = inject(SortService);
+  public readonly wishlistService = inject(WishlistService);
   private accountService = inject(AccountService);
   private loginModalService = inject(LoginModalService);
 
   ngOnInit(): void {
-    this.clearCache();
+    this.loadCategories();
     this.searchSubject
-      .pipe(debounceTime(500), distinctUntilChanged(), takeUntil(this.destroy$))
-      .subscribe((searchTerm) => {
-        this.searchTerm = searchTerm;
-        this.page = 1;
-        this.isSearching = true;
-        this.loadAll();
+      .pipe(debounceTime(400), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.applyFilters();
       });
+
+    // Subscribe to wishlist changes for realtime updates
+    this.wishlistService.items$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((items) => {
+        this.wishlistProductIds = new Set(
+          items
+            .map((item) => item.id)
+            .filter((id): id is number => id !== undefined),
+        );
+      });
+
     this.handleNavigation();
   }
 
@@ -100,77 +108,69 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.searchSubject.next(term);
   }
 
-  getCategoryName(): string {
-    const category = this.categories.find(
-      (c) => c.slug === this.selectedCategorySlug,
-    );
-    return category?.name || '';
-  }
-
-  clearSearch(): void {
-    this.searchTerm = '';
-    this.searchSubject.next('');
+  applyFilters(): void {
+    this.page = 1;
+    this.transition();
   }
 
   clearAllFilters(): void {
     this.searchTerm = '';
     this.selectedCategorySlug = 'all';
-    this.page = 1;
-    this.searchSubject.next('');
-  }
-
-  clearCache(): void {
-    this.cache.clear();
+    this.minPrice = null;
+    this.maxPrice = null;
+    this.inStockOnly = false;
+    this.sortOption = 'createdDate,desc';
+    this.applyFilters();
   }
 
   loadAll(): void {
-    const cacheKey = `${this.page}-${this.selectedCategorySlug}-${this.searchTerm}`;
-    const cached = this.cache.get(cacheKey);
-
-    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
-      this.filteredProducts = cached.data;
-      this.isSearching = false;
-      return;
-    }
-
     this.isLoading = true;
-    forkJoin([
-      this.categoryService.query().pipe(map((res) => res.body ?? [])),
-      this.productService
-        .query({
-          page: this.page - 1,
-          size: this.itemsPerPage,
-          sort: this.sortService.buildSortParam(this.sortState()),
-          ...(this.selectedCategorySlug !== 'all' && {
-            categorySlug: this.selectedCategorySlug,
-          }),
-          ...(this.searchTerm && { 'name.contains': this.searchTerm }),
-        })
-        .pipe(
-          map((res) => {
-            this.totalItems = Number(res.headers.get('X-Total-Count'));
-            return res.body ?? [];
-          }),
-        ),
-    ]).subscribe({
-      next: ([categories, products]) => {
-        this.categories = categories;
-        this.allProducts = products as IProduct[];
-        this.filteredProducts = this.allProducts;
-        this.cache.set(cacheKey, {
-          data: this.allProducts,
-          timestamp: Date.now(),
-        });
-        this.isLoading = false;
-        this.isSearching = false;
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.isSearching = false;
-        console.error('Error loading products:', error);
-        this.notify.error('❌ Không thể tải danh sách sản phẩm!');
-      },
-    });
+    this.productService
+      .query({
+        page: this.page - 1,
+        size: this.itemsPerPage,
+        sort: this.sortOption.split(','),
+        ...(this.selectedCategorySlug !== 'all' && {
+          categorySlug: this.selectedCategorySlug,
+        }),
+        ...(this.searchTerm && { nameContains: this.searchTerm }),
+        ...(this.minPrice != null && { minPrice: this.minPrice }),
+        ...(this.maxPrice != null && { maxPrice: this.maxPrice }),
+        ...(this.inStockOnly && { inStock: true }),
+      })
+      .pipe(
+        tap((res) => {
+          this.totalItems = Number(res.headers.get('X-Total-Count'));
+          this.filteredProducts = res.body ?? [];
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.isSearching = false;
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.isSearching = false;
+          console.error('Error loading products:', error);
+          this.notify.error('❌ Không thể tải danh sách sản phẩm!');
+        },
+      });
+  }
+
+  loadCategories(): void {
+    this.productService
+      .getCategories()
+      .pipe(
+        map((res) => res.body ?? []),
+        map((cats) => {
+          const unclassified = cats.find((c) => c.slug === 'chua-phan-loai');
+          const others = cats.filter((c) => c.slug !== 'chua-phan-loai');
+          return unclassified ? [...others, unclassified] : others;
+        }),
+      )
+      .subscribe((sortedCats) => (this.categories = sortedCats));
   }
 
   addToCart(product: IProduct): void {
@@ -182,26 +182,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
       this.notify.error('❌ Sản phẩm đã hết hàng!');
       return;
     }
-    const currentCartItem = this.cartService
-      .getCartItems()
-      .find((item) => item.product.id === product.id);
-    const currentQtyInCart = currentCartItem ? currentCartItem.quantity : 0;
-    if (currentQtyInCart >= product.quantity) {
-      this.notify.error(
-        `⚠️ Bạn đã có ${currentQtyInCart} sản phẩm này trong giỏ! Tồn kho chỉ còn ${product.quantity}.`,
-      );
-      return;
-    }
     this.cartService.addToCart(product.id!).subscribe(() => {
-      const newTotal = currentQtyInCart + 1;
-      const remaining = product.quantity! - newTotal;
-      if (remaining <= 5 && remaining > 0) {
-        this.notify.warning(
-          `⚠️ Đã thêm vào giỏ hàng! Chỉ còn ${remaining} sản phẩm.`,
-        );
-      } else {
-        this.notify.success('✅ Đã thêm sản phẩm vào giỏ hàng!');
-      }
+      this.notify.success('✅ Đã thêm sản phẩm vào giỏ hàng!');
       this.cartService.loadCart();
     });
   }
@@ -212,49 +194,30 @@ export class ProductListComponent implements OnInit, OnDestroy {
       this.loginModalService.open();
       return;
     }
+    const isInWishlist = this.wishlistService.isInWishlist(product.id!);
     this.wishlistService.toggleWishlist(product).subscribe({
-      next: (added: boolean) => {
-        if (added) {
-          this.notify.success('💖 Đã thêm vào danh sách yêu thích!');
-        } else {
+      next: () => {
+        if (isInWishlist) {
           this.notify.info('💔 Đã xóa khỏi danh sách yêu thích!');
+        } else {
+          this.notify.success('💖 Đã thêm vào danh sách yêu thích!');
         }
-      },
-      error: (error: Error) => {
-        this.notify.error(
-          `❌ Lỗi khi cập nhật danh sách yêu thích: ${error.message}`,
-        );
       },
     });
   }
 
   isInWishlist(productId: number): boolean {
-    return this.wishlistService.isInWishlist(productId);
+    return this.wishlistProductIds.has(productId);
   }
 
-  toggleComparison(product: IProduct, event: Event): void {
-    event.stopPropagation();
-    const added = this.comparisonService.toggleComparison(product);
-    if (added) {
-      this.notify.success('📊 Đã thêm vào danh sách so sánh!');
-    } else {
-      if (this.comparisonService.isFull()) {
-        this.notify.warning('⚠️ Chỉ có thể so sánh tối đa 4 sản phẩm!');
-      } else {
-        this.notify.info('❌ Đã xóa khỏi danh sách so sánh!');
-      }
-    }
-  }
-
-  isInComparison(productId: number): boolean {
-    return this.comparisonService.isInComparison(productId);
+  isInCart(productId: number): boolean {
+    return this.cartService
+      .getCartItems()
+      .some((item) => item.product.id === productId);
   }
 
   formatPrice(price: number | null | undefined): string {
-    if (price === null || price === undefined) {
-      return this.utils.formatPrice(0);
-    }
-    return this.utils.formatPrice(price);
+    return this.utils.formatPrice(price ?? 0);
   }
 
   getProxiedImageUrl(imageUrl: string | null | undefined): string {
@@ -262,17 +225,12 @@ export class ProductListComponent implements OnInit, OnDestroy {
   }
 
   onImageError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    img.src = 'content/images/default-product.svg';
+    (event.target as HTMLImageElement).src =
+      'content/images/default-product.svg';
   }
 
   viewProductDetail(id: number): void {
     this.router.navigate(['/product', id]);
-  }
-
-  onCategoryChange(): void {
-    this.page = 1;
-    this.transition();
   }
 
   transition(): void {
@@ -280,31 +238,37 @@ export class ProductListComponent implements OnInit, OnDestroy {
       relativeTo: this.route,
       queryParams: {
         page: this.page,
-        size: this.itemsPerPage,
-        sort: this.sortService.buildSortParam(this.sortState()),
-        categorySlug:
+        sort: this.sortOption,
+        category:
           this.selectedCategorySlug !== 'all'
             ? this.selectedCategorySlug
             : null,
         search: this.searchTerm || null,
+        minPrice: this.minPrice,
+        maxPrice: this.maxPrice,
+        inStock: this.inStockOnly ? true : null,
       },
       queryParamsHandling: 'merge',
+      replaceUrl: true,
     });
   }
 
   private handleNavigation(): void {
-    combineLatest([this.route.data, this.route.queryParamMap]).subscribe(
-      ([data, params]) => {
-        const page = params.get('page');
-        this.page = +(page ?? 1);
-        this.itemsPerPage = +(params.get('size') ?? ITEMS_PER_PAGE);
-        this.sortState.set(
-          this.sortService.parseSortParam(params.get(SORT) ?? data.defaultSort),
-        );
-        this.selectedCategorySlug = params.get('categorySlug') ?? 'all';
+    combineLatest([this.route.queryParamMap])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([params]) => {
+        this.page = +(params.get('page') ?? 1);
+        this.sortOption = params.get('sort') ?? 'createdDate,desc';
+        this.selectedCategorySlug = params.get('category') ?? 'all';
         this.searchTerm = params.get('search') ?? '';
+        this.minPrice = params.has('minPrice')
+          ? +params.get('minPrice')!
+          : null;
+        this.maxPrice = params.has('maxPrice')
+          ? +params.get('maxPrice')!
+          : null;
+        this.inStockOnly = params.get('inStock') === 'true';
         this.loadAll();
-      },
-    );
+      });
   }
 }

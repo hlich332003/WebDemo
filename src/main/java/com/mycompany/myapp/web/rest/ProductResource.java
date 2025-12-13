@@ -7,6 +7,7 @@ import com.mycompany.myapp.service.ProductService;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -16,8 +17,6 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-// import org.springframework.cache.annotation.CacheEvict; // Tạm thời vô hiệu hóa
-// import org.springframework.cache.annotation.Cacheable; // Tạm thời vô hiệu hóa
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -29,9 +28,6 @@ import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
 import tech.jhipster.web.util.ResponseUtil;
 
-/**
- * REST controller for managing {@link com.mycompany.myapp.domain.Product}.
- */
 @RestController
 @RequestMapping("/api")
 public class ProductResource {
@@ -44,7 +40,6 @@ public class ProductResource {
     private String applicationName;
 
     private final ProductService productService;
-
     private final ProductRepository productRepository;
 
     public ProductResource(ProductService productService, ProductRepository productRepository) {
@@ -54,7 +49,6 @@ public class ProductResource {
 
     @PostMapping("/products")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    // @CacheEvict(value = "products", allEntries = true) // Tạm thời vô hiệu hóa
     public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) throws URISyntaxException {
         log.debug("REST request to save Product : {}", product);
         if (product.getId() != null) {
@@ -68,7 +62,6 @@ public class ProductResource {
 
     @PutMapping("/products/{id}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    // @CacheEvict(value = "products", allEntries = true) // Tạm thời vô hiệu hóa
     public ResponseEntity<Product> updateProduct(
         @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestBody Product product
@@ -80,11 +73,9 @@ public class ProductResource {
         if (!Objects.equals(id, product.getId())) {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
-
         if (!productRepository.existsById(id)) {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
-
         Product result = productService.update(product);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, product.getId().toString()))
@@ -93,7 +84,6 @@ public class ProductResource {
 
     @PatchMapping(value = "/products/{id}", consumes = { "application/json", "application/merge-patch+json" })
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    // @CacheEvict(value = "products", allEntries = true) // Tạm thời vô hiệu hóa
     public ResponseEntity<Product> partialUpdateProduct(
         @PathVariable(value = "id", required = false) final Long id,
         @NotNull @RequestBody Product product
@@ -105,13 +95,10 @@ public class ProductResource {
         if (!Objects.equals(id, product.getId())) {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
-
         if (!productRepository.existsById(id)) {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
-
         Optional<Product> result = productService.partialUpdate(product);
-
         return ResponseUtil.wrapOrNotFound(
             result,
             HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, product.getId().toString())
@@ -119,18 +106,16 @@ public class ProductResource {
     }
 
     @GetMapping("/products")
-    // @Cacheable(value = "products", key = "{#pageable.pageNumber, #pageable.pageSize, #pageable.sort}") // Tạm thời vô hiệu hóa
     public ResponseEntity<List<Product>> getAllProducts(
         @org.springdoc.core.annotations.ParameterObject Pageable pageable,
-        @RequestParam(value = "categorySlug", required = false) String categorySlug,
-        @RequestParam(value = "nameContains", required = false) String nameContains,
+        @RequestParam(required = false) String categorySlug,
+        @RequestParam(required = false) String nameContains,
+        @RequestParam(required = false) BigDecimal minPrice,
+        @RequestParam(required = false) BigDecimal maxPrice,
+        @RequestParam(required = false) Boolean inStock,
         @RequestParam Map<String, String> allRequestParams
     ) {
-        log.debug("REST request to get a page of Products with filters");
-        // Support multiple frontend query param names for backward compatibility:
-        // - nameContains (current)
-        // - name.contains (used by some frontends)
-        // - search (used by navbar)
+        log.debug("REST request to get a page of Products with filters: {}", allRequestParams);
         String resolvedName = nameContains;
         if ((resolvedName == null || resolvedName.isEmpty()) && allRequestParams != null) {
             String p = allRequestParams.get("name.contains");
@@ -145,13 +130,12 @@ public class ProductResource {
             }
         }
 
-        Page<Product> page = productService.findAllWithFilters(pageable, categorySlug, resolvedName);
+        Page<Product> page = productService.findAllWithFilters(pageable, categorySlug, resolvedName, minPrice, maxPrice, inStock);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
     @GetMapping("/products/{id}")
-    // @Cacheable(value = "products", key = "#id") // Tạm thời vô hiệu hóa
     public ResponseEntity<Product> getProduct(@PathVariable Long id) {
         log.debug("REST request to get Product : {}", id);
         Optional<Product> product = productService.findOne(id);
@@ -160,15 +144,11 @@ public class ProductResource {
 
     @DeleteMapping("/products/{id}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    // @CacheEvict(value = "products", allEntries = true) // Tạm thời vô hiệu hóa
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         log.debug("REST request to delete Product : {}", id);
-
-        // Kiểm tra sản phẩm có tồn tại không
         if (!productRepository.existsById(id)) {
             throw new BadRequestAlertException("Sản phẩm không tồn tại", ENTITY_NAME, "idnotfound");
         }
-
         try {
             productService.delete(id);
             return ResponseEntity.noContent()

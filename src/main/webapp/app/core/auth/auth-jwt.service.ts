@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { tap, map, catchError } from 'rxjs/operators';
 
 import { Login } from 'app/login/login.model';
 import { ApplicationConfigService } from '../config/application-config.service';
@@ -38,27 +38,34 @@ export class AuthServerProvider {
   logout(): Observable<void> {
     const token = this.getToken();
 
-    // Nếu có token, gọi API backend để blacklist
+    const logoutAndCleanup = () => {
+      this.stateStorageService.clearAuthenticationToken();
+    };
+
     if (token) {
+      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
       return this.http
         .post<void>(
           this.applicationConfigService.getEndpointFor('api/account/logout'),
           {},
+          { headers },
         )
         .pipe(
           tap(() => {
-            console.log('✅ Token đã được blacklist trên server');
-            this.stateStorageService.clearAuthenticationToken();
+            console.log('✅ Token has been blacklisted on the server');
+            logoutAndCleanup();
+          }),
+          catchError((error) => {
+            console.error('Error blacklisting token, logging out client-side anyway.', error);
+            logoutAndCleanup();
+            return of(undefined); // Ensure the stream completes
           }),
           map(() => undefined),
         );
     }
 
-    // Nếu không có token, chỉ clear local storage
-    return new Observable((observer) => {
-      this.stateStorageService.clearAuthenticationToken();
-      observer.complete();
-    });
+    logoutAndCleanup();
+    return of(undefined);
   }
 
   private authenticateSuccess(response: JwtToken, rememberMe: boolean): void {

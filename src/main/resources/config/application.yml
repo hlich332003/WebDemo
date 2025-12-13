@@ -92,8 +92,8 @@ spring:
     mail:
         host: ${SPRING_MAIL_HOST:smtp.gmail.com} # Thay đổi: đọc từ biến môi trường hoặc default smtp.gmail.com
         port: ${SPRING_MAIL_PORT:587} # Cổng SMTP, thường là 587 cho TLS hoặc 465 cho SSL
-        username: ${SPRING_MAIL_USERNAME:}
-        password: ${SPRING_MAIL_PASSWORD:}
+        username: catbamaytongdai@gmail.com
+        password: rpoq lwsq myyg mkwe
         properties:
             mail.smtp.auth: true
             mail.smtp.starttls.enable: true # Bật STARTTLS để mã hóa kết nối

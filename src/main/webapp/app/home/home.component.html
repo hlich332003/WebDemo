@@ -9,7 +9,7 @@
 >
   <div class="hero-overlay"></div>
   <div class="hero-content">
-    <h1 class="hero-title">WelCome</h1>
+    <h1 class="hero-title">Welcome</h1>
     <p class="hero-subtitle">Cửa hàng điện tử & công nghệ hàng đầu Việt Nam</p>
 
     @if (account()?.authorities?.includes('ROLE_ADMIN')) {
@@ -18,22 +18,22 @@
         Bạn đang đăng nhập với quyền Admin
       </div>
       <div class="hero-actions">
-        <a routerLink="/admin" class="btn btn-primary">
+        <a routerLink="/admin" class="btn btn-primary btn-lg">
           <fa-icon icon="cog"></fa-icon>
           Quản lý hệ thống
         </a>
-        <a routerLink="/products" class="btn btn-outline">
+        <a routerLink="/products" class="btn btn-outline-light btn-lg">
           <fa-icon icon="eye"></fa-icon>
           Xem cửa hàng
         </a>
       </div>
     } @else {
       <div class="hero-actions">
-        <a routerLink="/products" class="btn btn-primary">
+        <a routerLink="/products" class="btn btn-primary btn-lg">
           <fa-icon icon="shopping-cart"></fa-icon>
           Mua sắm ngay
         </a>
-        <a routerLink="/cart" class="btn btn-outline">
+        <a routerLink="/cart" class="btn btn-outline-light btn-lg">
           <fa-icon icon="shopping-cart"></fa-icon>
           Xem giỏ hàng
         </a>
@@ -53,7 +53,7 @@
         class="icon-card"
       >
         <div class="icon-wrapper">
-          <fa-icon [icon]="['fas', 'tags']" class="category-icon"></fa-icon>
+          <fa-icon [icon]="getCategoryIcon(category.slug)" class="category-icon"></fa-icon>
         </div>
         <span class="icon-label">{{ category.name }}</span>
       </a>
@@ -65,20 +65,22 @@
 <section class="best-sellers">
   <h2 class="section-title">🔥 Sản Phẩm Bán Chạy</h2>
   <div class="product-grid">
-    @if (bestSellerProducts.length === 0) {
-      <p>Đang cập nhật...</p>
+    @if (isLoading) {
+      <p>Đang tải...</p>
+    } @else if (bestSellerProducts.length === 0) {
+      <p>Chưa có sản phẩm bán chạy nào.</p>
     } @else {
       @for (product of bestSellerProducts; track product.id; let idx = $index) {
         <div class="product-card">
           <img
             [src]="getProxiedImageUrl(product.imageUrl)"
             [alt]="product.name"
-            [attr.loading]="idx < 4 ? 'eager' : 'lazy'"
-            (click)="viewProductDetail(product.id)"
+            [attr.loading]="idx < 5 ? 'eager' : 'lazy'"
+            (click)="viewProductDetail(product.id!)"
             (error)="onImageError($event)"
           />
           <div class="product-info">
-            <h4 class="product-name" (click)="viewProductDetail(product.id)">
+            <h4 class="product-name" (click)="viewProductDetail(product.id!)">
               {{ product.name }}
             </h4>
             <p class="product-price">{{ formatPrice(product.price) }}</p>
@@ -97,18 +99,19 @@
               <button
                 type="button"
                 (click)="toggleWishlist(product, $event)"
-                class="btn btn-sm"
-                [class.btn-danger]="isInWishlist(product.id!)"
-                [class.btn-outline-danger]="!isInWishlist(product.id!)"
+                class="btn-wishlist"
+                [class.in-wishlist]="isInWishlist(product.id!)"
+                title="Yêu thích"
               >
                 <fa-icon icon="heart"></fa-icon>
               </button>
               <button
-                class="btn btn-sm btn-success"
+                class="btn btn-sm btn-success flex-grow-1"
                 (click)="addToCart(product)"
                 [disabled]="product.quantity === 0"
               >
-                {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm vào giỏ' }}
+                <fa-icon icon="cart-plus"></fa-icon>
+                {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm giỏ' }}
               </button>
             </div>
           </div>
@@ -121,22 +124,24 @@
 <!-- Sản phẩm mới -->
 <section class="new-products">
   <h2 class="section-title">✨ Sản Phẩm Mới</h2>
-  <div class="product-grid-compact">
-    @if (newProducts.length === 0) {
+  <div class="product-grid">
+    @if (isLoading) {
+      <p>Đang tải...</p>
+    } @else if (newProducts.length === 0) {
       <p>Đang cập nhật sản phẩm mới...</p>
     } @else {
       @for (product of newProducts; track product.id) {
-        <div class="product-card-sm">
+        <div class="product-card">
           <div class="badge-new">NEW</div>
           <img
             [src]="getProxiedImageUrl(product.imageUrl)"
             [alt]="product.name"
             loading="lazy"
-            (click)="viewProductDetail(product.id)"
+            (click)="viewProductDetail(product.id!)"
             (error)="onImageError($event)"
           />
           <div class="product-info">
-            <h4 class="product-name" (click)="viewProductDetail(product.id)">
+            <h4 class="product-name" (click)="viewProductDetail(product.id!)">
               {{ product.name }}
             </h4>
             <p class="product-price">{{ formatPrice(product.price) }}</p>
@@ -155,23 +160,78 @@
               <button
                 type="button"
                 (click)="toggleWishlist(product, $event)"
-                class="btn btn-sm"
-                [class.btn-danger]="isInWishlist(product.id!)"
-                [class.btn-outline-danger]="!isInWishlist(product.id!)"
+                class="btn-wishlist"
+                [class.in-wishlist]="isInWishlist(product.id!)"
+                title="Yêu thích"
               >
                 <fa-icon icon="heart"></fa-icon>
               </button>
               <button
-                class="btn btn-sm btn-success"
+                class="btn btn-sm btn-success flex-grow-1"
                 (click)="addToCart(product)"
                 [disabled]="product.quantity === 0"
               >
-                {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm vào giỏ' }}
+                <fa-icon icon="cart-plus"></fa-icon>
+                {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm giỏ' }}
               </button>
             </div>
           </div>
         </div>
       }
+    }
+  </div>
+</section>
+
+<!-- Sản phẩm đã xem gần đây -->
+<section class="recently-viewed" *ngIf="recentlyViewedProducts.length > 0">
+  <h2 class="section-title">👁️ Sản Phẩm Đã Xem Gần Đây</h2>
+  <div class="product-grid">
+    @for (product of recentlyViewedProducts; track product.id) {
+      <div class="product-card">
+        <img
+          [src]="getProxiedImageUrl(product.imageUrl)"
+          [alt]="product.name"
+          loading="lazy"
+          (click)="viewProductDetail(product.id!)"
+          (error)="onImageError($event)"
+        />
+        <div class="product-info">
+          <h4 class="product-name" (click)="viewProductDetail(product.id!)">
+            {{ product.name }}
+          </h4>
+          <p class="product-price">{{ formatPrice(product.price) }}</p>
+          @if (product.quantity !== null && product.quantity !== undefined) {
+            @if (product.quantity === 0) {
+              <p class="stock text-danger fw-bold">❌ Hết hàng</p>
+            } @else if (product.quantity < 10) {
+              <p class="stock text-warning">
+                ⚠️ Chỉ còn {{ product.quantity }}
+              </p>
+            } @else {
+              <p class="stock text-muted">Kho: {{ product.quantity }}</p>
+            }
+          }
+          <div class="product-buttons">
+            <button
+              type="button"
+              (click)="toggleWishlist(product, $event)"
+              class="btn-wishlist"
+              [class.in-wishlist]="isInWishlist(product.id!)"
+              title="Yêu thích"
+            >
+              <fa-icon icon="heart"></fa-icon>
+            </button>
+            <button
+              class="btn btn-sm btn-success flex-grow-1"
+              (click)="addToCart(product)"
+              [disabled]="product.quantity === 0"
+            >
+              <fa-icon icon="cart-plus"></fa-icon>
+              {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm giỏ' }}
+            </button>
+          </div>
+        </div>
+      </div>
     }
   </div>
 </section>
@@ -187,20 +247,21 @@
       @for (category of featuredCategories; track category.id) {
         <div class="category-card">
           <h3 class="category-title">{{ category.name }}</h3>
-          <div class="product-preview-grid">
-            @for (product of category.products?.slice(0, 8); track product.id) {
-              <div class="product-card-sm">
+          <div class="product-grid">
+            @if (category.products && category.products.length > 0) {
+              @for (product of category.products; track product.id) {
+              <div class="product-card">
                 <img
                   [src]="getProxiedImageUrl(product.imageUrl)"
                   [alt]="product.name"
                   loading="lazy"
-                  (click)="viewProductDetail(product.id)"
+                  (click)="viewProductDetail(product.id!)"
                   (error)="onImageError($event)"
                 />
                 <div class="product-info">
                   <h4
                     class="product-name"
-                    (click)="viewProductDetail(product.id)"
+                    (click)="viewProductDetail(product.id!)"
                   >
                     {{ product.name }}
                   </h4>
@@ -224,30 +285,36 @@
                     <button
                       type="button"
                       (click)="toggleWishlist(product, $event)"
-                      class="btn btn-sm"
-                      [class.btn-danger]="isInWishlist(product.id!)"
-                      [class.btn-outline-danger]="!isInWishlist(product.id!)"
+                      class="btn-wishlist"
+                      [class.in-wishlist]="isInWishlist(product.id!)"
+                      title="Yêu thích"
                     >
                       <fa-icon icon="heart"></fa-icon>
                     </button>
                     <button
-                      class="btn btn-sm btn-success"
+                      class="btn btn-sm btn-success flex-grow-1"
                       (click)="addToCart(product)"
                       [disabled]="product.quantity === 0"
                     >
-                      {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm vào giỏ' }}
+                      <fa-icon icon="cart-plus"></fa-icon>
+                      {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm giỏ' }}
                     </button>
                   </div>
                 </div>
               </div>
+              }
+            } @else {
+              <p class="text-muted">Không có sản phẩm nào trong danh mục này.</p>
             }
           </div>
           <a
             [routerLink]="['/products']"
             [queryParams]="{ categorySlug: category.slug }"
-            class="view-all-link"
-            >Xem thêm →</a
-          >
+            class="btn btn-primary btn-lg mt-3"
+            >
+            <fa-icon icon="arrow-right"></fa-icon>
+            Xem thêm
+          </a>
         </div>
       }
     }

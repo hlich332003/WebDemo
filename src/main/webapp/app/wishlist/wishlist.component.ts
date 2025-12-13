@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -19,7 +19,7 @@ import { LoginModalService } from 'app/core/login/login-modal.service';
   styleUrls: ['./wishlist.component.scss'],
   imports: [CommonModule, RouterModule, FontAwesomeModule],
 })
-export class WishlistComponent {
+export class WishlistComponent implements OnInit {
   public wishlistService = inject(WishlistService);
   private cartService = inject(CartService);
   private utils = inject(UtilsService);
@@ -29,6 +29,10 @@ export class WishlistComponent {
   private loginModalService = inject(LoginModalService);
 
   wishlistItems$: Observable<IProduct[]> = this.wishlistService.items$;
+
+  ngOnInit(): void {
+    this.wishlistService.loadWishlist();
+  }
 
   removeFromWishlist(product: IProduct): void {
     this.wishlistService.toggleWishlist(product).subscribe({
@@ -54,6 +58,10 @@ export class WishlistComponent {
       this.notify.success('✅ Đã thêm vào giỏ hàng!');
       this.cartService.loadCart();
     });
+  }
+
+  isInCart(productId: number): boolean {
+    return this.cartService.getCartItems().some(item => item.product.id === productId);
   }
 
   viewProductDetail(productId: number): void {

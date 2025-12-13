@@ -1,10 +1,12 @@
 package com.mycompany.myapp.service;
 
+import com.mycompany.myapp.domain.Cart;
 import com.mycompany.myapp.domain.Order;
 import com.mycompany.myapp.domain.OrderItem;
 import com.mycompany.myapp.domain.Product;
-//import com.mycompany.myapp.domain.User;
-import com.mycompany.myapp.domain.enumeration.OrderStatus; // Import OrderStatus
+import com.mycompany.myapp.domain.User;
+import com.mycompany.myapp.domain.enumeration.OrderStatus;
+import com.mycompany.myapp.repository.CartRepository;
 import com.mycompany.myapp.repository.OrderItemRepository;
 import com.mycompany.myapp.repository.OrderRepository;
 import com.mycompany.myapp.repository.ProductRepository;
@@ -37,7 +39,7 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
-    // private final NotificationService notificationService; // Removed
+    private final CartRepository cartRepository;
     private final MessageProducer messageProducer;
 
     public OrderService(
@@ -45,14 +47,14 @@ public class OrderService {
         OrderItemRepository orderItemRepository,
         ProductRepository productRepository,
         UserRepository userRepository,
-        // NotificationService notificationService, // Removed
+        CartRepository cartRepository,
         MessageProducer messageProducer
     ) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
-        // this.notificationService = notificationService; // Removed
+        this.cartRepository = cartRepository;
         this.messageProducer = messageProducer;
     }
 
@@ -71,14 +73,13 @@ public class OrderService {
         Order order = new Order();
         order.setOrderDate(Instant.now());
         order.setTotalAmount(orderDTO.getTotalAmount());
-        order.setStatus(OrderStatus.PENDING); // Đặt trạng thái ban đầu bằng Enum
+        order.setStatus(OrderStatus.PENDING);
         order.setOrderCode("ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         order.setNotes(orderDTO.getNotes());
 
-        // Lấy thông tin người dùng hiện tại và thiết lập cho đơn hàng nếu có
-        SecurityUtils.getCurrentUserLogin().flatMap(userRepository::findOneWithAuthoritiesByEmailOrPhone).ifPresent(order::setCustomer);
+        Optional<User> currentUser = SecurityUtils.getCurrentUserLogin().flatMap(userRepository::findOneWithAuthoritiesByEmailOrPhone);
+        currentUser.ifPresent(order::setCustomer);
 
-        // Điền thông tin khách hàng từ DTO
         if (orderDTO.getCustomerInfo() != null) {
             order.setCustomerFullName(orderDTO.getCustomerInfo().getFullName());
             order.setCustomerEmail(orderDTO.getCustomerInfo().getEmail());
@@ -87,17 +88,13 @@ public class OrderService {
             order.setPaymentMethod(orderDTO.getCustomerInfo().getPaymentMethod());
         }
 
-        // Lưu đơn hàng trước để có ID cho OrderItem
         Order savedOrder = orderRepository.save(order);
 
         Set<OrderItem> orderItems = new HashSet<>();
         for (OrderItemDTO itemDTO : orderDTO.getItems()) {
-            Optional<Product> productOptional = productRepository.findById(itemDTO.getProductId());
-            if (productOptional.isEmpty()) {
-                log.warn("Product with ID {} not found, skipping", itemDTO.getProductId());
-                continue;
-            }
-            Product product = productOptional.get();
+            Product product = productRepository
+                .findById(itemDTO.getProductId())
+                .orElseThrow(() -> new BadRequestAlertException("Product not found", "order", "productNotFound"));
 
             if (product.getQuantity() < itemDTO.getQuantity()) {
                 throw new BadRequestAlertException(
@@ -116,15 +113,24 @@ public class OrderService {
             orderItems.add(orderItem);
 
             product.setQuantity(product.getQuantity() - itemDTO.getQuantity());
+            product.setSalesCount(product.getSalesCount() + itemDTO.getQuantity());
             productRepository.save(product);
         }
         orderItemRepository.saveAll(orderItems);
         savedOrder.setItems(orderItems);
 
-        // Define customerName here for use in OrderEventDTO
+        // Clear the user's cart
+        currentUser.ifPresent(user -> {
+            cartRepository
+                .findOneByUser_Email(user.getEmail())
+                .ifPresent(cart -> {
+                    log.debug("Deleting cart {} for user {}", cart.getId(), user.getEmail());
+                    cartRepository.delete(cart);
+                });
+        });
+
         String customerName = savedOrder.getCustomerFullName() != null ? savedOrder.getCustomerFullName() : "Khách hàng";
 
-        // Gửi message vào RabbitMQ để gửi email bất đồng bộ
         OrderEventDTO orderEvent = new OrderEventDTO(
             savedOrder.getId(),
             savedOrder.getOrderCode(),

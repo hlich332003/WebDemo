@@ -1,15 +1,16 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 
 import { isPresent } from 'app/core/util/operators';
 import { ApplicationConfigService } from 'app/core/config/application-config.service';
 import { createRequestOption } from 'app/core/request/request-util';
 import { IProduct, NewProduct } from './product.model';
+import { ICategory } from './category.model';
 
 export type EntityResponseType = HttpResponse<IProduct>;
 export type EntityArrayResponseType = HttpResponse<IProduct[]>;
+export type CategoryArrayResponseType = HttpResponse<ICategory[]>;
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
@@ -18,6 +19,12 @@ export class ProductService {
 
   protected resourceUrl =
     this.applicationConfigService.getEndpointFor('api/products');
+  protected publicResourceUrl =
+    this.applicationConfigService.getEndpointFor('api/public/products');
+  protected categoryResourceUrl =
+    this.applicationConfigService.getEndpointFor('api/categories');
+  protected publicCategoryResourceUrl =
+    this.applicationConfigService.getEndpointFor('api/public/categories');
 
   create(product: NewProduct): Observable<EntityResponseType> {
     return this.http.post<IProduct>(this.resourceUrl, product, {
@@ -54,6 +61,14 @@ export class ProductService {
       observe: 'response',
     });
   }
+  
+  queryPublic(req?: any): Observable<EntityArrayResponseType> {
+    const options = createRequestOption(req);
+    return this.http.get<IProduct[]>(this.publicResourceUrl, {
+      params: options,
+      observe: 'response',
+    });
+  }
 
   delete(id: number): Observable<HttpResponse<{}>> {
     return this.http.delete(`${this.resourceUrl}/${id}`, {
@@ -71,6 +86,22 @@ export class ProductService {
 
   getFeaturedProducts(): Observable<EntityArrayResponseType> {
     return this.http.get<IProduct[]>(`${this.resourceUrl}/featured`, {
+      observe: 'response',
+    });
+  }
+
+  getCategories(req?: any): Observable<CategoryArrayResponseType> {
+    const options = createRequestOption(req);
+    return this.http.get<ICategory[]>(this.categoryResourceUrl, {
+      params: options,
+      observe: 'response',
+    });
+  }
+  
+  getPublicCategories(req?: any): Observable<CategoryArrayResponseType> {
+    const options = createRequestOption(req);
+    return this.http.get<ICategory[]>(this.publicCategoryResourceUrl, {
+      params: options,
       observe: 'response',
     });
   }

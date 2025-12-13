@@ -65,7 +65,7 @@ public class EmailConsumer {
 
         log.info("Sending order confirmation email to: {}", event.getCustomerEmail());
         log.info("Email content:\n{}", content);
-        // mailService.sendEmail(event.getCustomerEmail(), subject, content, false, false);
+        mailService.sendEmail(event.getCustomerEmail(), subject, content, false, false);
     }
 
     private void sendWelcomeEmail(UserRegistrationEventDTO event) {
@@ -106,6 +106,6 @@ public class EmailConsumer {
         log.info("Sending activation email to: {}", event.getEmail());
         log.info("Activation link: {}", activationLink);
         log.info("Email content:\n{}", content);
-        // mailService.sendEmail(event.getEmail(), subject, content, false, false);
+        mailService.sendEmail(event.getEmail(), subject, content, false, false);
     }
 }

@@ -41,6 +41,9 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
     @Column(name = "image_url", length = 1024)
     private String imageUrl;
 
+    @Column(name = "sales_count", nullable = false, columnDefinition = "int default 0")
+    private Integer salesCount = 0;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "category_id", nullable = false)
     @JsonIgnoreProperties(value = { "products", "hibernateLazyInitializer", "handler" }, allowSetters = true)
@@ -96,6 +99,14 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
         this.imageUrl = imageUrl;
     }
 
+    public Integer getSalesCount() {
+        return salesCount;
+    }
+
+    public void setSalesCount(Integer salesCount) {
+        this.salesCount = salesCount;
+    }
+
     public Category getCategory() {
         return category;
     }
@@ -139,6 +150,8 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
             ", imageUrl='" +
             getImageUrl() +
             "'" +
+            ", salesCount=" +
+            getSalesCount() +
             "}"
         );
     }

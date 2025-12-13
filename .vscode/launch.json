@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Debug Spring Boot",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.mycompany.WebDemoApp",
+      "projectName": "WebDemo",
+      "args": [],
+      "vmArgs": "-Dspring.profiles.active=dev"
+    },
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "Run Angular Dev Server",
+      "cwd": "${workspaceFolder}/WebDemo/src/main/webapp",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start"],
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Run Backend + Frontend",
+      "configurations": ["Debug Spring Boot", "Run Angular Dev Server"]
+    }
+  ]
+}

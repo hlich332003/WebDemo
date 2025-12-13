@@ -1,6 +1,8 @@
 @use 'variables' as vars; // Đã đổi alias thành vars
 @use 'sass:color';
 @use 'loading-states';
+@use 'buttons';
+@use 'wishlist-button';
 
 /* ==========================================================================
    Global styles
@@ -19,7 +21,7 @@ h4,
 h5,
 h6 {
   font-weight: 600;
-  color: vars.$body-color; // Đổi sang màu tím đậm để dễ đọc trên nền hồng tím nhạt
+  color: vars.$body-color;
 }
 
 /* Navbar overrides - FORCE white text with highest specificity */

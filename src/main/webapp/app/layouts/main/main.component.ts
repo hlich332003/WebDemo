@@ -15,8 +15,6 @@ import { NavbarComponent } from '../navbar/navbar.component';
   styleUrls: ['./main.component.scss'],
   imports: [
     RouterOutlet,
-    PageRibbonComponent,
-    NavbarComponent,
     FooterComponent,
   ],
 })

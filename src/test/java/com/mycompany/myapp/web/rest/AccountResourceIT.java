@@ -41,6 +41,8 @@ import org.springframework.transaction.annotation.Transactional;
 class AccountResourceIT {
 
     static final String TEST_USER_EMAIL = "test@localhost";
+    static final String TEST_USER_PHONE = "1234567890";
+
 
     @Autowired
     private ObjectMapper om;
@@ -95,6 +97,7 @@ class AccountResourceIT {
         user.setFirstName("john");
         user.setLastName("doe");
         user.setEmail(TEST_USER_EMAIL);
+        user.setPhone(TEST_USER_PHONE);
         user.setImageUrl("http://placehold.it/50x50");
         user.setLangKey("en");
         user.setAuthorities(authorities);
@@ -105,6 +108,7 @@ class AccountResourceIT {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.email").value(TEST_USER_EMAIL))
+            .andExpect(jsonPath("$.phone").value(TEST_USER_PHONE))
             .andExpect(jsonPath("$.firstName").value("john"))
             .andExpect(jsonPath("$.lastName").value("doe"))
             .andExpect(jsonPath("$.imageUrl").value("http://placehold.it/50x50"))
@@ -127,6 +131,7 @@ class AccountResourceIT {
         validUser.setFirstName("Alice");
         validUser.setLastName("Test");
         validUser.setEmail("test-register-valid@example.com");
+        validUser.setPhone("111222333");
         validUser.setImageUrl("http://placehold.it/50x50");
         validUser.setLangKey(Constants.DEFAULT_LANGUAGE);
         validUser.setAuthorities(Collections.singleton(AuthoritiesConstants.USER));
@@ -143,9 +148,9 @@ class AccountResourceIT {
 
     static Stream<ManagedUserVM> invalidUsers() {
         return Stream.of(
-            createInvalidUser("password", "Bob", "Green", "invalid", true), // <-- invalid email
-            createInvalidUser("123", "Bob", "Green", "bob@example.com", true), // password with only 3 digits
-            createInvalidUser(null, "Bob", "Green", "bob@example.com", true) // invalid null password
+            createInvalidUser("password", "Bob", "Green", "invalid", "123456789", true), // <-- invalid email
+            createInvalidUser("123", "Bob", "Green", "bob@example.com", "123456789", true), // password with only 3 digits
+            createInvalidUser(null, "Bob", "Green", "bob@example.com", "123456789", true) // invalid null password
         );
     }
 
@@ -161,12 +166,13 @@ class AccountResourceIT {
         assertThat(user).isEmpty();
     }
 
-    private static ManagedUserVM createInvalidUser(String password, String firstName, String lastName, String email, boolean activated) {
+    private static ManagedUserVM createInvalidUser(String password, String firstName, String lastName, String email, String phone, boolean activated) {
         ManagedUserVM invalidUser = new ManagedUserVM();
         invalidUser.setPassword(password);
         invalidUser.setFirstName(firstName);
         invalidUser.setLastName(lastName);
         invalidUser.setEmail(email);
+        invalidUser.setPhone(phone);
         invalidUser.setActivated(activated);
         invalidUser.setImageUrl("http://placehold.it/50x50");
         invalidUser.setLangKey(Constants.DEFAULT_LANGUAGE);
@@ -183,6 +189,7 @@ class AccountResourceIT {
         firstUser.setFirstName("Alice");
         firstUser.setLastName("Test");
         firstUser.setEmail("test-register-duplicate-email@example.com");
+        firstUser.setPhone("123456789");
         firstUser.setImageUrl("http://placehold.it/50x50");
         firstUser.setLangKey(Constants.DEFAULT_LANGUAGE);
         firstUser.setAuthorities(Collections.singleton(AuthoritiesConstants.USER));
@@ -201,6 +208,7 @@ class AccountResourceIT {
         secondUser.setFirstName(firstUser.getFirstName());
         secondUser.setLastName(firstUser.getLastName());
         secondUser.setEmail(firstUser.getEmail());
+        secondUser.setPhone("987654321"); // Different phone
         secondUser.setImageUrl(firstUser.getImageUrl());
         secondUser.setLangKey(firstUser.getLangKey());
         secondUser.setAuthorities(firstUser.getAuthorities());
@@ -219,6 +227,7 @@ class AccountResourceIT {
         userWithUpperCaseEmail.setFirstName(firstUser.getFirstName());
         userWithUpperCaseEmail.setLastName(firstUser.getLastName());
         userWithUpperCaseEmail.setEmail("TEST-register-duplicate-email@example.com");
+        userWithUpperCaseEmail.setPhone("112233445"); // Different phone
         userWithUpperCaseEmail.setImageUrl(firstUser.getImageUrl());
         userWithUpperCaseEmail.setLangKey(firstUser.getLangKey());
         userWithUpperCaseEmail.setAuthorities(firstUser.getAuthorities());
@@ -245,12 +254,77 @@ class AccountResourceIT {
 
     @Test
     @Transactional
+    void testRegisterDuplicatePhone() throws Exception {
+        // First user
+        ManagedUserVM firstUser = new ManagedUserVM();
+        firstUser.setPassword("password");
+        firstUser.setFirstName("Alice");
+        firstUser.setLastName("Test");
+        firstUser.setEmail("test-register-duplicate-phone1@example.com");
+        firstUser.setPhone("1234567890");
+        firstUser.setImageUrl("http://placehold.it/50x50");
+        firstUser.setLangKey(Constants.DEFAULT_LANGUAGE);
+        firstUser.setAuthorities(Collections.singleton(AuthoritiesConstants.USER));
+
+        // Register first user
+        restAccountMockMvc
+            .perform(post("/api/register").contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(firstUser)))
+            .andExpect(status().isCreated());
+
+        Optional<User> testUser1 = userRepository.findOneByPhone("1234567890");
+        assertThat(testUser1).isPresent();
+
+        // Duplicate phone, different email
+        ManagedUserVM secondUser = new ManagedUserVM();
+        secondUser.setPassword(firstUser.getPassword());
+        secondUser.setFirstName(firstUser.getFirstName());
+        secondUser.setLastName(firstUser.getLastName());
+        secondUser.setEmail("test-register-duplicate-phone2@example.com");
+        secondUser.setPhone(firstUser.getPhone());
+        secondUser.setImageUrl(firstUser.getImageUrl());
+        secondUser.setLangKey(firstUser.getLangKey());
+        secondUser.setAuthorities(firstUser.getAuthorities());
+
+        // Register second (non activated) user
+        restAccountMockMvc
+            .perform(post("/api/register").contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(secondUser)))
+            .andExpect(status().isCreated());
+
+        Optional<User> testUser2 = userRepository.findOneByPhone("1234567890");
+        assertThat(testUser2).isPresent();
+        assertThat(testUser2.get().getEmail()).isEqualTo("test-register-duplicate-phone2@example.com");
+
+        testUser2.get().setActivated(true);
+        userService.updateUser(new AdminUserDTO(testUser2.get()));
+
+        // Register third user with same phone (now activated)
+        ManagedUserVM thirdUser = new ManagedUserVM();
+        thirdUser.setPassword(firstUser.getPassword());
+        thirdUser.setFirstName(firstUser.getFirstName());
+        thirdUser.setLastName(firstUser.getLastName());
+        thirdUser.setEmail("test-register-duplicate-phone3@example.com");
+        thirdUser.setPhone(firstUser.getPhone());
+        thirdUser.setImageUrl(firstUser.getImageUrl());
+        thirdUser.setLangKey(firstUser.getLangKey());
+        thirdUser.setAuthorities(firstUser.getAuthorities());
+
+        restAccountMockMvc
+            .perform(post("/api/register").contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(thirdUser)))
+            .andExpect(status().is4xxClientError());
+
+        userService.deleteUser("test-register-duplicate-phone2@example.com");
+    }
+
+
+    @Test
+    @Transactional
     void testRegisterAdminIsIgnored() throws Exception {
         ManagedUserVM validUser = new ManagedUserVM();
         validUser.setPassword("password");
         validUser.setFirstName("Bad");
         validUser.setLastName("Guy");
         validUser.setEmail("badguy@example.com");
+        validUser.setPhone("111111111");
         validUser.setActivated(true);
         validUser.setImageUrl("http://placehold.it/50x50");
         validUser.setLangKey(Constants.DEFAULT_LANGUAGE);
@@ -279,7 +353,7 @@ class AccountResourceIT {
         user.setActivationKey(activationKey);
         user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
 
-        userRepository.saveAndFlush(user);
+        userRepository.save(user);
 
         restAccountMockMvc.perform(get("/api/activate?key={activationKey}", activationKey)).andExpect(status().isOk());
 
@@ -304,7 +378,7 @@ class AccountResourceIT {
         user.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));
         user.setActivated(true);
         user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
-        userRepository.saveAndFlush(user);
+        userRepository.save(user);
 
         AdminUserDTO userDTO = new AdminUserDTO();
         userDTO.setFirstName("firstname");
@@ -342,7 +416,7 @@ class AccountResourceIT {
         user.setActivated(true);
         user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
 
-        userRepository.saveAndFlush(user);
+        userRepository.save(user);
 
         AdminUserDTO userDTO = new AdminUserDTO();
         userDTO.setFirstName("firstname");
@@ -371,7 +445,7 @@ class AccountResourceIT {
         user.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));
         user.setActivated(true);
         user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
-        userRepository.saveAndFlush(user);
+        userRepository.save(user);
 
         User anotherUser = new User();
         anotherUser.setEmail("save-existing-email2@example.com");
@@ -379,7 +453,7 @@ class AccountResourceIT {
         anotherUser.setActivated(true);
         anotherUser.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
 
-        userRepository.saveAndFlush(anotherUser);
+        userRepository.save(anotherUser);
 
         AdminUserDTO userDTO = new AdminUserDTO();
         userDTO.setFirstName("firstname");
@@ -410,7 +484,7 @@ class AccountResourceIT {
         user.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));
         user.setActivated(true);
         user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
-        userRepository.saveAndFlush(user);
+        userRepository.save(user);
 
         AdminUserDTO userDTO = new AdminUserDTO();
         userDTO.setFirstName("firstname");
@@ -440,7 +514,7 @@ class AccountResourceIT {
         user.setPassword(passwordEncoder.encode(currentPassword));
         user.setEmail("change-password-wrong-existing-password@example.com");
         user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
-        userRepository.saveAndFlush(user);
+        userRepository.save(user);
 
         restAccountMockMvc
             .perform(
@@ -466,7 +540,7 @@ class AccountResourceIT {
         user.setPassword(passwordEncoder.encode(currentPassword));
         user.setEmail("change-password@example.com");
         user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
-        userRepository.saveAndFlush(user);
+        userRepository.save(user);
 
         restAccountMockMvc
             .perform(
@@ -491,7 +565,7 @@ class AccountResourceIT {
         user.setPassword(passwordEncoder.encode(currentPassword));
         user.setEmail("change-password-too-small@example.com");
         user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
-        userRepository.saveAndFlush(user);
+        userRepository.save(user);
 
         String newPassword = RandomStringUtils.insecure().next(ManagedUserVM.PASSWORD_MIN_LENGTH - 1);
 
@@ -518,7 +592,7 @@ class AccountResourceIT {
         user.setPassword(passwordEncoder.encode(currentPassword));
         user.setEmail("change-password-too-long@example.com");
         user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
-        userRepository.saveAndFlush(user);
+        userRepository.save(user);
 
         String newPassword = RandomStringUtils.insecure().next(ManagedUserVM.PASSWORD_MAX_LENGTH + 1);
 
@@ -545,7 +619,7 @@ class AccountResourceIT {
         user.setPassword(passwordEncoder.encode(currentPassword));
         user.setEmail("change-password-empty@example.com");
         user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
-        userRepository.saveAndFlush(user);
+        userRepository.save(user);
 
         restAccountMockMvc
             .perform(
@@ -570,7 +644,7 @@ class AccountResourceIT {
         user.setEmail("password-reset@example.com");
         user.setLangKey("en");
         user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
-        userRepository.saveAndFlush(user);
+        userRepository.save(user);
 
         restAccountMockMvc
             .perform(post("/api/account/reset-password/init").content("password-reset@example.com"))
@@ -588,7 +662,7 @@ class AccountResourceIT {
         user.setEmail("password-reset-upper-case@example.com");
         user.setLangKey("en");
         user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
-        userRepository.saveAndFlush(user);
+        userRepository.save(user);
 
         restAccountMockMvc
             .perform(post("/api/account/reset-password/init").content("password-reset-upper-case@EXAMPLE.COM"))
@@ -613,7 +687,7 @@ class AccountResourceIT {
         user.setResetDate(Instant.now().plusSeconds(60));
         user.setResetKey("reset key");
         user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
-        userRepository.saveAndFlush(user);
+        userRepository.save(user);
 
         KeyAndPasswordVM keyAndPassword = new KeyAndPasswordVM();
         keyAndPassword.setKey(user.getResetKey());
@@ -642,7 +716,7 @@ class AccountResourceIT {
         user.setResetDate(Instant.now().plusSeconds(60));
         user.setResetKey("reset key too small");
         user.setAuthority(authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow());
-        userRepository.saveAndFlush(user);
+        userRepository.save(user);
 
         KeyAndPasswordVM keyAndPassword = new KeyAndPasswordVM();
         keyAndPassword.setKey(user.getResetKey());

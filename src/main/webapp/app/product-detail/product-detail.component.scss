@@ -310,8 +310,27 @@
 
 .product-actions {
   display: flex;
-  gap: 0.5rem;
-  margin-top: auto;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 2rem;
+  align-items: stretch;
+
+  .btn {
+    flex: 1;
+    min-width: 150px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    font-weight: 600;
+    white-space: nowrap;
+
+    @media (max-width: 768px) {
+      flex: 1 1 100%;
+      min-width: auto;
+    }
+  }
 
   .btn-primary {
     background-color: $primary;
@@ -321,5 +340,10 @@
       background-color: $secondary;
       border-color: $secondary;
     }
+  }
+
+  .btn-info {
+    flex: 0 0 auto;
+    min-width: 120px;
   }
 }

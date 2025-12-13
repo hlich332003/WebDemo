@@ -52,15 +52,17 @@
                 -
               </button>
               <input
-                type="text"
-                [ngModel]="item.quantity"
-                (ngModelChange)="updateQuantity(item.product.id, $event)"
+                type="number"
+                [value]="item.quantity"
+                (blur)="onQuantityBlur(item.product.id, $event)"
+                (keydown.enter)="onQuantityBlur(item.product.id, $event)"
                 min="1"
                 [max]="item.product.quantity ?? 999"
                 [disabled]="
                   item.product.quantity !== null && item.product.quantity === 0
                 "
                 class="quantity-input"
+                placeholder="Nhập số lượng"
               />
               <button
                 (click)="increaseQuantity(item.product.id, item.quantity)"

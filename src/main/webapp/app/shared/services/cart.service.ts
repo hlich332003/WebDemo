@@ -7,6 +7,7 @@ import {
   catchError,
   takeUntil,
   switchMap,
+  tap,
 } from 'rxjs/operators';
 import { IProduct } from 'app/entities/product/product.model';
 import { AccountService } from 'app/core/auth/account.service';
@@ -103,7 +104,11 @@ export class CartService implements OnDestroy {
   }
 
   clearCart(): Observable<any> {
-    return this.http.delete(this.API_URL);
+    return this.http.delete(this.API_URL).pipe(
+      tap(() => {
+        this.cartItemsSubject.next([]);
+      }),
+    );
   }
 
   getCartItems(): ICartItem[] {

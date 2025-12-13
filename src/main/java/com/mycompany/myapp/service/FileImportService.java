@@ -50,6 +50,7 @@ public class FileImportService {
         this.categoryRepository = categoryRepository;
     }
 
+    // Existing implementation methods
     public void importProducts(MultipartFile file) throws Exception {
         if (!file.getOriginalFilename().endsWith(".xlsx")) {
             throw new BadRequestAlertException("Chỉ chấp nhận file Excel định dạng .xlsx", "fileImport", "invalidFileFormat");
@@ -83,6 +84,33 @@ public class FileImportService {
             List<Product> productsToSave = new ArrayList<>();
             int rowNumber = 0;
 
+            // --- Optimization: Pre-load categories ---
+            Map<String, Category> categoryCacheByName = new HashMap<>();
+            Map<String, Category> categoryCacheBySlug = new HashMap<>();
+            categoryRepository.findAll().forEach(cat -> {
+                if (cat.getName() != null) {
+                    categoryCacheByName.put(cat.getName().trim(), cat);
+                }
+                if (cat.getSlug() != null) {
+                    categoryCacheBySlug.put(cat.getSlug().trim(), cat);
+                }
+            });
+
+            Category defaultCategory = categoryCacheBySlug.get("chua-phan-loai");
+            if (defaultCategory == null) {
+                defaultCategory = categoryRepository.findBySlug("chua-phan-loai").orElseGet(() -> {
+                    Category newCat = new Category();
+                    newCat.setName("Chưa phân loại");
+                    newCat.setSlug("chua-phan-loai");
+                    return categoryRepository.save(newCat);
+                });
+                categoryCacheBySlug.put("chua-phan-loai", defaultCategory);
+                if(defaultCategory.getName() != null) {
+                    categoryCacheByName.put(defaultCategory.getName().trim(), defaultCategory);
+                }
+            }
+            // --- End Optimization ---
+
             while (rows.hasNext()) {
                 Row currentRow = rows.next();
                 if (rowNumber == 0) {
@@ -110,7 +138,7 @@ public class FileImportService {
                     if (priceCell == null || priceCell.getCellType() != CellType.NUMERIC) {
                         throw new IllegalArgumentException("Giá sản phẩm không được để trống và phải là số");
                     }
-                    product.setPrice(priceCell.getNumericCellValue());
+                    product.setPrice(Double.valueOf(priceCell.getNumericCellValue()));
 
                     Cell quantityCell = currentRow.getCell(4);
                     if (quantityCell != null && quantityCell.getCellType() == CellType.NUMERIC) {
@@ -126,31 +154,30 @@ public class FileImportService {
                             : imageUrl.trim()
                     );
 
+                    // --- Use category cache ---
                     String categoryInput = getCellValue(currentRow.getCell(7));
                     Category category;
 
                     if (categoryInput == null || categoryInput.trim().isEmpty()) {
-                        category = categoryRepository
-                            .findBySlug("chua-phan-loai")
-                            .orElseGet(() -> {
-                                Category defaultCategory = new Category();
-                                defaultCategory.setName("Chưa phân loại");
-                                defaultCategory.setSlug("chua-phan-loai");
-                                return categoryRepository.save(defaultCategory);
-                            });
+                        category = defaultCategory;
                     } else {
-                        category = categoryRepository
-                            .findByName(categoryInput.trim())
-                            .or(() -> categoryRepository.findBySlug(categoryInput.trim()))
-                            .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                    "Không tìm thấy danh mục '" +
-                                    categoryInput +
-                                    "'. Vui lòng kiểm tra lại tên danh mục hoặc tạo danh mục mới."
-                                )
+                        String trimmedInput = categoryInput.trim();
+                        category = categoryCacheByName.get(trimmedInput);
+                        if (category == null) {
+                            category = categoryCacheBySlug.get(trimmedInput);
+                        }
+
+                        if (category == null) {
+                            throw new IllegalArgumentException(
+                                "Không tìm thấy danh mục '" +
+                                categoryInput +
+                                "'. Vui lòng kiểm tra lại tên danh mục hoặc tạo danh mục mới."
                             );
+                        }
                     }
                     product.setCategory(category);
+                    // --- End category cache usage ---
+
                 } catch (BadRequestAlertException e) {
                     throw e;
                 } catch (Exception e) {
@@ -237,10 +264,9 @@ public class FileImportService {
             List<User> usersToSave = new ArrayList<>();
             int rowNumber = 0;
 
-            Optional<Authority> userAuthority = authorityRepository.findById(AuthoritiesConstants.USER);
-            if (userAuthority.isEmpty()) {
-                throw new BadRequestAlertException("Không tìm thấy quyền USER mặc định", "fileImport", "userAuthorityNotFound");
-            }
+            Authority userAuthority = authorityRepository
+                .findById(AuthoritiesConstants.USER)
+                .orElseThrow(() -> new BadRequestAlertException("Không tìm thấy quyền USER mặc định", "fileImport", "userAuthorityNotFound"));
 
             while (rows.hasNext()) {
                 Row currentRow = rows.next();
@@ -256,13 +282,24 @@ public class FileImportService {
                 }
 
                 try {
-                    user.setPassword(passwordEncoder.encode(getCellValue(currentRow.getCell(2))));
+                    String password = getCellValue(currentRow.getCell(2));
+                    if (password == null || password.isBlank()) {
+                        throw new IllegalArgumentException("Mật khẩu không được để trống");
+                    }
+                    user.setPassword(passwordEncoder.encode(password));
+
                     user.setFirstName(getCellValue(currentRow.getCell(3)));
                     user.setLastName(getCellValue(currentRow.getCell(4)));
-                    user.setEmail(getCellValue(currentRow.getCell(5)));
+
+                    String email = getCellValue(currentRow.getCell(5));
+                    if (email == null || email.isBlank()) {
+                        throw new IllegalArgumentException("Email không được để trống");
+                    }
+                    user.setEmail(email.toLowerCase());
+
                     user.setPhone(getCellValue(currentRow.getCell(6)));
                     user.setActivated(true);
-                    user.setAuthority(userAuthority.get());
+                    user.setAuthority(userAuthority);
                 } catch (Exception e) {
                     throw new BadRequestAlertException(
                         "Lỗi đọc dữ liệu người dùng tại dòng " + (rowNumber + 1) + ": " + e.getMessage(),
@@ -279,8 +316,39 @@ public class FileImportService {
                             user.setCreatedDate(existingUser.getCreatedDate());
                         });
                 } else {
-                    if (userRepository.findOneByEmailIgnoreCase(user.getEmail()).isPresent()) {
-                        throw new BadRequestAlertException("Email đã tồn tại: " + user.getEmail(), "fileImport", "emailExists");
+                    // Sync with UserService: remove non-activated user with same email or phone
+                    final String userEmail = user.getEmail();
+                    if (userEmail != null && !userEmail.isBlank()) {
+                        userRepository
+                            .findOneByEmailIgnoreCase(userEmail)
+                            .ifPresent(existingUser -> {
+                                if (existingUser.isActivated()) {
+                                    throw new BadRequestAlertException(
+                                        "Email '" + userEmail + "' đã tồn tại và đã được kích hoạt.",
+                                        "fileImport",
+                                        "emailExists"
+                                    );
+                                }
+                                userRepository.delete(existingUser);
+                                userRepository.flush();
+                            });
+                    }
+
+                    final String userPhone = user.getPhone();
+                    if (userPhone != null && !userPhone.isBlank()) {
+                        userRepository
+                            .findOneByPhone(userPhone)
+                            .ifPresent(existingUser -> {
+                                if (existingUser.isActivated()) {
+                                    throw new BadRequestAlertException(
+                                        "Số điện thoại '" + userPhone + "' đã tồn tại và đã được kích hoạt.",
+                                        "fileImport",
+                                        "phoneExists"
+                                    );
+                                }
+                                userRepository.delete(existingUser);
+                                userRepository.flush();
+                            });
                     }
                 }
                 usersToSave.add(user);

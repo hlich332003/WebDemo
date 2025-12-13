@@ -52,7 +52,8 @@ public class PublicProductResource {
                 resolvedName = p2;
             }
         }
-        var page = productService.findAllWithFilters(pageable, categorySlug, resolvedName);
+        // Call the updated method with null for the new filter parameters
+        var page = productService.findAllWithFilters(pageable, categorySlug, resolvedName, null, null, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }

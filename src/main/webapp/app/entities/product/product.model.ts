@@ -1,4 +1,4 @@
-import { ICategory } from 'app/entities/category/category.model';
+import { ICategory } from './category.model';
 
 export interface IProduct {
   id: number;
@@ -8,7 +8,7 @@ export interface IProduct {
   quantity?: number | null; // Số lượng tồn kho
   imageUrl: string | null;
   isPinned?: boolean | null;
-  salesCount?: number | null;
+  salesCount: number;
   category?: ICategory | null;
 }
 

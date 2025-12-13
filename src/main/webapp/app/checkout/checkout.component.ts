@@ -8,8 +8,8 @@ import {
   Validators,
 } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Subject, of } from 'rxjs';
+import { takeUntil, switchMap } from 'rxjs/operators';
 
 import { CartService, ICartItem } from 'app/shared/services/cart.service';
 import { UtilsService } from 'app/shared/utils/utils.service';
@@ -150,26 +150,33 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   private submitOrder(orderData: any): void {
-    this.orderService.create(orderData).subscribe({
-      next: (response: any) => {
-        this.cartService.clearCart();
-        this.orderSuccess = true;
-        this.orderDetails = {
-          orderCode: response.body?.orderCode,
-          orderId: response.body?.id,
-          customerName: orderData.customerInfo.fullName,
-          totalAmount: orderData.totalAmount,
-          customerInfo: orderData.customerInfo,
-        };
-        this.notify.success('✅ Đặt hàng thành công!');
-      },
-      error: (_error: any) => {
-        console.error('Order creation failed');
-        this.notify.error(
-          '❌ Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.',
-        );
-      },
-    });
+    this.orderService
+      .create(orderData)
+      .pipe(
+        switchMap((response: any) => {
+          this.orderDetails = {
+            orderCode: response.body?.orderCode,
+            orderId: response.body?.id,
+            customerName: orderData.customerInfo.fullName,
+            totalAmount: orderData.totalAmount,
+            customerInfo: orderData.customerInfo,
+          };
+          return this.cartService.clearCart();
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe({
+        next: () => {
+          this.orderSuccess = true;
+          this.notify.success('✅ Đặt hàng thành công!');
+        },
+        error: (_error: any) => {
+          console.error('Order creation failed');
+          this.notify.error(
+            '❌ Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.',
+          );
+        },
+      });
   }
 
   previousState(): void {

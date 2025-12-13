@@ -26,6 +26,7 @@ type ProductFormGroupContent = {
   price: FormControl<IProduct['price']>;
   quantity: FormControl<IProduct['quantity']>;
   imageUrl: FormControl<IProduct['imageUrl']>;
+  salesCount: FormControl<IProduct['salesCount']>;
   category: FormControl<IProduct['category']>; // Thêm FormControl cho category
 };
 
@@ -71,6 +72,7 @@ export default class ProductUpdateComponent implements OnInit {
       validators: [Validators.required, Validators.min(0)],
     }),
     imageUrl: new FormControl(null as IProduct['imageUrl']),
+    salesCount: new FormControl(0, { nonNullable: true }),
     category: new FormControl(null as IProduct['category'], {
       validators: [Validators.required],
     }), // Khởi tạo FormControl cho category
@@ -158,15 +160,18 @@ export default class ProductUpdateComponent implements OnInit {
       price: product.price,
       quantity: product.quantity,
       imageUrl: product.imageUrl,
+      salesCount: product.salesCount,
       category: product.category, // Cập nhật category vào form
     });
   }
 
   protected createFromForm(): IProduct | NewProduct {
+    const rawValue = this.editForm.getRawValue();
     return {
-      ...this.editForm.getRawValue(),
-      id: this.editForm.get('id')!.value,
-      category: this.editForm.get('category')!.value, // Lấy category từ form
+      ...rawValue,
+      id: rawValue.id,
+      salesCount: rawValue.salesCount ?? 0,
+      category: rawValue.category,
     };
   }
 

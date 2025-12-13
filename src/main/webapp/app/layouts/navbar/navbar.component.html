@@ -90,6 +90,11 @@
           <a class="nav-link" routerLink="/wishlist" (click)="collapseNavbar()">
             <fa-icon icon="heart" class="nav-icon"></fa-icon>
             <span class="nav-text">Yêu thích</span>
+            @if (wishlistItemCount$ | async; as count) {
+              @if (count > 0) {
+                <span class="cart-badge">{{ count }}</span>
+              }
+            }
           </a>
         </li>
 
@@ -102,11 +107,11 @@
           <a class="nav-link" routerLink="/cart" (click)="collapseNavbar()">
             <fa-icon icon="shopping-cart" class="nav-icon"></fa-icon>
             <span class="nav-text">Giỏ hàng</span>
-            <span
-              *ngIf="(cartItemCount$ | async) ?? 0 > 0"
-              class="cart-badge"
-              >{{ cartItemCount$ | async }}</span
-            >
+            @if (cartItemCount$ | async; as count) {
+              @if (count > 0) {
+                <span class="cart-badge">{{ count }}</span>
+              }
+            }
           </a>
         </li>
 

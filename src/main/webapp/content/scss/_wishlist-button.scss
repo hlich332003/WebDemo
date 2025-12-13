@@ -1,0 +1,67 @@
+// ===================================
+// WISHLIST BUTTON STYLES
+// ===================================
+
+.btn-wishlist {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #e0e0e0;
+  background-color: #fff;
+  color: #adb5bd;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  fa-icon {
+    margin: 0;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
+    color: #e60023; // Red color on hover
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  // State when the item is in the wishlist
+  &.in-wishlist {
+    background-color: #e60023;
+    border-color: #e60023;
+    color: #fff;
+    animation: heartbeat 0.8s ease-in-out;
+
+    fa-icon {
+      transform: scale(1.1);
+    }
+
+    &:hover {
+      background-color: #c5001e;
+      border-color: #c5001e;
+    }
+  }
+}
+
+@keyframes heartbeat {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.2);
+  }
+  50% {
+    transform: scale(1);
+  }
+  75% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
