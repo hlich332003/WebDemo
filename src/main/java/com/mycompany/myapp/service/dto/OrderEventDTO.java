@@ -1,6 +1,7 @@
 package com.mycompany.myapp.service.dto;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 public class OrderEventDTO implements Serializable {
 
@@ -8,11 +9,11 @@ public class OrderEventDTO implements Serializable {
     private String orderCode;
     private String customerEmail;
     private String customerName;
-    private Double totalAmount; // Hoàn tác về Double
+    private BigDecimal totalAmount;
 
     public OrderEventDTO() {}
 
-    public OrderEventDTO(Long orderId, String orderCode, String customerEmail, String customerName, Double totalAmount) { // Hoàn tác về Double
+    public OrderEventDTO(Long orderId, String orderCode, String customerEmail, String customerName, BigDecimal totalAmount) {
         this.orderId = orderId;
         this.orderCode = orderCode;
         this.customerEmail = customerEmail;
@@ -52,11 +53,11 @@ public class OrderEventDTO implements Serializable {
         this.customerName = customerName;
     }
 
-    public Double getTotalAmount() { // Hoàn tác về Double
+    public BigDecimal getTotalAmount() {
         return totalAmount;
     }
 
-    public void setTotalAmount(Double totalAmount) { // Hoàn tác về Double
+    public void setTotalAmount(BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
     }
 }

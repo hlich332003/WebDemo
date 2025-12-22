@@ -19,7 +19,7 @@ import { Authority } from 'app/config/authority.constants';
   templateUrl: './order-detail.component.html',
   styleUrls: ['./order-detail.component.scss'],
 })
-export default class OrderDetailComponent implements OnInit {
+export class OrderDetailComponent implements OnInit {
   order: IOrder | null = null;
   isLoading = false;
   isEditingAddress = false;
@@ -123,6 +123,38 @@ export default class OrderDetailComponent implements OnInit {
       minute: '2-digit',
     };
     return new Date(date).toLocaleDateString('vi-VN', options);
+  }
+
+  translateStatus(status: string | null | undefined): string {
+    if (!status) return 'Không xác định';
+    switch (status) {
+      case 'PENDING':
+        return 'Chờ xử lý';
+      case 'PROCESSING':
+        return 'Đang xử lý';
+      case 'SHIPPING':
+        return 'Đang giao hàng';
+      case 'DELIVERED':
+        return 'Đã giao hàng';
+      case 'COMPLETED':
+        return 'Hoàn thành';
+      case 'CANCELLED':
+        return 'Đã hủy';
+      default:
+        return status;
+    }
+  }
+
+  translatePaymentMethod(method: string | null | undefined): string {
+    if (!method) return 'Không xác định';
+    switch (method) {
+      case 'cod':
+        return 'Thanh toán khi nhận hàng (COD)';
+      case 'bank':
+        return 'Chuyển khoản ngân hàng';
+      default:
+        return method;
+    }
   }
 
   previousState(): void {

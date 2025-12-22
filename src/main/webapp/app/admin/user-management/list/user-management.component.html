@@ -20,6 +20,19 @@
           <span>Làm mới danh sách</span>
         </button>
         <button
+          class="btn btn-secondary me-2 rounded-pill"
+          (click)="triggerFileInput()"
+        >
+          <fa-icon icon="upload"></fa-icon> <span>Import người dùng</span>
+        </button>
+        <input
+          type="file"
+          hidden
+          #fileInput
+          (change)="onFileSelected($event)"
+          accept=".xlsx, .xls"
+        />
+        <button
           class="btn btn-primary jh-create-entity rounded-pill"
           [routerLink]="['./new']"
         >

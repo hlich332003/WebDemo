@@ -22,11 +22,12 @@ export interface DashboardStats {
   templateUrl: './admin-home.component.html',
   styleUrls: ['./admin-home.component.scss'],
   imports: [CommonModule, RouterModule, SharedModule],
-  providers: [CurrencyPipe], // Add CurrencyPipe to providers
+  providers: [CurrencyPipe],
 })
 export default class AdminHomeComponent implements OnInit, OnDestroy {
   account = signal<Account | null>(null);
   stats = signal<DashboardStats | null>(null);
+  isCSKH = false;
 
   private readonly accountService = inject(AccountService);
   private readonly http = inject(HttpClient);
@@ -36,6 +37,10 @@ export default class AdminHomeComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.accountService.getAuthenticationState().subscribe((account) => {
       this.account.set(account);
+      this.isCSKH = this.accountService.hasAnyAuthority([
+        'ROLE_ADMIN',
+        'ROLE_CSKH',
+      ]);
     });
     this.loadStats();
   }

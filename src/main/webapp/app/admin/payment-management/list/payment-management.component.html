@@ -1,0 +1,69 @@
+<div>
+  <h2>
+    <span>Quản lý Thanh toán</span>
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-info me-2" (click)="loadPayments()">
+        <fa-icon icon="sync"></fa-icon>
+        <span>Làm mới</span>
+      </button>
+    </div>
+  </h2>
+
+  <div class="table-responsive" *ngIf="payments$ | async as payments">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th><span>ID</span></th>
+          <th><span>Phương thức</span></th>
+          <th><span>Trạng thái</span></th>
+          <th><span>Ngày thanh toán</span></th>
+          <th><span>Số tiền</span></th>
+          <th><span>Đơn hàng ID</span></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let payment of payments; trackBy: trackId">
+          <td>
+            <a
+              [routerLink]="['/admin/payment-management', payment.id, 'view']"
+              >{{ payment.id }}</a
+            >
+          </td>
+          <td>{{ payment.method }}</td>
+          <td>{{ payment.status }}</td>
+          <td>
+            {{ payment.paidAt | notificationDate | formatMediumDatetime }}
+          </td>
+          <td>{{ payment.amount | currency: 'VND' }}</td>
+          <td>
+            <a
+              *ngIf="payment.order"
+              [routerLink]="[
+                '/admin/order-management',
+                payment.order.id,
+                'view',
+              ]"
+              >{{ payment.order.id }}</a
+            >
+          </td>
+          <td class="text-end">
+            <div class="btn-group">
+              <a
+                [routerLink]="['/admin/payment-management', payment.id, 'view']"
+                class="btn btn-info btn-sm"
+              >
+                <fa-icon icon="eye"></fa-icon>
+                <span class="d-none d-md-inline">Xem</span>
+              </a>
+              <button (click)="delete(payment)" class="btn btn-danger btn-sm">
+                <fa-icon icon="times"></fa-icon>
+                <span class="d-none d-md-inline">Xóa</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

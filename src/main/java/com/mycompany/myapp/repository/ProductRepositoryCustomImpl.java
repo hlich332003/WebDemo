@@ -5,6 +5,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.StoredProcedureQuery;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Repository;
@@ -16,6 +17,7 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
     private EntityManager entityManager;
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<TopSellingProductDTO> getTopSellingProducts(int topN) {
         StoredProcedureQuery query = entityManager.createStoredProcedureQuery("sp_GetTopSellingProducts");
         query.registerStoredProcedureParameter("TopN", Integer.class, ParameterMode.IN);
@@ -29,7 +31,7 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
             TopSellingProductDTO dto = new TopSellingProductDTO();
             dto.setId(((Number) row[0]).longValue());
             dto.setName((String) row[1]);
-            dto.setPrice(((Number) row[2]).doubleValue());
+            dto.setPrice(BigDecimal.valueOf(((Number) row[2]).doubleValue()));
             dto.setImageUrl((String) row[3]);
             dto.setTotalOrders(((Number) row[4]).intValue());
             dto.setTotalQuantitySold(((Number) row[5]).intValue());

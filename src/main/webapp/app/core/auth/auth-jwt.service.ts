@@ -56,7 +56,10 @@ export class AuthServerProvider {
             logoutAndCleanup();
           }),
           catchError((error) => {
-            console.error('Error blacklisting token, logging out client-side anyway.', error);
+            console.error(
+              'Error blacklisting token, logging out client-side anyway.',
+              error,
+            );
             logoutAndCleanup();
             return of(undefined); // Ensure the stream completes
           }),

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -17,17 +17,20 @@ import { IProduct } from 'app/entities/product/product.model';
   styleUrls: ['./cart.component.scss'],
   imports: [CommonModule, RouterModule, FormsModule, FontAwesomeModule],
 })
-export class CartComponent {
+export class CartComponent implements OnInit {
   public cartService = inject(CartService);
   private utils = inject(UtilsService);
   private notify = inject(NotificationService);
   public wishlistService = inject(WishlistService);
 
+  ngOnInit(): void {
+    this.cartService.loadCart();
+  }
+
   onQuantityBlur(productId: number, event: Event): void {
     const input = event.target as HTMLInputElement;
     const quantity = input.value.trim();
 
-    // Nếu empty, restore giá trị cũ
     if (quantity === '' || quantity === '0') {
       const item = this.cartService
         .getCartItems()
@@ -45,7 +48,7 @@ export class CartComponent {
     const q = Number(quantity);
     if (!Number.isFinite(q) || q < 1) {
       this.notify.error('❌ Số lượng phải lớn hơn 0!');
-      this.cartService.loadCart(); // Reload để restore giá trị
+      this.cartService.loadCart();
       return;
     }
 
@@ -131,7 +134,6 @@ export class CartComponent {
         }
       },
       error: (error: Error) => {
-        // Explicitly type error
         this.notify.error(
           `❌ Lỗi khi cập nhật danh sách yêu thích: ${error.message}`,
         );
@@ -141,5 +143,23 @@ export class CartComponent {
 
   isInWishlist(productId: number): boolean {
     return this.wishlistService.isInWishlist(productId);
+  }
+
+  toggleSelection(productId: number): void {
+    this.cartService.toggleItemSelected(productId);
+  }
+
+  toggleSelectAll(event: Event): void {
+    const checkbox = event.target as HTMLInputElement;
+    this.cartService.selectAllItems(checkbox.checked);
+  }
+
+  proceedToCheckout(): void {
+    this.cartService.proceedToCheckout();
+  }
+
+  isAllSelected(): boolean {
+    const items = this.cartService.getCartItems();
+    return items.length > 0 && items.every((item) => item.selected);
   }
 }

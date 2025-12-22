@@ -5,16 +5,17 @@ import {
   OnInit,
   Renderer2,
   inject,
+  OnChanges,
 } from '@angular/core';
 
 @Directive({
   selector: '[jhiSkeleton]',
   standalone: true,
 })
-export class SkeletonDirective implements OnInit {
-  @Input('jhiSkeleton') isLoading: boolean = false;
-  @Input() skeletonHeight: string = '200px';
-  @Input() skeletonWidth: string = '100%';
+export class SkeletonDirective implements OnInit, OnChanges {
+  @Input('jhiSkeleton') isLoading = false;
+  @Input() skeletonHeight = '200px';
+  @Input() skeletonWidth = '100%';
 
   private el = inject(ElementRef);
   private renderer = inject(Renderer2);

@@ -1,15 +1,14 @@
 <nav data-cy="navbar" class="navbar navbar-dark navbar-expand-lg">
   <div class="container-fluid">
     <!-- Brand -->
+    @let currentAccount = account();
     <a
       class="navbar-brand"
-      [routerLink]="
-        account()?.authorities?.includes('ROLE_ADMIN') ? '/admin' : '/'
-      "
+      [routerLink]="currentAccount?.authorities?.includes('ROLE_ADMIN') ? '/admin' : '/'"
       (click)="collapseNavbar()"
     >
       <fa-icon icon="shopping-cart" class="brand-icon"></fa-icon>
-      <span class="navbar-title">WebDemo</span>
+      <span class="navbar-title">PC No.1</span>
       <span class="navbar-version">{{ version }}</span>
     </a>
 
@@ -71,9 +70,7 @@
         >
           <a
             class="nav-link"
-            [routerLink]="
-              account()?.authorities?.includes('ROLE_ADMIN') ? '/admin' : '/'
-            "
+            [routerLink]="currentAccount?.authorities?.includes('ROLE_ADMIN') ? '/admin' : '/'"
             (click)="collapseNavbar()"
           >
             <fa-icon icon="home" class="nav-icon"></fa-icon>
@@ -81,38 +78,87 @@
           </a>
         </li>
 
-        <!-- Wishlist (hidden for admin) -->
+        <!-- Wishlist (hidden for admin and guest) -->
         <li
-          *ngIf="showCart()"
+          *ngIf="showCart() && currentAccount"
           class="nav-item wishlist-item"
           routerLinkActive="active"
         >
           <a class="nav-link" routerLink="/wishlist" (click)="collapseNavbar()">
             <fa-icon icon="heart" class="nav-icon"></fa-icon>
             <span class="nav-text">Yêu thích</span>
-            @if (wishlistItemCount$ | async; as count) {
-              @if (count > 0) {
-                <span class="cart-badge">{{ count }}</span>
-              }
-            }
+            <span class="cart-badge" *ngIf="wishlistItemCount > 0">{{ wishlistItemCount }}</span>
           </a>
         </li>
 
-        <!-- Cart (hidden for admin) -->
+        <!-- Cart (hidden for admin and guest) -->
         <li
-          *ngIf="showCart()"
+          *ngIf="showCart() && currentAccount"
           class="nav-item cart-item"
           routerLinkActive="active"
         >
           <a class="nav-link" routerLink="/cart" (click)="collapseNavbar()">
             <fa-icon icon="shopping-cart" class="nav-icon"></fa-icon>
             <span class="nav-text">Giỏ hàng</span>
-            @if (cartItemCount$ | async; as count) {
-              @if (count > 0) {
-                <span class="cart-badge">{{ count }}</span>
-              }
-            }
+            <span class="cart-badge" *ngIf="cartItemCount > 0">{{ cartItemCount }}</span>
           </a>
+        </li>
+
+        <!-- Notifications -->
+        <li
+          ngbDropdown
+          class="nav-item dropdown notification-bell"
+          *ngIf="account()"
+        >
+          <a
+            class="nav-link"
+            ngbDropdownToggle
+            href="javascript:void(0);"
+            id="notification-menu"
+          >
+            <fa-icon icon="bell"></fa-icon>
+            <span
+              class="badge bg-danger"
+              *ngIf="((unreadCount$ | async) || 0) > 0"
+              >{{ unreadCount$ | async }}</span
+            >
+          </a>
+          <ul
+            class="dropdown-menu dropdown-menu-end"
+            ngbDropdownMenu
+            aria-labelledby="notification-menu"
+          >
+            <li class="dropdown-header">
+              <span>Thông báo</span>
+              <a
+                href="javascript:void(0);"
+                (click)="markAllAsRead()"
+                class="mark-all-read"
+                >Đánh dấu đã đọc tất cả</a
+              >
+            </li>
+            <li *ngFor="let notification of notifications$ | async">
+              <a
+                class="dropdown-item"
+                [class.unread]="!notification.read"
+                (click)="markAsRead(notification.id)"
+                [routerLink]="notification.link"
+              >
+                <p>{{ notification.message }}</p>
+                <small>{{
+                  notification.timestamp
+                    | notificationDate
+                    | formatMediumDatetime
+                }}</small>
+              </a>
+            </li>
+            <li
+              *ngIf="(notifications$ | async)?.length === 0"
+              class="dropdown-item text-center"
+            >
+              <small>Không có thông báo nào</small>
+            </li>
+          </ul>
         </li>
 
         <!-- jhipster-needle-add-element-to-menu - JHipster will add new menu items here -->
@@ -166,6 +212,17 @@
             <li>
               <a
                 class="dropdown-item"
+                routerLink="/admin/review-management"
+                routerLinkActive="active"
+                (click)="collapseNavbar()"
+              >
+                <fa-icon icon="star" [fixedWidth]="true"></fa-icon>
+                <span>Quản lý đánh giá</span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="dropdown-item"
                 routerLink="/admin/user-management"
                 routerLinkActive="active"
                 (click)="collapseNavbar()"
@@ -202,6 +259,8 @@
                   [ngSrc]="accountRef!.imageUrl || ''"
                   class="profile-image rounded-circle"
                   alt="Avatar"
+                  width="28"
+                  height="28"
                 />
               </span>
             }

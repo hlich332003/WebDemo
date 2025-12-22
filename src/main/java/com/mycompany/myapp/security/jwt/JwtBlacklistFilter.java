@@ -72,31 +72,7 @@ public class JwtBlacklistFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        // Use servlet path (which excludes context path) for matching so filter is robust when app has context path
-        final String servletPath = request.getServletPath() == null ? request.getRequestURI() : request.getServletPath();
-        final String requestUri = request.getRequestURI();
-        final String pathInfo = request.getPathInfo();
-
-        // Build a small set of path candidates to match against public endpoints to be defensive
-        List<String> candidates = new ArrayList<>();
-        if (servletPath != null) candidates.add(servletPath);
-        if (requestUri != null) candidates.add(requestUri);
-        if (pathInfo != null) candidates.add(pathInfo);
-
-        for (String p : publicEndpoints) {
-            for (String candidate : candidates) {
-                if (candidate == null) continue;
-                try {
-                    if (pathMatcher.match(p, candidate) || candidate.startsWith(p.replace("/**", ""))) {
-                        return true;
-                    }
-                } catch (Exception ex) {
-                    if (candidate.contains(p.replace("**", ""))) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
+        String path = request.getServletPath();
+        return publicEndpoints.stream().anyMatch(p -> pathMatcher.match(p, path));
     }
 }

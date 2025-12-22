@@ -13,6 +13,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 
 import SharedModule from 'app/shared/shared.module';
 import { LoginService } from 'app/login/login.service';
@@ -22,7 +23,13 @@ import { StateStorageService } from 'app/core/auth/state-storage.service';
 @Component({
   selector: 'jhi-login',
   standalone: true,
-  imports: [SharedModule, FormsModule, ReactiveFormsModule, RouterModule],
+  imports: [
+    SharedModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterModule,
+    TranslateModule,
+  ],
   templateUrl: './login.component.html',
 })
 export class LoginComponent implements AfterViewInit {
@@ -47,6 +54,7 @@ export class LoginComponent implements AfterViewInit {
   });
 
   private loginService = inject(LoginService);
+  private accountService = inject(AccountService);
   private router = inject(Router);
   private stateStorageService = inject(StateStorageService);
 
@@ -58,13 +66,19 @@ export class LoginComponent implements AfterViewInit {
     this.loginService.login(this.loginForm.getRawValue()).subscribe({
       next: () => {
         this.authenticationError = false;
-        const previousUrl = this.stateStorageService.getUrl();
-        if (previousUrl) {
-          this.stateStorageService.clearUrl();
-          this.router.navigateByUrl(previousUrl);
-        } else {
-          this.router.navigate(['']);
-        }
+        this.accountService.identity(true).subscribe((account) => {
+          if (account?.authorities?.includes('ROLE_ADMIN')) {
+            this.router.navigate(['/admin']);
+          } else {
+            const previousUrl = this.stateStorageService.getUrl();
+            if (previousUrl) {
+              this.stateStorageService.clearUrl();
+              this.router.navigateByUrl(previousUrl);
+            } else {
+              this.router.navigate(['']);
+            }
+          }
+        });
       },
       error: () => (this.authenticationError = true),
     });

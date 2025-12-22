@@ -1,0 +1,38 @@
+<div *ngIf="payment">
+  <h2>
+    <span>Chi tiết Thanh toán #{{ payment.id }}</span>
+  </h2>
+  <hr />
+  <dl class="row-md jh-entity-details">
+    <dt><span>Phương thức</span></dt>
+    <dd>
+      <span>{{ payment.method }}</span>
+    </dd>
+    <dt><span>Trạng thái</span></dt>
+    <dd>
+      <span>{{ payment.status }}</span>
+    </dd>
+    <dt><span>Ngày thanh toán</span></dt>
+    <dd>
+      <span>{{
+        payment.paidAt | notificationDate | formatMediumDatetime
+      }}</span>
+    </dd>
+    <dt><span>Số tiền</span></dt>
+    <dd>
+      <span>{{ payment.amount | currency: 'VND' }}</span>
+    </dd>
+    <dt><span>Đơn hàng</span></dt>
+    <dd>
+      <a
+        *ngIf="payment.order"
+        [routerLink]="['/admin/order-management', payment.order.id, 'view']"
+      >
+        Đơn hàng #{{ payment.order.id }}
+      </a>
+    </dd>
+  </dl>
+  <button type="button" (click)="previousState()" class="btn btn-info">
+    <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span>Quay lại</span>
+  </button>
+</div>

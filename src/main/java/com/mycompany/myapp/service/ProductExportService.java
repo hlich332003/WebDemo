@@ -44,10 +44,14 @@ public class ProductExportService {
             row.createCell(0).setCellValue(product.getId());
             row.createCell(1).setCellValue(product.getName());
             row.createCell(2).setCellValue(product.getDescription());
-            row.createCell(3).setCellValue(product.getPrice());
+            if (product.getPrice() != null) {
+                row.createCell(3).setCellValue(product.getPrice().doubleValue());
+            }
             row.createCell(4).setCellValue(product.getQuantity());
             row.createCell(5).setCellValue(product.getImageUrl());
-            row.createCell(6).setCellValue(product.getSalesCount());
+            if (product.getSalesCount() != null) {
+                row.createCell(6).setCellValue(product.getSalesCount());
+            }
         }
 
         // Tự động điều chỉnh độ rộng cột

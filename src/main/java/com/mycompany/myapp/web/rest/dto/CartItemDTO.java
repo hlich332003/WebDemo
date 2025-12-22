@@ -1,12 +1,13 @@
 package com.mycompany.myapp.web.rest.dto;
 
 import com.mycompany.myapp.domain.CartItem;
+import java.math.BigDecimal;
 
 public class CartItemDTO {
 
     private Long productId;
     private String productName;
-    private Double price;
+    private BigDecimal price;
     private Integer quantity;
     private String imageUrl;
 
@@ -39,11 +40,11 @@ public class CartItemDTO {
         this.productName = productName;
     }
 
-    public Double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 

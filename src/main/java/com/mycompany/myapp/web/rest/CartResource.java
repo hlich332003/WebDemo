@@ -26,7 +26,7 @@ public class CartResource {
     }
 
     @GetMapping("/cart")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<List<CartItemDTO>> getCart() {
         Cart cart = cartService.getCartForCurrentUser();
         List<CartItemDTO> dtos = cart
@@ -39,28 +39,35 @@ public class CartResource {
     }
 
     @PostMapping("/cart")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<Void> addToCart(@RequestBody CartItemDTO cartItemDTO) {
-        cartService.addToCart(cartItemDTO.getProductId(), cartItemDTO.getQuantity());
-        return ResponseEntity.ok().build();
+        try {
+            Integer quantity = cartItemDTO.getQuantity() != null ? cartItemDTO.getQuantity() : 1;
+            log.debug("Adding product {} to cart with quantity {}", cartItemDTO.getProductId(), quantity);
+            cartService.addToCart(cartItemDTO.getProductId(), quantity);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("Error adding product {} to cart: {}", cartItemDTO.getProductId(), e.getMessage(), e);
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @PutMapping("/cart")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<Void> updateCartItem(@RequestBody CartItemDTO cartItemDTO) {
         cartService.updateCartItem(cartItemDTO.getProductId(), cartItemDTO.getQuantity());
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/cart/{productId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<Void> removeFromCart(@PathVariable Long productId) {
         cartService.removeFromCart(productId);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/cart")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<Void> clearCart() {
         cartService.clearCart();
         return ResponseEntity.noContent().build();

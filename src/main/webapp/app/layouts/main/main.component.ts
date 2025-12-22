@@ -1,24 +1,23 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 
 import { AccountService } from 'app/core/auth/account.service';
-import PageRibbonComponent from '../profiles/page-ribbon.component';
 import FooterComponent from '../footer/footer.component';
-import { NavbarComponent } from '../navbar/navbar.component';
+import { ChatWidgetComponent } from '../chat-widget/chat-widget.component';
 
 @Component({
   selector: 'jhi-main',
   standalone: true,
   templateUrl: './main.component.html',
   styleUrls: ['./main.component.scss'],
-  imports: [
-    RouterOutlet,
-    FooterComponent,
-  ],
+  imports: [CommonModule, RouterOutlet, FooterComponent, ChatWidgetComponent],
 })
-export default class MainComponent implements OnInit {
+export default class MainComponent implements OnInit, OnDestroy {
+  showChatWidget = false;
+
   private readonly accountService = inject(AccountService);
   private readonly destroy$ = new Subject<void>();
 
@@ -28,10 +27,19 @@ export default class MainComponent implements OnInit {
       .pipe(takeUntil(this.destroy$))
       .subscribe((account) => {
         if (account) {
-          console.log('✅ User authenticated on init:', account.email);
+          // Chỉ hiển thị chat widget cho người dùng thường (không phải admin/CSKH)
+          this.showChatWidget = !this.accountService.hasAnyAuthority([
+            'ROLE_ADMIN',
+            'ROLE_CSKH',
+          ]);
         } else {
-          console.log('User not authenticated on init.');
+          this.showChatWidget = false;
         }
       });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

@@ -104,7 +104,7 @@ export class OrderManagementComponent implements OnInit {
   }
 
   getStatusText(status: string | null | undefined): string {
-    const statusMap: { [key: string]: string } = {
+    const statusMap: Record<string, string> = {
       PENDING: 'Chờ xác nhận',
       PROCESSING: 'Đang xử lý',
       SHIPPED: 'Đang giao',

@@ -61,15 +61,11 @@ public class OrderRepositoryCustomImpl implements OrderRepositoryCustom {
         return tuples
             .stream()
             .map(tuple -> {
-                // Convert BigDecimal sang Double
-                BigDecimal totalAmount = tuple.get("totalAmount", BigDecimal.class);
-                Double totalAmountDouble = (totalAmount != null) ? totalAmount.doubleValue() : null;
-
                 return new OrderSearchDTO(
                     tuple.get("id", Long.class),
                     tuple.get("customerLogin", String.class),
                     tuple.get("orderDate", Instant.class),
-                    totalAmountDouble,
+                    tuple.get("totalAmount", BigDecimal.class),
                     tuple.get("status", String.class)
                 );
             })

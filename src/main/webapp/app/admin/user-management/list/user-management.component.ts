@@ -1,4 +1,11 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  inject,
+  signal,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { HttpHeaders, HttpResponse } from '@angular/common/http';
 
@@ -13,6 +20,8 @@ import { AccountService } from 'app/core/auth/account.service';
 import { UserManagementService } from '../service/user-management.service';
 import { User } from '../user-management.model';
 import ItemCountComponent from 'app/shared/pagination/item-count.component';
+import { UserImportService } from '../service/user-import.service';
+import { NotificationService } from 'app/shared/notification/notification.service';
 
 @Component({
   selector: 'jhi-user-mgmt',
@@ -28,6 +37,8 @@ import ItemCountComponent from 'app/shared/pagination/item-count.component';
   ],
 })
 export default class UserManagementComponent implements OnInit {
+  @ViewChild('fileInput') fileInput!: ElementRef;
+
   currentAccount = inject(AccountService).trackCurrentAccount();
   users = signal<User[] | null>(null);
   isLoading = signal(false);
@@ -39,7 +50,9 @@ export default class UserManagementComponent implements OnInit {
   private searchTimeout: any;
 
   private readonly userService = inject(UserManagementService);
+  private readonly userImportService = inject(UserImportService);
   private readonly sortService = inject(SortService);
+  private readonly notificationService = inject(NotificationService);
 
   ngOnInit(): void {
     this.loadAll();
@@ -66,6 +79,31 @@ export default class UserManagementComponent implements OnInit {
         },
         error: () => this.isLoading.set(false),
       });
+  }
+
+  triggerFileInput(): void {
+    this.fileInput.nativeElement.click();
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      this.isLoading.set(true);
+      this.userImportService.importUsers(file).subscribe({
+        next: () => {
+          this.isLoading.set(false);
+          this.notificationService.success('Tải lên người dùng thành công!');
+          this.loadAll();
+        },
+        error: (err) => {
+          this.isLoading.set(false);
+          this.notificationService.error(
+            'Lỗi khi tải lên người dùng: ' + err.message,
+          );
+        },
+      });
+    }
   }
 
   onSearchInput(event: Event): void {

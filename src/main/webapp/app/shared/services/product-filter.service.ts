@@ -1,144 +1,40 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable } from '@angular/core';
+import { IProduct } from 'app/entities/product/product.model';
 
-export interface PriceRange {
-  min: number;
-  max: number;
-}
-
-export interface FilterOptions {
-  priceRange?: PriceRange;
-  categories?: number[];
-  inStock?: boolean;
-  minRating?: number;
-  sortBy?:
-    | 'price-asc'
-    | 'price-desc'
-    | 'name-asc'
-    | 'name-desc'
-    | 'newest'
-    | 'popular';
-}
-
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class ProductFilterService {
-  // Signal để reactive updates
-  private filterOptions = signal<FilterOptions>({
-    priceRange: undefined,
-    categories: [],
-    inStock: undefined,
-    minRating: undefined,
-    sortBy: 'newest',
-  });
+  filterProducts(
+    products: IProduct[],
+    searchTerm: string,
+    categorySlug: string,
+    minPrice: number | null,
+    maxPrice: number | null,
+    inStockOnly: boolean,
+  ): IProduct[] {
+    let filtered = [...products];
 
-  // Public readonly signal
-  public readonly filters = this.filterOptions.asReadonly();
+    if (searchTerm) {
+      filtered = filtered.filter((p) =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
+    }
 
-  /**
-   * Cập nhật price range filter
-   */
-  setPriceRange(min: number, max: number): void {
-    this.filterOptions.update((current) => ({
-      ...current,
-      priceRange: { min, max },
-    }));
-  }
+    if (categorySlug && categorySlug !== 'all') {
+      filtered = filtered.filter((p) => p.category?.slug === categorySlug);
+    }
 
-  /**
-   * Xóa price range filter
-   */
-  clearPriceRange(): void {
-    this.filterOptions.update((current) => ({
-      ...current,
-      priceRange: undefined,
-    }));
-  }
+    if (minPrice !== null) {
+      filtered = filtered.filter((p) => (p.price ?? 0) >= minPrice);
+    }
 
-  /**
-   * Toggle category filter
-   */
-  toggleCategory(categoryId: number): void {
-    this.filterOptions.update((current) => {
-      const categories = current.categories ?? [];
-      const index = categories.indexOf(categoryId);
+    if (maxPrice !== null) {
+      filtered = filtered.filter((p) => (p.price ?? 0) <= maxPrice);
+    }
 
-      if (index > -1) {
-        // Remove
-        return {
-          ...current,
-          categories: categories.filter((id) => id !== categoryId),
-        };
-      } else {
-        // Add
-        return {
-          ...current,
-          categories: [...categories, categoryId],
-        };
-      }
-    });
-  }
+    if (inStockOnly) {
+      filtered = filtered.filter((p) => (p.quantity ?? 0) > 0);
+    }
 
-  /**
-   * Set in-stock filter
-   */
-  setInStockFilter(inStock: boolean | undefined): void {
-    this.filterOptions.update((current) => ({
-      ...current,
-      inStock,
-    }));
-  }
-
-  /**
-   * Set minimum rating filter
-   */
-  setMinRating(rating: number | undefined): void {
-    this.filterOptions.update((current) => ({
-      ...current,
-      minRating: rating,
-    }));
-  }
-
-  /**
-   * Set sort option
-   */
-  setSortBy(sortBy: FilterOptions['sortBy']): void {
-    this.filterOptions.update((current) => ({
-      ...current,
-      sortBy,
-    }));
-  }
-
-  /**
-   * Reset tất cả filters
-   */
-  resetFilters(): void {
-    this.filterOptions.set({
-      priceRange: undefined,
-      categories: [],
-      inStock: undefined,
-      minRating: undefined,
-      sortBy: 'newest',
-    });
-  }
-
-  /**
-   * Get current filters
-   */
-  getCurrentFilters(): FilterOptions {
-    return this.filterOptions();
-  }
-
-  /**
-   * Kiểm tra có filter nào active không
-   */
-  hasActiveFilters(): boolean {
-    const current = this.filterOptions();
-    return !!(
-      current.priceRange ||
-      (current.categories && current.categories.length > 0) ||
-      current.inStock !== undefined ||
-      current.minRating !== undefined
-    );
+    return filtered;
   }
 }

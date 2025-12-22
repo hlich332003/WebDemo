@@ -1,7 +1,7 @@
 package com.mycompany.myapp.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.mycompany.myapp.domain.AbstractAuditingEntity; // Thêm import này
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
@@ -28,7 +28,11 @@ public class Category extends AbstractAuditingEntity<Long> implements Serializab
     @Column(name = "slug", length = 50, nullable = false, unique = true)
     private String slug;
 
+    @Column(name = "is_featured")
+    private Boolean isFeatured;
+
     @OneToMany(mappedBy = "category")
+    @JsonManagedReference
     @JsonIgnoreProperties(value = { "category", "hibernateLazyInitializer", "handler" }, allowSetters = true)
     private Set<Product> products = new HashSet<>();
 
@@ -56,6 +60,14 @@ public class Category extends AbstractAuditingEntity<Long> implements Serializab
 
     public void setSlug(String slug) {
         this.slug = slug;
+    }
+
+    public Boolean getIsFeatured() {
+        return isFeatured;
+    }
+
+    public void setIsFeatured(Boolean isFeatured) {
+        this.isFeatured = isFeatured;
     }
 
     public Set<Product> getProducts() {

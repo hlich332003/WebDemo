@@ -5,7 +5,13 @@ import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
 import SharedModule from 'app/shared/shared.module';
-import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormGroup,
+  FormControl,
+  Validators,
+} from '@angular/forms';
 
 import { IProduct, NewProduct } from 'app/entities/product/product.model';
 import { ProductService } from 'app/entities/product/product.service';
@@ -18,6 +24,7 @@ type ProductFormGroupContent = {
   price: FormControl<IProduct['price']>;
   quantity: FormControl<IProduct['quantity']>;
   imageUrl: FormControl<IProduct['imageUrl']>;
+  salesCount: FormControl<IProduct['salesCount']>;
 };
 
 type ProductFormGroup = FormGroup<ProductFormGroupContent>;
@@ -40,11 +47,30 @@ export default class ProductUpdateComponent implements OnInit {
 
   editForm: ProductFormGroup = new FormGroup<ProductFormGroupContent>({
     id: new FormControl(null as IProduct['id'] | null, { nonNullable: true }),
-    name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(3), Validators.maxLength(100)] }),
-    description: new FormControl(null as IProduct['description'], { validators: [Validators.maxLength(500)] }),
-    price: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
-    quantity: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
+    name: new FormControl('', {
+      nonNullable: true,
+      validators: [
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(100),
+      ],
+    }),
+    description: new FormControl(null as IProduct['description'], {
+      validators: [Validators.maxLength(500)],
+    }),
+    price: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(0)],
+    }),
+    quantity: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(0)],
+    }),
     imageUrl: new FormControl(null as IProduct['imageUrl']),
+    salesCount: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(0)],
+    }),
   });
 
   ngOnInit(): void {
@@ -58,6 +84,8 @@ export default class ProductUpdateComponent implements OnInit {
 
       if (!this.isEditing()) {
         this.editForm.disable();
+      } else {
+        this.editForm.controls.salesCount.disable();
       }
     });
   }
@@ -76,13 +104,9 @@ export default class ProductUpdateComponent implements OnInit {
     }
   }
 
-  switchToEditMode(): void {
-    if (this.product?.id) {
-      this.router.navigate(['/admin/product-management', this.product.id, 'edit']);
-    }
-  }
-
-  protected subscribeToSaveResponse(result: Observable<HttpResponse<IProduct>>): void {
+  protected subscribeToSaveResponse(
+    result: Observable<HttpResponse<IProduct>>,
+  ): void {
     result.pipe(finalize(() => this.onSaveFinalize())).subscribe({
       next: () => this.onSaveSuccess(),
       error: (error: HttpErrorResponse) => this.onSaveError(error),
@@ -95,7 +119,8 @@ export default class ProductUpdateComponent implements OnInit {
   }
 
   protected onSaveError(error: HttpErrorResponse): void {
-    const errorMessage = error.error?.detail || error.message || 'Lưu sản phẩm thất bại.';
+    const errorMessage =
+      error.error?.detail || error.message || 'Lưu sản phẩm thất bại.';
     this.notify.error(errorMessage);
   }
 
@@ -111,13 +136,20 @@ export default class ProductUpdateComponent implements OnInit {
       price: product.price,
       quantity: product.quantity,
       imageUrl: product.imageUrl,
+      salesCount: product.salesCount,
     });
   }
 
   protected createFromForm(): IProduct | NewProduct {
+    const formValue = this.editForm.getRawValue();
     return {
-      ...this.editForm.getRawValue(),
-      id: this.editForm.get('id')!.value,
+      id: formValue.id,
+      name: formValue.name,
+      description: formValue.description,
+      price: formValue.price,
+      quantity: formValue.quantity,
+      imageUrl: formValue.imageUrl,
+      salesCount: formValue.salesCount,
     };
   }
 }

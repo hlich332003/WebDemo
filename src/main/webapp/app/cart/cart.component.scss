@@ -1,5 +1,5 @@
 // Cart Component - Pink Purple Theme
-@use '../shared/styles/variables' as *;
+@use '../../content/scss/variables' as *;
 
 .cart-container {
   max-width: 1200px;
@@ -12,18 +12,18 @@
 h1 {
   text-align: center;
   margin-bottom: 2rem;
-  color: $text-primary;
+  color: $body-color;
   font-size: 2.5rem;
   font-weight: 700;
 }
 
 .cart-items {
-  background: $white;
+  background: $light;
   border: 1px solid #e1e8ed;
   border-radius: 15px;
   padding: 1.5rem;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  color: $text-primary;
+  color: $body-color;
 }
 
 .cart-header {
@@ -32,7 +32,7 @@ h1 {
   @media (min-width: 768px) {
     display: flex;
     font-weight: 700;
-    color: $text-primary;
+    color: $body-color;
     border-bottom: 2px solid #e1e8ed;
     padding-bottom: 1rem;
     margin-bottom: 1rem;
@@ -66,7 +66,7 @@ h1 {
     .item-name {
       font-size: 1.1rem;
       font-weight: 600;
-      color: $text-primary;
+      color: $body-color;
     }
     .item-price {
       font-size: 1rem;
@@ -85,9 +85,9 @@ h1 {
     .quantity-input {
       width: 40px;
       text-align: center;
-      background: $white;
+      background: $light;
       border: 1px solid #e1e8ed;
-      color: $text-primary;
+      color: $body-color;
       font-weight: 600;
       padding: 0.375rem 0;
       margin: 0 0.5rem;
@@ -112,36 +112,36 @@ h1 {
 
     .wishlist-btn {
       &.btn-outline-secondary {
-        border-color: #e91e63;
-        color: #e91e63;
+        border-color: $primary;
+        color: $primary;
         background: transparent;
 
         fa-icon {
-          color: #e91e63 !important;
+          color: $primary !important;
         }
 
         &:hover {
-          background: #e91e63;
-          color: white;
+          background: $primary;
+          color: $light;
 
           fa-icon {
-            color: white !important;
+            color: $light !important;
           }
         }
       }
 
       &.btn-danger {
-        background: #e91e63;
-        border-color: #e91e63;
-        color: white;
+        background: $primary;
+        border-color: $primary;
+        color: $light;
 
         fa-icon {
-          color: white !important;
+          color: $light !important;
         }
 
         &:hover {
-          background: #c2185b;
-          border-color: #c2185b;
+          background: $secondary;
+          border-color: $secondary;
         }
       }
     }
@@ -194,11 +194,11 @@ h1 {
     margin-bottom: 2rem;
     text-align: center;
     padding-bottom: 1rem;
-    border-bottom: 2px solid $accent;
-    color: $white;
+    border-bottom: 2px solid $warning;
+    color: $light;
 
     .total-price {
-      color: $accent;
+      color: $warning;
     }
   }
 
@@ -229,12 +229,12 @@ h1 {
     font-size: 1.8rem;
     font-weight: 600;
     margin-bottom: 1rem;
-    color: $white;
+    color: $light;
   }
 
   .btn {
     background: linear-gradient(135deg, $primary 0%, $secondary 100%);
-    color: $white;
+    color: $light;
     padding: 1rem 2rem;
     border: none;
     border-radius: 25px;

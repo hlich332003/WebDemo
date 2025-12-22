@@ -29,6 +29,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findOneByPhone(String phone);
 
+
     @EntityGraph(attributePaths = "authority")
     Optional<User> findOneWithAuthoritiesByEmailIgnoreCase(String email);
 
@@ -52,4 +53,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT COUNT(u) FROM User u JOIN u.authority a WHERE a.name = :authorityName")
     Long countByAuthority_Name(@Param("authorityName") String authorityName);
+
+    @EntityGraph(attributePaths = "authority")
+    @Query("SELECT u FROM User u JOIN u.authority a WHERE a.name = :authorityName")
+    Page<User> findAllByAuthority_Name(@Param("authorityName") String authorityName, Pageable pageable);
+
+    @EntityGraph(attributePaths = "authority")
+    @Query("SELECT u FROM User u JOIN u.authority a WHERE a.name = :authorityName")
+    List<User> findAllByAuthority(@Param("authorityName") String authorityName);
 }

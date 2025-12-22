@@ -3,6 +3,7 @@ import {
   LOCALE_ID,
   importProvidersFrom,
   inject,
+  isDevMode,
 } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localeVi from '@angular/common/locales/vi';
@@ -24,6 +25,11 @@ import {
   withInterceptorsFromDi,
 } from '@angular/common/http';
 import { NgbDateAdapter } from '@ng-bootstrap/ng-bootstrap';
+import { provideStore } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import { provideStoreDevtools } from '@ngrx/store-devtools';
+import { reducers, metaReducers } from './store';
+import { CartEffects } from './store/cart/cart.effects';
 
 import './config/dayjs';
 import { environment } from 'environments/environment';
@@ -61,12 +67,23 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, ...routerFeatures),
     importProvidersFrom(BrowserModule),
     importProvidersFrom(
-      ServiceWorkerModule.register('ngsw-worker.js', { enabled: false }),
+      ServiceWorkerModule.register('ngsw-worker.js', {
+        enabled: environment.production,
+        registrationStrategy: 'registerWhenStable:30000',
+      }),
     ),
     provideHttpClient(
       withInterceptors([authInterceptor]),
       withInterceptorsFromDi(),
     ),
+    // NgRx Store
+    provideStore(reducers, { metaReducers }),
+    provideEffects([CartEffects]),
+    provideStoreDevtools({
+      maxAge: 25,
+      logOnly: !isDevMode(),
+      connectInZone: true,
+    }),
     Title,
     { provide: LOCALE_ID, useValue: 'vi' },
     { provide: NgbDateAdapter, useClass: NgbDateDayjsAdapter },

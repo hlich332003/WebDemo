@@ -1,0 +1,37 @@
+<div *ngIf="review">
+  <h2>
+    <span>Chi tiết Đánh giá #{{ review.id }}</span>
+  </h2>
+  <hr />
+  <dl class="row-md jh-entity-details">
+    <dt><span>Người dùng</span></dt>
+    <dd>
+      <span>{{ review.user?.login }}</span>
+    </dd>
+    <dt><span>Sản phẩm</span></dt>
+    <dd>
+      <a
+        *ngIf="review.product"
+        [routerLink]="['/product', review.product.id, 'view']"
+        >{{ review.product.name }}</a
+      >
+    </dd>
+    <dt><span>Đánh giá (sao)</span></dt>
+    <dd>
+      <span>{{ review.rating }}</span>
+    </dd>
+    <dt><span>Bình luận</span></dt>
+    <dd>
+      <span>{{ review.comment }}</span>
+    </dd>
+    <dt><span>Ngày tạo</span></dt>
+    <dd>
+      <span>{{
+        review.createdDate | notificationDate | formatMediumDatetime
+      }}</span>
+    </dd>
+  </dl>
+  <button type="button" (click)="previousState()" class="btn btn-info">
+    <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span>Quay lại</span>
+  </button>
+</div>

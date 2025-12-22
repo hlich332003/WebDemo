@@ -30,25 +30,24 @@ public class DomainUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(final String login) {
         log.debug("Authenticating {}", login);
 
-        if (new EmailValidator().isValid(login, null)) {
-            return userRepository
-                .findOneByEmailIgnoreCase(login)
-                .map(user -> createSpringSecurityUser(login, user))
-                .orElseThrow(() -> new UsernameNotFoundException("User with email " + login + " was not found in the database"));
-        }
-
-        String lowercaseLogin = login.toLowerCase(Locale.ENGLISH);
-        return userRepository
-            .findOneByEmailIgnoreCase(lowercaseLogin)
-            .map(user -> createSpringSecurityUser(lowercaseLogin, user))
-            .orElseThrow(() -> new UsernameNotFoundException("User " + lowercaseLogin + " was not found in the database"));
+        // Sử dụng phương thức tìm kiếm linh hoạt cho cả Email và SĐT
+        return userRepository.findOneWithAuthoritiesByEmailOrPhone(login)
+            .map(user -> createSpringSecurityUser(login, user))
+            .orElseThrow(() -> new UsernameNotFoundException("User with email or phone " + login + " was not found in the database"));
     }
 
     private org.springframework.security.core.userdetails.User createSpringSecurityUser(String lowercaseLogin, User user) {
         if (!user.isActivated()) {
             throw new UserNotActivatedException("User " + lowercaseLogin + " was not activated");
         }
-        List<SimpleGrantedAuthority> grantedAuthorities = Collections.singletonList(new SimpleGrantedAuthority(user.getAuthority().getName()));
+        // Authority trong User entity là quan hệ ManyToOne (User -> Authority)
+        // Nhưng Spring Security cần List<GrantedAuthority>
+        List<SimpleGrantedAuthority> grantedAuthorities = Collections.singletonList(
+            new SimpleGrantedAuthority(user.getAuthority().getName())
+        );
+        
+        // Luôn sử dụng Email làm username cho Spring Security Principal
+        // Điều này đảm bảo tính nhất quán cho WebSocket và các dịch vụ khác
         return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), grantedAuthorities);
     }
 

@@ -13,7 +13,8 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 
 import SharedModule from 'app/shared/shared.module';
 import { RegisterService } from './register.service';
@@ -24,7 +25,13 @@ import { HttpErrorResponse } from '@angular/common/http';
 @Component({
   selector: 'jhi-register',
   standalone: true,
-  imports: [SharedModule, FormsModule, ReactiveFormsModule],
+  imports: [
+    SharedModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterModule,
+    TranslateModule,
+  ],
   templateUrl: './register.component.html',
 })
 export default class RegisterComponent implements AfterViewInit {
@@ -103,7 +110,7 @@ export default class RegisterComponent implements AfterViewInit {
               'Đăng ký tài khoản thành công! Đang đăng nhập...',
             );
             this.loginService
-              .login({ username: email, password: password, rememberMe: false })
+              .login({ username: email, password, rememberMe: false })
               .subscribe({
                 next: () => {
                   this.router.navigate(['/']);

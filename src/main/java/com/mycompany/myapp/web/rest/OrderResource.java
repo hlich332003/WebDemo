@@ -45,15 +45,16 @@ public class OrderResource {
     private final OrderService orderService;
     private final OrderRepository orderRepository;
 
-    // private final com.mycompany.myapp.service.NotificationService notificationService; // Removed
+    private final com.mycompany.myapp.service.NotificationService notificationService;
 
     public OrderResource(
         OrderService orderService,
-        OrderRepository orderRepository/*, com.mycompany.myapp.service.NotificationService notificationService*/
-    ) { // Removed parameter
+        OrderRepository orderRepository,
+        com.mycompany.myapp.service.NotificationService notificationService
+    ) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
-        // this.notificationService = notificationService; // Removed
+        this.notificationService = notificationService;
     }
 
     @PostMapping(value = "/orders", consumes = "application/json; charset=UTF-8", produces = "application/json; charset=UTF-8")
@@ -70,9 +71,9 @@ public class OrderResource {
 
         Order result = orderService.create(orderDTO);
 
-        // Gửi thông báo WebSocket cho admin // Removed
-        // String customerName = orderDTO.getCustomerInfo() != null ? orderDTO.getCustomerInfo().getFullName() : "Khách hàng";
-        // notificationService.notifyNewOrder(result.getId(), customerName);
+        // Gửi thông báo WebSocket cho admin
+        String customerName = orderDTO.getCustomerInfo() != null ? orderDTO.getCustomerInfo().getFullName() : "Khách hàng";
+        notificationService.notifyAdminNewOrder(result.getId(), customerName);
 
         return ResponseEntity.created(new URI("/api/orders/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
@@ -136,8 +137,11 @@ public class OrderResource {
         order.setStatus(newStatus);
         Order result = orderService.save(order);
 
-        // Gửi thông báo WebSocket // Removed
-        // notificationService.notifyOrderStatusChange(result.getId(), newStatus.name());
+        // Gửi thông báo WebSocket cho khách hàng
+        String userEmail = result.getCustomer() != null ? result.getCustomer().getEmail() : result.getCustomerEmail();
+        if (userEmail != null) {
+            notificationService.notifyOrderStatusChange(userEmail, result.getId(), newStatus.name());
+        }
 
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
@@ -232,6 +236,7 @@ public class OrderResource {
     }
 
     @GetMapping("/my-orders")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.USER + "\")")
     public ResponseEntity<List<Order>> getMyOrders() {
         log.debug("REST request to get current user's Orders");
         List<Order> orders = orderService.findOrdersByCurrentUser();

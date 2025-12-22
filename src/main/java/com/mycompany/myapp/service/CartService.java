@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,8 +38,12 @@ public class CartService {
     }
 
     public Cart getCartForCurrentUser() {
-        String userEmail = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new IllegalStateException("Current user not found"));
+        String userEmail = getCurrentUserEmail();
         return cartRepository.findOneByUser_Email(userEmail).orElseGet(() -> createCartForUser(userEmail));
+    }
+
+    public String getCurrentUserEmail() {
+        return SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new IllegalStateException("Current user not found"));
     }
 
     private Cart createCartForUser(String userEmail) {
@@ -51,29 +56,51 @@ public class CartService {
         return cartRepository.save(newCart);
     }
     
+    @CacheEvict(value = "userCart", key = "#root.target.getCurrentUserEmail()")
     public void addToCart(Long productId, Integer quantity) {
-        Cart cart = getCartForCurrentUser();
-        Product product = productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product not found"));
+        try {
+            log.debug("🛒 Thêm sản phẩm {} vào giỏ hàng với số lượng {}", productId, quantity);
+            Cart cart = getCartForCurrentUser();
+            Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found: " + productId));
 
-        Optional<CartItem> existingItem = cart.getItems().stream()
-            .filter(item -> item.getProduct().getId().equals(productId))
-            .findFirst();
+            // Kiểm tra số lượng tồn kho
+            if (product.getQuantity() == null || product.getQuantity() < quantity) {
+                throw new RuntimeException("Insufficient stock for product: " + productId);
+            }
 
-        if (existingItem.isPresent()) {
-            CartItem item = existingItem.get();
-            item.setQuantity(item.getQuantity() + quantity);
-        } else {
-            CartItem newItem = new CartItem();
-            newItem.setCart(cart);
-            newItem.setProduct(product);
-            newItem.setQuantity(quantity);
-            cart.getItems().add(newItem);
+            Optional<CartItem> existingItem = cart.getItems().stream()
+                .filter(item -> item.getProduct().getId().equals(productId))
+                .findFirst();
+
+            if (existingItem.isPresent()) {
+                CartItem item = existingItem.get();
+                int newQuantity = item.getQuantity() + quantity;
+                if (product.getQuantity() < newQuantity) {
+                    throw new RuntimeException("Insufficient stock for product: " + productId);
+                }
+                item.setQuantity(newQuantity);
+                log.debug("✅ Cập nhật số lượng sản phẩm {} thành {}", productId, newQuantity);
+            } else {
+                CartItem newItem = new CartItem();
+                newItem.setCart(cart);
+                newItem.setProduct(product);
+                newItem.setQuantity(quantity);
+                cart.getItems().add(newItem);
+                log.debug("✅ Thêm mới sản phẩm {} vào giỏ hàng", productId);
+            }
+            cart.setUpdatedDate(Instant.now());
+            cartRepository.save(cart);
+            log.debug("✅ Lưu giỏ hàng thành công");
+        } catch (Exception e) {
+            log.error("❌ Lỗi khi thêm sản phẩm {} vào giỏ hàng: {}", productId, e.getMessage(), e);
+            throw e;
         }
-        cart.setUpdatedDate(Instant.now());
-        cartRepository.save(cart);
     }
 
+    @CacheEvict(value = "userCart", key = "#root.target.getCurrentUserEmail()")
     public void updateCartItem(Long productId, Integer quantity) {
+        log.debug("✏️ Cập nhật sản phẩm {} trong giỏ hàng: số lượng {}", productId, quantity);
         Cart cart = getCartForCurrentUser();
         CartItem item = cart.getItems().stream()
             .filter(i -> i.getProduct().getId().equals(productId))
@@ -85,14 +112,18 @@ public class CartService {
         cartRepository.save(cart);
     }
 
+    @CacheEvict(value = "userCart", key = "#root.target.getCurrentUserEmail()")
     public void removeFromCart(Long productId) {
+        log.debug("🗑️ Xóa sản phẩm {} khỏi giỏ hàng", productId);
         Cart cart = getCartForCurrentUser();
         cart.getItems().removeIf(item -> item.getProduct().getId().equals(productId));
         cart.setUpdatedDate(Instant.now());
         cartRepository.save(cart);
     }
 
+    @CacheEvict(value = "userCart", key = "#root.target.getCurrentUserEmail()")
     public void clearCart() {
+        log.debug("🧹 Xóa toàn bộ giỏ hàng");
         Cart cart = getCartForCurrentUser();
         cart.getItems().clear();
         cart.setUpdatedDate(Instant.now());

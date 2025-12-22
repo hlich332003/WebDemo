@@ -1,14 +1,15 @@
-import { Injectable, inject } from '@angular/core';
+/* eslint-disable @typescript-eslint/member-ordering */
+import { Injectable, inject, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { IProduct } from 'app/entities/product/product.model';
 import { AccountService } from 'app/core/auth/account.service';
 import { Observable, of, BehaviorSubject, Subject } from 'rxjs';
-import { map, shareReplay, catchError, takeUntil, tap } from 'rxjs/operators';
+import { map, catchError, takeUntil, tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
 })
-export class WishlistService {
+export class WishlistService implements OnDestroy {
   private readonly API_URL = 'api/wishlist';
 
   private http = inject(HttpClient);
@@ -17,10 +18,8 @@ export class WishlistService {
   private _itemsSubject = new BehaviorSubject<IProduct[]>([]);
   public items$ = this._itemsSubject.asObservable();
 
-  public count$ = this.items$.pipe(
-    map((items) => items.length),
-    shareReplay(1),
-  );
+  private _countSubject = new BehaviorSubject<number>(0);
+  public count$ = this._countSubject.asObservable();
 
   private destroy$ = new Subject<void>();
 
@@ -33,6 +32,7 @@ export class WishlistService {
           this.loadWishlist();
         } else {
           this._itemsSubject.next([]);
+          this._countSubject.next(0);
         }
       });
   }
@@ -45,41 +45,43 @@ export class WishlistService {
   loadWishlist(): void {
     this.http
       .get<IProduct[]>(this.API_URL)
-      .pipe(catchError(() => of([])))
+      .pipe(
+        map((products) => {
+          const uniqueProducts = Array.from(
+            new Map(products.map((p) => [p.id, p])).values(),
+          );
+          return uniqueProducts;
+        }),
+        catchError(() => of([])),
+      )
       .subscribe((products) => {
         this._itemsSubject.next(products);
+        this._countSubject.next(products.length);
       });
   }
 
   toggleWishlist(product: IProduct): Observable<boolean> {
-    if (!product || !product.id) {
+    if (!product.id) {
       return of(false);
     }
 
-    const isInWishlist = this.isInWishlist(product.id);
+    const currentItems = this._itemsSubject.value;
+    const isInWishlist = currentItems.some((p) => p.id === product.id);
+
     const apiCall = isInWishlist
       ? this.http.delete(`${this.API_URL}/${product.id}`)
       : this.http.post(`${this.API_URL}/${product.id}`, {});
 
     return apiCall.pipe(
       tap(() => {
-        // Optimistic update: update UI immediately before reload
-        const currentItems = this._itemsSubject.value;
-        if (isInWishlist) {
-          // Remove from wishlist
-          this._itemsSubject.next(
-            currentItems.filter((p) => p.id !== product.id),
-          );
-        } else {
-          // Add to wishlist
-          this._itemsSubject.next([...currentItems, product]);
-        }
-        // Then load fresh data from server
+        // Reload the wishlist from the server to ensure consistency
         this.loadWishlist();
       }),
       map(() => !isInWishlist),
       catchError((err) => {
-        this.loadWishlist(); // Reload on error to sync with server
+        // On error, revert by reloading the original state from the server
+        this.loadWishlist();
+        // Re-throw the error to be handled by the component
         throw err;
       }),
     );

@@ -3,17 +3,20 @@ package com.mycompany.myapp.web.rest;
 import com.mycompany.myapp.config.Constants;
 import com.mycompany.myapp.domain.User;
 import com.mycompany.myapp.repository.UserRepository;
-import com.mycompany.myapp.security.AuthoritiesConstants;
 import com.mycompany.myapp.service.MailService;
 import com.mycompany.myapp.service.UserService;
 import com.mycompany.myapp.service.dto.AdminUserDTO;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
 import com.mycompany.myapp.web.rest.errors.EmailAlreadyUsedException;
+import com.mycompany.myapp.web.rest.errors.PhoneAlreadyUsedException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,12 +34,13 @@ import tech.jhipster.web.util.PaginationUtil;
 import tech.jhipster.web.util.ResponseUtil;
 
 @RestController
-@RequestMapping(value = "/api/admin", produces = "application/json; charset=UTF-8")
+@RequestMapping("/api/admin")
 public class UserResource {
 
     private static final List<String> ALLOWED_ORDERED_PROPERTIES = Collections.unmodifiableList(
         Arrays.asList(
             "id",
+            "login",
             "firstName",
             "lastName",
             "email",
@@ -49,7 +53,7 @@ public class UserResource {
         )
     );
 
-    private static final Logger LOG = LoggerFactory.getLogger(UserResource.class);
+    private final Logger log = LoggerFactory.getLogger(UserResource.class);
 
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
@@ -66,53 +70,56 @@ public class UserResource {
         this.mailService = mailService;
     }
 
-    @PostMapping(value = "/users", consumes = "application/json; charset=UTF-8")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @PostMapping("/users")
+    @PreAuthorize("hasAuthority(\"ROLE_ADMIN\")")
     public ResponseEntity<User> createUser(@Valid @RequestBody AdminUserDTO userDTO) throws URISyntaxException {
-        LOG.debug("REST request to save User : {}", userDTO);
+        log.debug("REST request to save User : {}", userDTO);
 
         if (userDTO.getId() != null) {
             throw new BadRequestAlertException("A new user cannot already have an ID", "userManagement", "idexists");
         } else if (userRepository.findOneByEmailIgnoreCase(userDTO.getEmail()).isPresent()) {
             throw new EmailAlreadyUsedException();
+        } else if (userRepository.findOneByPhone(userDTO.getPhone()).isPresent()) {
+            throw new PhoneAlreadyUsedException();
         } else {
             User newUser = userService.createUser(userDTO);
             mailService.sendCreationEmail(newUser);
-            return ResponseEntity.created(new URI("/api/admin/users/" + newUser.getEmail()))
-                .headers(
-                    HeaderUtil.createAlert(applicationName, "A user is created with identifier " + newUser.getEmail(), newUser.getEmail())
-                )
+            return ResponseEntity
+                .created(new URI("/api/admin/users/" + newUser.getEmail()))
+                .headers(HeaderUtil.createAlert(applicationName, "userManagement.created", newUser.getEmail()))
                 .body(newUser);
         }
     }
 
-    @PutMapping(value = { "/users", "/users/{id}" }, consumes = "application/json; charset=UTF-8")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public ResponseEntity<AdminUserDTO> updateUser(
-        @PathVariable(name = "id", required = false) Long id,
-        @Valid @RequestBody AdminUserDTO userDTO
-    ) {
-        LOG.debug("REST request to update User : {}", userDTO);
+    @PutMapping("/users")
+    @PreAuthorize("hasAuthority(\"ROLE_ADMIN\")")
+    public ResponseEntity<AdminUserDTO> updateUser(@Valid @RequestBody AdminUserDTO userDTO) {
+        log.debug("REST request to update User : {}", userDTO);
         Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
-        if (existingUser.isPresent() && (!existingUser.orElseThrow().getId().equals(userDTO.getId()))) {
+        if (existingUser.isPresent() && (!existingUser.get().getId().equals(userDTO.getId()))) {
             throw new EmailAlreadyUsedException();
+        }
+        existingUser = userRepository.findOneByPhone(userDTO.getPhone());
+        if (existingUser.isPresent() && (!existingUser.get().getId().equals(userDTO.getId()))) {
+            throw new PhoneAlreadyUsedException();
         }
         Optional<AdminUserDTO> updatedUser = userService.updateUser(userDTO);
 
         return ResponseUtil.wrapOrNotFound(
             updatedUser,
-            HeaderUtil.createAlert(applicationName, "A user is updated with identifier " + userDTO.getEmail(), userDTO.getEmail())
+            HeaderUtil.createAlert(applicationName, "userManagement.updated", userDTO.getEmail())
         );
     }
 
     @GetMapping("/users")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public ResponseEntity<List<AdminUserDTO>> getAllUsers(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
-        LOG.debug("REST request to get all User for an admin");
+    @PreAuthorize("hasAuthority(\"ROLE_ADMIN\")")
+    public ResponseEntity<List<AdminUserDTO>> getAllUsers(Pageable pageable) {
+        log.debug("REST request to get all User for an admin");
         if (!onlyContainsAllowedProperties(pageable)) {
             return ResponseEntity.badRequest().build();
         }
 
+        // Admin có thể xem tất cả người dùng (cả ADMIN và USER)
         final Page<AdminUserDTO> page = userService.getAllManagedUsers(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
@@ -123,19 +130,17 @@ public class UserResource {
     }
 
     @GetMapping("/users/{email}")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public ResponseEntity<AdminUserDTO> getUser(@PathVariable("email") String email) {
-        LOG.debug("REST request to get User : {}", email);
-        return ResponseUtil.wrapOrNotFound(userService.getUserWithAuthoritiesByEmail(email).map(AdminUserDTO::new));
+    @PreAuthorize("hasAuthority(\"ROLE_ADMIN\")")
+    public ResponseEntity<AdminUserDTO> getUser(@PathVariable @Pattern(regexp = Constants.LOGIN_REGEX) String email) {
+        log.debug("REST request to get User : {}", email);
+        return ResponseUtil.wrapOrNotFound(userService.getUserWithAuthoritiesByLogin(email).map(AdminUserDTO::new));
     }
 
     @DeleteMapping("/users/{email}")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public ResponseEntity<Void> deleteUser(@PathVariable("email") String email) {
-        LOG.debug("REST request to delete User: {}", email);
+    @PreAuthorize("hasAuthority(\"ROLE_ADMIN\")")
+    public ResponseEntity<Void> deleteUser(@PathVariable @Pattern(regexp = Constants.LOGIN_REGEX) String email) {
+        log.debug("REST request to delete User: {}", email);
         userService.deleteUser(email);
-        return ResponseEntity.noContent()
-            .headers(HeaderUtil.createAlert(applicationName, "A user is deleted with identifier " + email, email))
-            .build();
+        return ResponseEntity.noContent().headers(HeaderUtil.createAlert(applicationName, "userManagement.deleted", email)).build();
     }
 }

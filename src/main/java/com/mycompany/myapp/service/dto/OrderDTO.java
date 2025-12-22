@@ -1,6 +1,7 @@
 package com.mycompany.myapp.service.dto;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
@@ -9,7 +10,7 @@ public class OrderDTO implements Serializable {
 
     private CustomerInfoDTO customerInfo;
     private List<OrderItemDTO> items;
-    private Double totalAmount; // Hoàn tác về Double
+    private BigDecimal totalAmount;
     private Instant orderDate;
     private String status;
     private String notes;
@@ -30,11 +31,11 @@ public class OrderDTO implements Serializable {
         this.items = items;
     }
 
-    public Double getTotalAmount() { // Hoàn tác về Double
+    public BigDecimal getTotalAmount() {
         return totalAmount;
     }
 
-    public void setTotalAmount(Double totalAmount) { // Hoàn tác về Double
+    public void setTotalAmount(BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
     }
 

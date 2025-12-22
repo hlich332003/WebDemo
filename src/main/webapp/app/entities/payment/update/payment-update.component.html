@@ -1,0 +1,125 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <form
+      name="editForm"
+      role="form"
+      novalidate
+      (ngSubmit)="save()"
+      [formGroup]="editForm"
+    >
+      <h2 id="jhi-payment-heading" data-cy="PaymentCreateUpdateHeading">
+        Create or edit a Payment
+      </h2>
+
+      <div>
+        <jhi-alert-error></jhi-alert-error>
+
+        <div class="mb-3" *ngIf="editForm.controls.id.value !== null">
+          <label class="form-label" for="field_id">ID</label>
+          <input
+            type="number"
+            class="form-control"
+            name="id"
+            id="field_id"
+            data-cy="id"
+            formControlName="id"
+            [readonly]="true"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_method">Method</label>
+          <input
+            type="text"
+            class="form-control"
+            name="method"
+            id="field_method"
+            data-cy="method"
+            formControlName="method"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_status">Status</label>
+          <input
+            type="text"
+            class="form-control"
+            name="status"
+            id="field_status"
+            data-cy="status"
+            formControlName="status"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_paidAt">Paid At</label>
+          <div class="d-flex">
+            <input
+              id="field_paidAt"
+              data-cy="paidAt"
+              type="datetime-local"
+              class="form-control"
+              name="paidAt"
+              formControlName="paidAt"
+              placeholder="YYYY-MM-DD HH:mm"
+            />
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_amount">Amount</label>
+          <input
+            type="number"
+            class="form-control"
+            name="amount"
+            id="field_amount"
+            data-cy="amount"
+            formControlName="amount"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_order">Order</label>
+          <select
+            class="form-control"
+            id="field_order"
+            data-cy="order"
+            name="order"
+            formControlName="order"
+            [compareWith]="compareOrder"
+          >
+            <option [ngValue]="null"></option>
+            <option
+              [ngValue]="orderOption"
+              *ngFor="let orderOption of ordersSharedCollection"
+            >
+              {{ orderOption.id }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <button
+          type="button"
+          id="cancel-save"
+          data-cy="entityCreateCancelButton"
+          class="btn btn-secondary"
+          (click)="previousState()"
+        >
+          <fa-icon icon="ban"></fa-icon>&nbsp;<span>Cancel</span>
+        </button>
+
+        <button
+          type="submit"
+          id="save-entity"
+          data-cy="entityCreateSaveButton"
+          [disabled]="editForm.invalid || isSaving"
+          class="btn btn-primary"
+        >
+          <fa-icon icon="save"></fa-icon>&nbsp;<span>Save</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,64 @@
+<div>
+  <h2>
+    <span>Quản lý Đánh giá</span>
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-info me-2" (click)="loadReviews()">
+        <fa-icon icon="sync"></fa-icon>
+        <span>Làm mới</span>
+      </button>
+    </div>
+  </h2>
+
+  <div class="table-responsive" *ngIf="reviews$ | async as reviews">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th><span>ID</span></th>
+          <th><span>Người dùng</span></th>
+          <th><span>Sản phẩm</span></th>
+          <th><span>Đánh giá (sao)</span></th>
+          <th><span>Bình luận</span></th>
+          <th><span>Ngày tạo</span></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let review of reviews; trackBy: trackId">
+          <td>
+            <a [routerLink]="['/admin/review-management', review.id, 'view']">{{
+              review.id
+            }}</a>
+          </td>
+          <td>{{ review.user?.login }}</td>
+          <td>
+            <a
+              *ngIf="review.product"
+              [routerLink]="['/product', review.product.id, 'view']"
+              >{{ review.product.name }}</a
+            >
+          </td>
+          <td>{{ review.rating }}</td>
+          <td>{{ review.comment }}</td>
+          <td>
+            {{ review.createdDate | notificationDate | formatMediumDatetime }}
+          </td>
+          <td class="text-end">
+            <div class="btn-group">
+              <a
+                [routerLink]="['/admin/review-management', review.id, 'view']"
+                class="btn btn-info btn-sm"
+              >
+                <fa-icon icon="eye"></fa-icon>
+                <span class="d-none d-md-inline">Xem</span>
+              </a>
+              <button (click)="delete(review)" class="btn btn-danger btn-sm">
+                <fa-icon icon="times"></fa-icon>
+                <span class="d-none d-md-inline">Xóa</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

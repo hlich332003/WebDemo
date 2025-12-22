@@ -15,6 +15,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import PasswordStrengthBarComponent from 'app/account/password/password-strength-bar/password-strength-bar.component';
 import SharedModule from 'app/shared/shared.module';
 
@@ -29,6 +30,7 @@ import { PasswordResetFinishService } from './password-reset-finish.service';
     FormsModule,
     ReactiveFormsModule,
     PasswordStrengthBarComponent,
+    TranslateModule,
   ],
   templateUrl: './password-reset-finish.component.html',
 })

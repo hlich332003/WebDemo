@@ -15,7 +15,7 @@ export class LoginService {
   login(credentials: Login): Observable<Account | null> {
     return this.authServerProvider
       .login(credentials)
-      .pipe(mergeMap(() => this.accountService.identity(true, true)));
+      .pipe(mergeMap(() => this.accountService.identity(true)));
   }
 
   logout(): void {

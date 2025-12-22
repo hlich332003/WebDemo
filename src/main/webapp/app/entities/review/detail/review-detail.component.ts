@@ -1,0 +1,26 @@
+import { Component, input } from '@angular/core';
+import { RouterModule } from '@angular/router';
+
+import SharedModule from 'app/shared/shared.module';
+import { FormatMediumDatetimePipe } from 'app/shared/date';
+import { IReview } from '../review.model';
+import { CastToDayjsPipe } from 'app/shared/date/cast-to-dayjs.pipe';
+
+@Component({
+  standalone: true,
+  selector: 'jhi-review-detail',
+  templateUrl: './review-detail.component.html',
+  imports: [
+    SharedModule,
+    RouterModule,
+    FormatMediumDatetimePipe,
+    CastToDayjsPipe,
+  ],
+})
+export class ReviewDetailComponent {
+  review = input<IReview | null>(null);
+
+  previousState(): void {
+    window.history.back();
+  }
+}

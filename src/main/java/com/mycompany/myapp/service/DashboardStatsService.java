@@ -27,7 +27,7 @@ public class DashboardStatsService {
         Long totalProducts = dashboardStatsRepository.getTotalProducts();
 
         DashboardStatsDTO stats = new DashboardStatsDTO();
-        stats.setTotalRevenue(totalRevenue != null ? totalRevenue.doubleValue() : 0.0);
+        stats.setTotalRevenue(totalRevenue != null ? totalRevenue : BigDecimal.ZERO);
         stats.setTotalOrders(totalOrders != null ? totalOrders : 0L);
         stats.setTotalCustomers(totalCustomers != null ? totalCustomers : 0L);
         stats.setTotalProducts(totalProducts != null ? totalProducts : 0L);

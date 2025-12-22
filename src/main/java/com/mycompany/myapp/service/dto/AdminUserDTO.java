@@ -59,6 +59,8 @@ public class AdminUserDTO {
         this.lastModifiedDate = user.getLastModifiedDate();
         if (user.getAuthority() != null) {
             this.authorities = Collections.singleton(user.getAuthority().getName());
+        } else {
+            this.authorities = Collections.emptySet();
         }
     }
 

@@ -7,8 +7,20 @@
     <div class="filter-group">
       <h5>Khoảng Giá</h5>
       <div class="price-inputs">
-        <input type="number" placeholder="Từ" [(ngModel)]="minPrice" (change)="applyFilters()" class="form-control mb-2">
-        <input type="number" placeholder="Đến" [(ngModel)]="maxPrice" (change)="applyFilters()" class="form-control">
+        <input
+          type="number"
+          placeholder="Từ"
+          [(ngModel)]="minPrice"
+          (change)="applyFiltersAndNavigate()"
+          class="form-control mb-2"
+        />
+        <input
+          type="number"
+          placeholder="Đến"
+          [(ngModel)]="maxPrice"
+          (change)="applyFiltersAndNavigate()"
+          class="form-control"
+        />
       </div>
     </div>
 
@@ -17,13 +29,31 @@
       <h5>Danh Mục</h5>
       <div class="category-list">
         <div class="form-check">
-          <input class="form-check-input" type="radio" name="categoryFilter" id="cat-all" [(ngModel)]="selectedCategorySlug" value="all" (change)="applyFilters()">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="categoryFilter"
+            id="cat-all"
+            [(ngModel)]="selectedCategorySlug"
+            value="all"
+            (change)="applyFiltersAndNavigate()"
+          />
           <label class="form-check-label" for="cat-all">Tất cả</label>
         </div>
         @for (category of categories; track category.id) {
           <div class="form-check">
-            <input class="form-check-input" type="radio" name="categoryFilter" [id]="'cat-' + category.id" [(ngModel)]="selectedCategorySlug" [value]="category.slug" (change)="applyFilters()">
-            <label class="form-check-label" [for]="'cat-' + category.id">{{ category.name }}</label>
+            <input
+              class="form-check-input"
+              type="radio"
+              name="categoryFilter"
+              [id]="'cat-' + category.id"
+              [(ngModel)]="selectedCategorySlug"
+              [value]="category.slug"
+              (change)="applyFiltersAndNavigate()"
+            />
+            <label class="form-check-label" [for]="'cat-' + category.id">{{
+              category.name
+            }}</label>
           </div>
         }
       </div>
@@ -33,8 +63,16 @@
     <div class="filter-group">
       <h5>Trạng Thái</h5>
       <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="in-stock-filter" [(ngModel)]="inStockOnly" (change)="applyFilters()">
-        <label class="form-check-label" for="in-stock-filter">Chỉ hiển thị sản phẩm còn hàng</label>
+        <input
+          class="form-check-input"
+          type="checkbox"
+          id="in-stock-filter"
+          [(ngModel)]="inStockOnly"
+          (change)="applyFiltersAndNavigate()"
+        />
+        <label class="form-check-label" for="in-stock-filter"
+          >Chỉ hiển thị sản phẩm còn hàng</label
+        >
       </div>
     </div>
 
@@ -54,13 +92,14 @@
           placeholder="🔍 Tìm kiếm sản phẩm..."
           class="search-input"
         />
-        @if (isSearching) {
-          <span class="search-loading" title="Đang tìm kiếm...">⏳</span>
-        }
       </div>
       <div class="sort-wrapper">
         <span class="me-2">Sắp xếp:</span>
-        <select class="form-select form-select-sm" [(ngModel)]="sortOption" (change)="applyFilters()">
+        <select
+          class="form-select form-select-sm"
+          [(ngModel)]="sortOption"
+          (change)="applyFiltersAndNavigate()"
+        >
           <option value="name,asc">Tên A-Z</option>
           <option value="name,desc">Tên Z-A</option>
           <option value="price,asc">Giá tăng dần</option>
@@ -70,74 +109,59 @@
       </div>
     </div>
 
-    @if (isLoading) {
-      <div class="loading-indicator">
-        <p>⏳ Đang tải sản phẩm...</p>
-      </div>
-    } @else if (filteredProducts.length === 0) {
+    @if (products.length === 0 && !isLoading) {
       <div class="no-results">
         <p>Không tìm thấy sản phẩm nào phù hợp.</p>
       </div>
     } @else {
-      <div class="products-grid">
-        @for (product of filteredProducts; track product.id) {
+      <div
+        class="products-grid"
+        infiniteScroll
+        [infiniteScrollDistance]="2"
+        [infiniteScrollThrottle]="50"
+        (scrolled)="onScroll()"
+      >
+        @for (product of products; track product.id) {
           <div class="product-card">
-            <img
-              [jhiLazyLoad]="getProxiedImageUrl(product.imageUrl)"
-              [alt]="product.name"
-              (click)="viewProductDetail(product.id!)"
-              (error)="onImageError($event)"
-            />
-            <div class="product-info">
-              <h4 class="product-name" (click)="viewProductDetail(product.id!)">
-                {{ product.name }}
-              </h4>
-              <p class="product-price">{{ formatPrice(product.price) }}</p>
-              @if (product.quantity !== null && product.quantity !== undefined) {
-                @if (product.quantity === 0) {
-                  <p class="stock text-danger fw-bold">❌ Hết hàng</p>
-                } @else if (product.quantity < 10) {
-                  <p class="stock text-warning">⚠️ Chỉ còn {{ product.quantity }}</p>
-                } @else {
-                  <p class="stock text-muted">Còn hàng</p>
-                }
-              }
-              <div class="product-buttons">
-                <button
-                  type="button"
-                  (click)="toggleWishlist(product, $event)"
-                  class="btn-wishlist"
-                  [class.in-wishlist]="isInWishlist(product.id!)"
-                  title="Yêu thích"
-                >
-                  <fa-icon icon="heart"></fa-icon>
-                </button>
-                <button
-                  class="btn btn-sm btn-success flex-grow-1"
-                  (click)="addToCart(product); $event.stopPropagation()"
-                  [disabled]="product.quantity === 0"
-                >
-                  <fa-icon icon="cart-plus"></fa-icon>
-                  {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm giỏ' }}
-                </button>
+            <div class="product-image-wrapper" (click)="viewProductDetail(product.id!)">
+              <img *ngIf="product.imageUrl" [jhiLazyLoad]="getProxiedImageUrl(product.imageUrl)" [alt]="product.name" (error)="onImageError($event)" loading="lazy" />
+              <div *ngIf="!product.imageUrl" class="image-placeholder">
+                <fa-icon icon="box-open"></fa-icon>
               </div>
+            </div>
+            <div class="product-info">
+              <h5 class="product-name" (click)="viewProductDetail(product.id!)">{{ product.name }}</h5>
+              <p class="product-price">{{ formatPrice(product.price) }}</p>
+            </div>
+            <div class="product-actions">
+              <button
+                class="btn btn-sm btn-wishlist"
+                (click)="toggleWishlist(product, $event)"
+                [class.in-wishlist]="isInWishlist(product.id!)"
+                title="Thêm vào yêu thích">
+                <fa-icon [icon]="isInWishlist(product.id!) ? 'heart-crack' : 'heart'"></fa-icon>
+              </button>
+              <button
+                class="btn btn-sm btn-add-to-cart"
+                (click)="addToCart(product)"
+                [disabled]="product.quantity === 0"
+                title="Thêm vào giỏ hàng">
+                <fa-icon icon="shopping-cart"></fa-icon>
+              </button>
+              <button
+                class="btn btn-sm btn-buy-now"
+                (click)="buyNow(product)"
+                [disabled]="product.quantity === 0">
+                {{ product.quantity === 0 ? 'Hết hàng' : 'Mua ngay' }}
+              </button>
             </div>
           </div>
         }
       </div>
 
-      @if (totalItems > itemsPerPage) {
-        <div class="pagination-controls">
-          <jhi-item-count [params]="{ page, totalItems, itemsPerPage }" />
-          <ngb-pagination
-            [collectionSize]="totalItems"
-            [(page)]="page"
-            [pageSize]="itemsPerPage"
-            [maxSize]="5"
-            [rotate]="true"
-            [boundaryLinks]="true"
-            (pageChange)="transition()"
-          ></ngb-pagination>
+      @if (isLoading) {
+        <div class="loading-indicator">
+          <p>⏳ Đang tải thêm sản phẩm...</p>
         </div>
       }
     }

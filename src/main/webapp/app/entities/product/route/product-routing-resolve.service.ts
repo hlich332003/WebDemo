@@ -12,16 +12,18 @@ export const productResolve = (
 ): Observable<NonNullable<IProduct>> => {
   const id = route.params['id'];
   if (id) {
-    return (inject(ProductService) as ProductService).find(Number(id)).pipe(
-      mergeMap((product: HttpResponse<IProduct>) => {
-        if (product.body) {
-          return of(product.body);
-        } else {
-          inject(Router).navigate(['404']);
-          return EMPTY;
-        }
-      }),
-    );
+    return inject(ProductService)
+      .find(Number(id))
+      .pipe(
+        mergeMap((product: HttpResponse<IProduct>) => {
+          if (product.body) {
+            return of(product.body);
+          } else {
+            inject(Router).navigate(['404']);
+            return EMPTY;
+          }
+        }),
+      );
   }
   // Trả về một sản phẩm hợp lệ với các thuộc tính bắt buộc khi không có ID
   // Hoặc điều hướng đến trang lỗi nếu không muốn hiển thị sản phẩm rỗng

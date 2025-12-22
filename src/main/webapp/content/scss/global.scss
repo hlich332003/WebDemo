@@ -1,17 +1,19 @@
-@use 'variables' as vars; // Đã đổi alias thành vars
+@use 'variables' as vars;
 @use 'sass:color';
 @use 'loading-states';
 @use 'buttons';
 @use 'wishlist-button';
+@use '../../app/layouts/_theme' as theme;
 
 /* ==========================================================================
-   Global styles
+   Global styles - Style toàn cục cho dự án
    ========================================================================== */
 
 body {
-  background-color: vars.$body-bg; // Sử dụng vars.$body-bg
-  color: vars.$body-color; // Sử dụng vars.$body-color
-  font-family: vars.$font-family-sans-serif; // Sử dụng vars.$font-family-sans-serif
+  background-color: vars.$body-bg;
+  color: vars.$body-color;
+  font-family: vars.$font-family-sans-serif;
+  line-height: 1.6;
 }
 
 h1,
@@ -22,139 +24,143 @@ h5,
 h6 {
   font-weight: 600;
   color: vars.$body-color;
+  margin-bottom: 1rem;
 }
 
-/* Navbar overrides - FORCE white text with highest specificity */
-.navbar,
-.navbar-dark,
-.navbar-light,
-nav.navbar {
-  .nav-link,
-  .nav-link *,
-  .dropdown-toggle,
-  .dropdown-toggle *,
-  .navbar-brand,
-  .navbar-brand *,
-  a,
-  a *,
-  span,
-  fa-icon,
-  ::ng-deep * {
-    color: #ffffff !important;
-  }
-
-  .dropdown-toggle::after {
-    border-top-color: #ffffff !important;
-  }
-
-  .nav-link:hover,
-  .nav-link:hover *,
-  .dropdown-toggle:hover,
-  .dropdown-toggle:hover *,
-  a:hover,
-  a:hover * {
-    color: #ffc107 !important;
-  }
-
-  .dropdown-menu {
-    background: #2d3436 !important;
-
-    .dropdown-item,
-    .dropdown-item *,
-    a,
-    a * {
-      color: #ffffff !important;
-    }
-
-    .dropdown-item:hover,
-    .dropdown-item:hover * {
-      color: #ffffff !important;
-      background: #e91e63 !important;
-    }
-  }
-}
-
-/* Footer overrides - FORCE white text */
-.footer,
-footer,
-.page-footer {
-  color: #ffffff !important;
-
-  *:not(.btn):not(a.btn) {
-    color: #ffffff !important;
-  }
-
-  a:not(.btn) {
-    color: #ffffff !important;
-
-    &:hover {
-      color: #ffc107 !important;
-    }
-  }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  p,
-  span,
-  div,
-  li {
-    color: #ffffff !important;
-  }
-}
-
-.btn {
-  border-radius: vars.$btn-border-radius; // Sử dụng vars.$btn-border-radius
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  transition: all 0.2s ease-in-out;
-}
-
-.btn-primary {
-  background-color: vars.$primary; // Sử dụng vars.$primary
-  border-color: vars.$primary; // Sử dụng vars.$primary
-  color: vars.$light; // Đảm bảo chữ trên nút primary là màu sáng
+a {
+  color: vars.$primary;
+  text-decoration: none;
+  transition: color 0.2s ease;
 
   &:hover {
-    background-color: color.adjust(vars.$primary, $lightness: -10%);
-    border-color: color.adjust(vars.$primary, $lightness: -10%);
+    color: color.adjust(vars.$primary, $lightness: -10%);
+    text-decoration: none;
   }
-}
-
-.btn-secondary {
-  background-color: vars.$secondary; // Sử dụng vars.$secondary
-  border-color: vars.$secondary; // Sử dụng vars.$secondary
-  color: vars.$light; // Đảm bảo chữ trên nút secondary là màu sáng
-
-  &:hover {
-    background-color: color.adjust(vars.$secondary, $lightness: -10%);
-    border-color: color.adjust(vars.$secondary, $lightness: -10%);
-  }
-}
-
-.card {
-  background-color: vars.$card-bg; // Sử dụng vars.$card-bg
-  border-radius: vars.$card-border-radius; // Sử dụng vars.$card-border-radius
-  box-shadow: vars.$card-box-shadow; // Sử dụng vars.$card-box-shadow
-  border: none;
 }
 
 /* ==========================================================================
-   JHipster specific styles
+   Button styles - Nút bấm đồng bộ toàn dự án
    ========================================================================== */
+
+.btn {
+  @include theme.themed-button;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+  user-select: none;
+  text-decoration: none;
+
+  fa-icon {
+    margin-right: 0.5rem;
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(vars.$primary, 0.25);
+  }
+}
+
+.btn-primary {
+  @include theme.themed-button;
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, vars.$secondary 0%, theme.$secondary-purple 100%);
+  color: theme.$light-text;
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg,
+      color.adjust(vars.$secondary, $lightness: -10%) 0%,
+      color.adjust(theme.$secondary-purple, $lightness: -10%) 100%);
+    color: theme.$light-text;
+  }
+}
+
+.btn-success {
+  background: vars.$success;
+  color: theme.$light-text;
+
+  &:hover:not(:disabled) {
+    background: color.adjust(vars.$success, $lightness: -10%);
+    color: theme.$light-text;
+  }
+}
+
+.btn-danger {
+  background: vars.$danger;
+  color: theme.$light-text;
+
+  &:hover:not(:disabled) {
+    background: color.adjust(vars.$danger, $lightness: -10%);
+    color: theme.$light-text;
+  }
+}
+
+.btn-warning {
+  background: vars.$warning;
+  color: theme.$dark-text;
+
+  &:hover:not(:disabled) {
+    background: color.adjust(vars.$warning, $lightness: -10%);
+    color: theme.$dark-text;
+  }
+}
+
+.btn-info {
+  background: vars.$info;
+  color: theme.$light-text;
+
+  &:hover:not(:disabled) {
+    background: color.adjust(vars.$info, $lightness: -10%);
+    color: theme.$light-text;
+  }
+}
+
+.btn-outline-primary {
+  background: transparent;
+  border: 2px solid vars.$primary;
+  color: vars.$primary;
+  box-shadow: none;
+
+  &:hover:not(:disabled) {
+    background: vars.$primary;
+    color: theme.$light-text;
+  }
+}
+
+// Button sizes
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border-radius: 8px;
+}
+
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  border-radius: 16px;
+}
+
+/* ==========================================================================
+   Card styles - Thẻ nội dung
+   ========================================================================== */
+
+.card {
+  @include theme.themed-card;
+  padding: 1.5rem;
+}
 
 .jh-card {
   @extend .card;
-  padding: 2rem;
   margin-top: 2rem;
   margin-bottom: 2rem;
 }
 
 /* ==========================================================================
-   Notification styles
+   Notification styles - Thông báo
    ========================================================================== */
 
 .notification {
@@ -162,8 +168,8 @@ footer,
   top: 80px;
   right: 20px;
   padding: 1rem 1.5rem;
-  border-radius: 8px;
-  color: #fff; // Giữ nguyên màu trắng cho notification text
+  border-radius: vars.$border-radius;
+  color: theme.$light-text;
   font-weight: 600;
   z-index: 1050;
   transition:
@@ -172,6 +178,7 @@ footer,
   transform: translateY(-20px);
   opacity: 0;
   pointer-events: none;
+  box-shadow: vars.$box-shadow;
 
   &.show {
     transform: translateY(0);
@@ -180,88 +187,73 @@ footer,
   }
 
   &.success {
-    background-color: vars.$success; // Sử dụng vars.$success
+    background: vars.$success;
   }
 
   &.error {
-    background-color: vars.$danger; // Sử dụng vars.$danger
+    background: vars.$danger;
   }
 
   &.info {
-    background-color: vars.$info; // Sử dụng vars.$info
+    background: vars.$info;
   }
 
   &.warning {
-    background-color: vars.$warning; // Sử dụng vars.$warning
+    background: vars.$warning;
+    color: theme.$dark-text;
   }
 }
 
 /* ==========================================================================
-   Global text color overrides for light purple background
+   Form styles - Form nhập liệu
    ========================================================================== */
 
-// Màu chữ mặc định cho nền hồng tím nhạt
-body,
-p,
-span,
-div,
-label,
-li,
-td,
-th,
-input,
-textarea,
-select {
-  color: #2d1b47 !important; // Màu tím đậm hơn để dễ đọc
-}
+.form-control {
+  border-radius: vars.$border-radius;
+  border: 1px solid vars.$border-color;
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  color: #1a0d2e !important; // Màu tím rất đậm cho heading
-}
-
-a {
-  color: #6a1b9a !important; // Link màu tím đậm
-
-  &:hover {
-    color: #8e24aa !important; // Hover sáng hơn
+  &:focus {
+    border-color: vars.$primary;
+    box-shadow: 0 0 0 0.2rem rgba(vars.$primary, 0.25);
+    outline: none;
   }
 }
 
-// Button text - giữ màu trắng
-.btn {
-  color: #fff !important;
-}
+/* ==========================================================================
+   Table styles - Bảng dữ liệu
+   ========================================================================== */
 
-// Card text
-.card,
-.jh-card {
-  p,
-  span,
-  div,
-  label,
-  li,
-  td,
-  th,
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    color: #2d1b47 !important;
+.table {
+  background: theme.$card-background;
+  border-radius: vars.$border-radius;
+  overflow: hidden;
+  box-shadow: vars.$box-shadow-sm;
+
+  thead {
+    background: theme.$gradient-primary;
+    color: theme.$light-text;
+
+    th {
+      padding: 1rem;
+      font-weight: 600;
+      border: none;
+    }
   }
-}
 
-// Navbar text
-.navbar {
-  a,
-  span,
-  div {
-    color: #2d1b47 !important;
+  tbody {
+    tr {
+      transition: background 0.2s ease;
+
+      &:hover {
+        background: rgba(vars.$primary, 0.05);
+      }
+    }
+
+    td {
+      padding: 1rem;
+      border-top: 1px solid vars.$border-color;
+    }
   }
 }

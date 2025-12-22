@@ -77,10 +77,21 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       this.loginModalService.open();
       return;
     }
-    this.cartService.addToCart(product.id!).subscribe(() => {
+    this.cartService.addToCart(product.id).subscribe(() => {
       this.notify.success('✅ Đã thêm sản phẩm vào giỏ hàng!');
       this.cartService.loadCart();
     });
+  }
+
+  buyNow(product: IProduct): void {
+    if (!this.accountService.isAuthenticated()) {
+      this.loginModalService.open();
+      return;
+    }
+    if (product.id && product.quantity && product.quantity > 0) {
+      // Use setBuyNowItem to proceed directly to checkout without adding to cart
+      this.cartService.setBuyNowItem(product, 1);
+    }
   }
 
   toggleWishlist(product: IProduct): void {
@@ -88,7 +99,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       this.loginModalService.open();
       return;
     }
-    const isInWishlist = this.wishlistService.isInWishlist(product.id!);
+    const isInWishlist = this.wishlistService.isInWishlist(product.id);
     this.wishlistService.toggleWishlist(product).subscribe({
       next: () => {
         if (isInWishlist) {

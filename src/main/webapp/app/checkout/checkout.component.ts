@@ -8,7 +8,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { Subject, of } from 'rxjs';
+import { Subject, of, forkJoin } from 'rxjs';
 import { takeUntil, switchMap } from 'rxjs/operators';
 
 import { CartService, ICartItem } from 'app/shared/services/cart.service';
@@ -31,6 +31,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   account: Account | null = null;
   orderSuccess = false;
   orderDetails: any = null;
+  isBuyNow = false; // Flag to track if this is a "Buy Now" order
 
   private readonly destroy$ = new Subject<void>();
 
@@ -66,22 +67,39 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Clear buy now item when leaving checkout if not successful
+    if (!this.orderSuccess) {
+        this.cartService.clearBuyNowItem();
+    }
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   private loadCartAndAccount(): void {
-    this.cartService.cartItems$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((items) => {
-        this.cart = items;
-      });
+    // Check for Buy Now item first
+    const buyNowItem = this.cartService.getBuyNowItem();
+    
+    if (buyNowItem) {
+        this.cart = [buyNowItem];
+        this.isBuyNow = true;
+    } else {
+        // Fallback to selected cart items
+        this.cart = this.cartService.getItemsForCheckout();
+        this.isBuyNow = false;
+    }
 
-    this.cartService.totalPrice$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((total) => {
-        this.total = total;
-      });
+    // Calculate total for these items
+    this.total = this.cart.reduce(
+      (sum, item) => sum + (item.product.price ?? 0) * item.quantity,
+      0,
+    );
+
+    // If no items, redirect back to cart
+    if (this.cart.length === 0) {
+      this.notify.warning('Vui lòng chọn sản phẩm để thanh toán.');
+      this.router.navigate(['/cart']);
+      return;
+    }
 
     this.accountService
       .getAuthenticationState()
@@ -112,13 +130,12 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const cartItems = this.cartService.getCartItems();
-    if (cartItems.length === 0) {
+    if (this.cart.length === 0) {
       this.notify.error('Giỏ hàng của bạn đang trống!');
       return;
     }
 
-    const orderData = this.buildOrderData(cartItems);
+    const orderData = this.buildOrderData(this.cart);
     this.submitOrder(orderData);
   }
 
@@ -139,10 +156,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         paymentMethod: formValue.paymentMethod || 'cod',
       },
       items: cartItems.map((item) => ({
-        productId: item.product.id,
-        productName: item.product.name,
+        product: item.product, // Send the whole product object
         quantity: item.quantity,
-        price: item.product.price,
       })),
       totalAmount: this.total,
       notes: formValue.notes || null,
@@ -161,7 +176,26 @@ export class CheckoutComponent implements OnInit, OnDestroy {
             totalAmount: orderData.totalAmount,
             customerInfo: orderData.customerInfo,
           };
-          return this.cartService.clearCart();
+          
+          // If this is a Buy Now order, we DO NOT remove items from the cart
+          if (this.isBuyNow) {
+              this.cartService.clearBuyNowItem();
+              return of(null);
+          }
+
+          // Otherwise, remove purchased items from cart
+          const purchasedProductIds = this.cart.map(item => item.product.id!);
+          const removeObservables = purchasedProductIds.map(id => this.cartService.removeFromCart(id));
+          
+          if (removeObservables.length > 0) {
+             return forkJoin(removeObservables).pipe(
+                 switchMap(() => {
+                     this.cartService.loadCart(); // Reload cart to reflect changes
+                     return of(null);
+                 })
+             );
+          }
+          return of(null);
         }),
         takeUntil(this.destroy$),
       )
@@ -171,7 +205,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
           this.notify.success('✅ Đặt hàng thành công!');
         },
         error: (_error: any) => {
-          console.error('Order creation failed');
+          console.error('Order creation failed', _error);
           this.notify.error(
             '❌ Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.',
           );

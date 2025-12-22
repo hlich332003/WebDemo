@@ -20,7 +20,11 @@
         <p class="product-stock">Số lượng tồn kho: {{ product.quantity }}</p>
 
         <div class="product-actions">
-          <button type="button" (click)="previousState()" class="btn btn-outline-info">
+          <button
+            type="button"
+            (click)="previousState()"
+            class="btn btn-outline-info"
+          >
             <fa-icon icon="arrow-left"></fa-icon>
             <span>Quay lại</span>
           </button>
@@ -50,11 +54,25 @@
             <button
               type="button"
               (click)="addToCart(product)"
+              class="btn btn-outline-success"
+              [disabled]="product.quantity === 0"
+              title="Thêm vào giỏ hàng"
+            >
+              <fa-icon icon="shopping-cart"></fa-icon>
+              <span>{{
+                product.quantity === 0 ? 'Hết hàng' : 'Thêm giỏ'
+              }}</span>
+            </button>
+            <button
+              type="button"
+              (click)="buyNow(product)"
               class="btn btn-success"
               [disabled]="product.quantity === 0"
             >
-              <fa-icon icon="cart-plus"></fa-icon>
-              <span>{{ product.quantity === 0 ? 'Hết hàng' : 'Thêm giỏ hàng' }}</span>
+              <fa-icon icon="bolt"></fa-icon>
+              <span>{{
+                product.quantity === 0 ? 'Hết hàng' : 'Mua ngay'
+              }}</span>
             </button>
           }
         </div>

@@ -121,16 +121,20 @@ public class AccountResource {
      */
     @PostMapping(value = "/account", consumes = "application/json; charset=UTF-8")
     public void saveAccount(@Valid @RequestBody AdminUserDTO userDTO) {
-        String userEmail = SecurityUtils.getCurrentUserLogin()
+        String userLogin = SecurityUtils.getCurrentUserLogin()
             .orElseThrow(() -> new AccountResourceException("Current user login not found"));
-        Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
-        if (existingUser.isPresent() && (!existingUser.orElseThrow().getEmail().equalsIgnoreCase(userEmail))) {
+            
+        Optional<User> existingUserByEmail = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
+        
+        // Tìm user hiện tại bằng login (email hoặc sđt)
+        User currentUser = userRepository.findOneWithAuthoritiesByEmailOrPhone(userLogin)
+            .orElseThrow(() -> new AccountResourceException("User could not be found"));
+
+        // Nếu email đã tồn tại và không phải của user hiện tại -> Lỗi
+        if (existingUserByEmail.isPresent() && !existingUserByEmail.get().getId().equals(currentUser.getId())) {
             throw new EmailAlreadyUsedException();
         }
-        Optional<User> user = userRepository.findOneByEmailIgnoreCase(userEmail);
-        if (!user.isPresent()) {
-            throw new AccountResourceException("User could not be found");
-        }
+
         userService.updateUser(
             userDTO.getFirstName(),
             userDTO.getLastName(),
@@ -223,7 +227,7 @@ public class AccountResource {
 
                 // Xóa refresh token của user (nếu có)
                 SecurityUtils.getCurrentUserLogin()
-                    .flatMap(userRepository::findOneByEmailIgnoreCase)
+                    .flatMap(userRepository::findOneWithAuthoritiesByEmailOrPhone)
                     .ifPresent(user -> {
                         refreshTokenService.deleteByUserId(user.getId());
                         LOG.debug("Refresh token deleted for user: {}", user.getEmail());

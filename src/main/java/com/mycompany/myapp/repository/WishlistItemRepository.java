@@ -1,5 +1,6 @@
 package com.mycompany.myapp.repository;
 
+import com.mycompany.myapp.domain.Product;
 import com.mycompany.myapp.domain.WishlistItem;
 import java.util.List;
 import java.util.Optional;
@@ -13,4 +14,6 @@ public interface WishlistItemRepository extends JpaRepository<WishlistItem, Long
     Optional<WishlistItem> findOneByUser_EmailAndProductId(String email, Long productId);
 
     void deleteByUser_EmailAndProductId(String email, Long productId);
+
+    List<WishlistItem> findByProduct(Product product);
 }

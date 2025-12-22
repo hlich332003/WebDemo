@@ -57,7 +57,7 @@ public class WishlistResource {
      * @return the {@link ResponseEntity} with status {@code 204 (No Content)}.
      */
     @DeleteMapping("/wishlist/{productId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     @CacheEvict(value = "com.mycompany.myapp.domain.Product", allEntries = true)
     public ResponseEntity<Void> removeFromWishlist(@PathVariable Long productId) {
         log.debug("REST request to remove product from wishlist : {}", productId);

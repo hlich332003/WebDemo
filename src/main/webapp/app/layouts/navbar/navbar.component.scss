@@ -1,20 +1,22 @@
+@use '../../../content/scss/_variables.scss' as g;
+
 // Navbar Component - Pink Purple Theme
 :host {
-  --primary: #e91e63;
-  --purple: #9c27b0;
-  --accent: #ffc107;
-  --dark: #2d3436;
-  --light: #f8f9fa;
+  --primary: #{g.$primary};
+  --purple: #{g.$secondary}; // Use secondary for purple
+  --accent: #{g.$warning};
+  --dark: #{g.$dark};
+  --light: #{g.$light};
   --white: #ffffff;
-  --success: #28a745;
-  --error: #dc3545;
-  --text-primary: #2d3436;
-  --text-secondary: #636e72;
-  --border-color: #e1e8ed;
+  --success: #{g.$success};
+  --error: #{g.$danger};
+  --text-primary: #{g.$body-color};
+  --text-secondary: #{g.$body-color};
+  --border-color: #{g.$border-color};
 }
 
 .navbar {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--purple) 100%);
+  background: linear-gradient(135deg, var(--purple) 0%, var(--primary) 100%);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
@@ -27,7 +29,7 @@
   }
 
   .navbar-brand {
-    color: var(--white) !important;
+    color: var(--white);
     font-weight: 700;
     font-size: 1.5rem;
     text-decoration: none;
@@ -37,7 +39,7 @@
     transition: all 0.3s ease;
 
     &:hover {
-      color: var(--accent) !important;
+      color: var(--accent);
       transform: scale(1.05);
     }
   }
@@ -74,6 +76,17 @@
         }
       }
 
+      .search-clear {
+        background: transparent;
+        border: none;
+        color: #999;
+        cursor: pointer;
+        padding: 0 0.5rem;
+        &:hover {
+          color: var(--error);
+        }
+      }
+
       .btn-search {
         background: var(--primary);
         color: var(--white);
@@ -84,6 +97,11 @@
 
         &:hover {
           background: var(--purple);
+        }
+
+        &:disabled {
+          background: #ccc;
+          cursor: not-allowed;
         }
       }
     }
@@ -110,7 +128,7 @@
       margin: 0 0.25rem;
 
       .nav-link {
-        color: #ffffff !important;
+        color: var(--white);
         font-weight: 600;
         padding: 0.75rem 1rem;
         border-radius: 20px;
@@ -120,18 +138,13 @@
         gap: 0.5rem;
         text-decoration: none;
 
-        .nav-text {
-          color: #ffffff !important;
-        }
-
+        .nav-text,
         .nav-icon {
-          color: #ffffff !important;
+          color: var(--white);
         }
 
-        &.dropdown-toggle {
-          &::after {
-            border-top-color: #ffffff !important;
-          }
+        &.dropdown-toggle::after {
+          border-top-color: var(--white);
         }
 
         &:hover {
@@ -140,7 +153,7 @@
 
           .nav-text,
           .nav-icon {
-            color: var(--accent) !important;
+            color: var(--accent);
           }
         }
 
@@ -167,39 +180,99 @@
           border: 2px solid var(--white);
           animation: cartBounce 0.5s ease;
           background: var(--accent);
-          color: var(--dark) !important;
+          color: var(--dark);
         }
+      }
+
+      &.notification-bell .nav-link.dropdown-toggle::after {
+        display: none;
       }
     }
   }
 
   .dropdown-menu {
-    background: var(--dark) !important;
+    background: var(--white); // Changed to white for better readability
     border: none;
     border-radius: 15px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     margin-top: 0.5rem;
+    min-width: 300px; // Wider for notifications
 
-    .dropdown-item {
-      color: #ffffff !important;
-      padding: 0.75rem 1.5rem;
+    &::before,
+    &::after {
+      display: none !important;
+    }
+
+    .dropdown-header {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 0.75rem;
-      transition: all 0.3s ease;
+      padding: 0.75rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
 
-      *,
-      ::ng-deep * {
-        color: #ffffff !important;
+      span {
+        font-weight: 700;
+        color: var(--text-primary);
       }
 
-      &:hover {
-        background: var(--primary) !important;
-        color: #ffffff !important;
+      .mark-all-read {
+        font-size: 0.8rem;
+        color: var(--primary);
+        text-decoration: none;
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
 
-        *,
-        ::ng-deep * {
-          color: #ffffff !important;
+    .dropdown-item {
+      color: var(--text-primary);
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center; // Reset to default alignment
+      gap: 0.75rem; // Add gap for icon
+      transition: all 0.3s ease;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      white-space: normal; // Allow text wrapping
+
+      &:hover {
+        background: rgba(var(--primary), 0.05);
+        color: var(--primary);
+      }
+    }
+
+    // Specific styles for notification dropdown
+    &[aria-labelledby="notification-menu"] {
+      .dropdown-item {
+        flex-direction: column; // Stack content vertically
+        align-items: flex-start;
+        gap: 0.25rem;
+
+        &.unread {
+          background-color: rgba(var(--accent), 0.1);
+          font-weight: 600;
+
+          &::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--primary);
+          }
+        }
+
+        p {
+          margin: 0;
+          font-size: 0.9rem;
+        }
+
+        small {
+          color: #888;
+          font-size: 0.75rem;
         }
       }
     }
@@ -214,23 +287,11 @@
       backdrop-filter: blur(10px);
 
       .nav-link {
-        color: #ffffff !important;
-
-        span,
-        fa-icon,
-        ::ng-deep * {
-          color: #ffffff !important;
-        }
+        color: var(--white);
 
         &:hover {
           background: var(--primary);
-          color: #ffffff !important;
-
-          span,
-          fa-icon,
-          ::ng-deep * {
-            color: #ffffff !important;
-          }
+          color: var(--white);
         }
       }
     }

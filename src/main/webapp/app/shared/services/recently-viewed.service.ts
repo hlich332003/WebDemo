@@ -12,7 +12,7 @@ export class RecentlyViewedService {
    * Thêm sản phẩm vào danh sách đã xem
    */
   addProduct(product: IProduct): void {
-    if (!product || !product.id) return;
+    if (!product?.id) return;
 
     const recentlyViewed = this.getProducts();
 

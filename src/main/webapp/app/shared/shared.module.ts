@@ -4,7 +4,6 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { AlertComponent } from './alert/alert.component';
 import { AlertErrorComponent } from './alert/alert-error.component';
-import { WishlistService } from './services/wishlist.service';
 import { RecentlyViewedService } from './services/recently-viewed.service';
 import { ProductComparisonService } from './services/product-comparison.service';
 
@@ -20,6 +19,6 @@ import { ProductComparisonService } from './services/product-comparison.service'
     AlertComponent,
     AlertErrorComponent,
   ],
-  providers: [WishlistService, RecentlyViewedService, ProductComparisonService],
+  providers: [RecentlyViewedService, ProductComparisonService],
 })
 export default class SharedModule {}

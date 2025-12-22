@@ -3,9 +3,12 @@
   "compilerOptions": {
     "outDir": "./target/out-tsc/app",
     "types": ["@angular/localize"],
-    "composite": true // Thêm dòng này
+    "composite": true
   },
   "files": ["src/main/webapp/main.ts"],
-  "include": ["src/main/webapp/**/*.ts"],
+  "include": [
+    "src/main/webapp/app/**/*.ts",
+    "src/main/webapp/environments/**/*.ts"
+  ],
   "exclude": ["src/main/webapp/**/*.spec.ts"]
 }

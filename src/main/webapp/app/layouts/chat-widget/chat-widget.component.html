@@ -1,0 +1,141 @@
+<div class="chat-widget-container">
+  <button class="chat-toggle-button" (click)="toggleChat()">
+    <fa-icon [icon]="isOpen ? 'times' : 'comments'"></fa-icon>
+    @if (hasUnreadMessages && !isOpen) {
+      <span class="notification-badge"></span>
+    }
+  </button>
+
+  @if (isOpen) {
+    <div class="chat-window">
+      <div class="chat-header">
+        <div class="header-content">
+          <h5>Hỗ trợ trực tuyến</h5>
+          <div class="status" [class.connected]="webSocketService.isConnected">
+            <fa-icon icon="circle"></fa-icon>
+            {{ webSocketService.isConnected ? 'Đã kết nối' : 'Đang kết nối...' }}
+          </div>
+        </div>
+        <button class="close-button" (click)="toggleChat()">
+          <fa-icon icon="times"></fa-icon>
+        </button>
+      </div>
+
+      <!-- Màn hình 1: Menu Lựa chọn -->
+      @if (viewMode === 'MENU') {
+        <div class="menu-view">
+          <div class="welcome-text">
+            <h6>Xin chào! 👋</h6>
+            <p>Chúng tôi có thể giúp gì cho bạn hôm nay?</p>
+          </div>
+
+          <div class="menu-options">
+            <button class="menu-btn" (click)="startDirectChat()">
+              <div class="icon-wrapper chat-icon">
+                <fa-icon icon="comments"></fa-icon>
+              </div>
+              <div class="text-wrapper">
+                <span class="title">Chat ngay</span>
+                <span class="desc">Trò chuyện trực tiếp với nhân viên</span>
+              </div>
+              <fa-icon icon="chevron-right" class="arrow"></fa-icon>
+            </button>
+
+            <button class="menu-btn" (click)="showCreateTicketForm()">
+              <div class="icon-wrapper ticket-icon">
+                <fa-icon icon="envelope"></fa-icon>
+              </div>
+              <div class="text-wrapper">
+                <span class="title">Tạo phiếu hỗ trợ</span>
+                <span class="desc">Gửi yêu cầu chi tiết qua email</span>
+              </div>
+              <fa-icon icon="chevron-right" class="arrow"></fa-icon>
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Màn hình 2: Form Tạo Phiếu -->
+      @if (viewMode === 'CREATE_TICKET') {
+        <div class="create-ticket-view">
+          <div class="view-header">
+            <button class="back-btn" (click)="backToMenu()">
+              <fa-icon icon="arrow-left"></fa-icon>
+            </button>
+            <h6>Tạo phiếu mới</h6>
+          </div>
+
+          <div class="form-body">
+            <div class="form-group">
+              <label>Tiêu đề <span class="required">*</span></label>
+              <input type="text" [(ngModel)]="ticketTitle" class="form-control" placeholder="Tóm tắt vấn đề...">
+            </div>
+
+            <div class="form-group">
+              <label>Nội dung <span class="required">*</span></label>
+              <textarea [(ngModel)]="ticketDescription" class="form-control" rows="5" placeholder="Mô tả chi tiết..."></textarea>
+            </div>
+
+            <button class="btn-submit" (click)="createTicket()" [disabled]="isCreatingTicket || !ticketTitle || !ticketDescription">
+              @if (isCreatingTicket) {
+                <fa-icon icon="spinner" spin></fa-icon> Đang gửi...
+              } @else {
+                Gửi yêu cầu
+              }
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Màn hình 3: Chat -->
+      @if (viewMode === 'CHAT') {
+        <div #chatMessagesContainer class="chat-body">
+          @if (isLoading) {
+            <div class="loading-indicator">
+              <fa-icon icon="spinner" spin></fa-icon>
+              <p>Đang tải cuộc trò chuyện...</p>
+            </div>
+          }
+
+          @if (messages.length === 0) {
+            <div class="empty-chat">
+              <p>👋 Xin chào! Hãy để lại lời nhắn, chúng tôi sẽ phản hồi sớm nhất.</p>
+            </div>
+          }
+
+          @for (msg of messages; track $index) {
+            <div class="message" [ngClass]="{'from-admin': msg.isFromAdmin, 'from-user': !msg.isFromAdmin, 'system-message': msg.type === 'system'}">
+              @if (msg.type !== 'system') {
+                <div class="message-avatar">
+                  <fa-icon [icon]="msg.isFromAdmin ? 'user-tie' : 'user'"></fa-icon>
+                </div>
+              }
+              <div class="message-content">
+                <div class="message-text">{{ msg.message }}</div>
+                <div class="message-time">{{ msg.timestamp | date:'HH:mm' }}</div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="chat-footer">
+          @if (sessionEnded) {
+            <div class="session-ended-notice">Phiên hỗ trợ đã kết thúc.</div>
+          } @else {
+            <input
+              type="text"
+              class="chat-input"
+              placeholder="Nhập tin nhắn..."
+              [(ngModel)]="newMessage"
+              (keyup.enter)="sendMessage()"
+              [disabled]="!webSocketService.isConnected"
+            />
+            <button class="send-button" (click)="sendMessage()" [disabled]="!newMessage.trim() || !webSocketService.isConnected">
+              <fa-icon icon="paper-plane"></fa-icon>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

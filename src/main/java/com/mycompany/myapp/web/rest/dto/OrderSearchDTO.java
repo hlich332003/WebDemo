@@ -1,5 +1,6 @@
 package com.mycompany.myapp.web.rest.dto;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 public class OrderSearchDTO {
@@ -7,10 +8,10 @@ public class OrderSearchDTO {
     private Long id;
     private String customerLogin;
     private Instant orderDate;
-    private Double totalAmount;
+    private BigDecimal totalAmount;
     private String status;
 
-    public OrderSearchDTO(Long id, String customerLogin, Instant orderDate, Double totalAmount, String status) {
+    public OrderSearchDTO(Long id, String customerLogin, Instant orderDate, BigDecimal totalAmount, String status) {
         this.id = id;
         this.customerLogin = customerLogin;
         this.orderDate = orderDate;
@@ -43,11 +44,11 @@ public class OrderSearchDTO {
         this.orderDate = orderDate;
     }
 
-    public Double getTotalAmount() {
+    public BigDecimal getTotalAmount() {
         return totalAmount;
     }
 
-    public void setTotalAmount(Double totalAmount) {
+    public void setTotalAmount(BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
     }
 

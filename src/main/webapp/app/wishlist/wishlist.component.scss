@@ -1,10 +1,11 @@
 @use 'sass:color';
-@use '../shared/styles/variables' as *;
+@use '../../content/scss/variables' as *;
+@use 'bootstrap/scss/bootstrap';
 
 .wishlist-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem;
+  max-width: 1600px;
+  margin: 2rem auto;
+  padding: 0 2rem;
   min-height: 100vh;
 }
 
@@ -13,14 +14,14 @@
   .page-title {
     font-size: 2.5rem;
     font-weight: 700;
-    color: $text-primary;
+    color: $body-color;
     display: flex;
     align-items: center;
     gap: 1rem;
 
     .count-badge {
       background: $primary;
-      color: $white;
+      color: white;
       padding: 0.4rem 1rem;
       border-radius: 25px;
       font-size: 1rem;
@@ -32,10 +33,10 @@
 .empty-wishlist {
   text-align: center;
   padding: 4rem 2rem;
-  background: $white;
-  border-radius: $border-radius-lg;
-  box-shadow: $shadow-sm;
-  border: 1px solid $border-color;
+  background: bootstrap.$light;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid bootstrap.$border-color;
 
   fa-icon {
     font-size: 5rem;
@@ -44,14 +45,14 @@
   }
 
   h2 {
-    color: $text-primary;
+    color: $body-color;
     font-size: 1.8rem;
     margin-bottom: 0.5rem;
     font-weight: 700;
   }
 
   p {
-    color: $text-secondary;
+    color: bootstrap.$gray-600;
     font-size: 1.1rem;
     margin-bottom: 2rem;
   }
@@ -60,31 +61,31 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: linear-gradient(135deg, $primary, $secondary);
-    color: $white;
+    background: $primary;
+    color: white;
     padding: 1rem 2rem;
-    border-radius: $border-radius-md;
+    border-radius: 8px;
     text-decoration: none;
     font-weight: 600;
-    transition: $transition-base;
-    box-shadow: $shadow-md;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba($primary, 0.2);
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba($primary, 0.4);
+      box-shadow: 0 8px 25px rgba($primary, 0.3);
     }
   }
 }
 
-.wishlist-grid {
+.products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 1.5rem;
 }
 
-// Using the same product-card style
-.wishlist-card {
-  background: $white;
+// --- Synced Product Card Styles ---
+.product-card {
+  background: bootstrap.$light;
   border-radius: 15px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
@@ -92,28 +93,43 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  border: 1px solid $border-color;
+  border: 1px solid transparent;
 
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba($primary, 0.2);
+    box-shadow: 0 8px 25px rgba($primary, 0.15);
     border-color: $primary;
   }
 
-  .product-image {
-    width: 100%;
-    height: 240px;
-    cursor: pointer;
+  .product-image-wrapper {
+    aspect-ratio: 1 / 1;
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     overflow: hidden;
+    cursor: pointer;
 
     img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       transition: transform 0.3s ease;
-      &:hover {
-        transform: scale(1.05);
-      }
+    }
+
+    .image-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: bootstrap.$gray-100;
+      color: bootstrap.$gray-400;
+      font-size: 3rem;
+    }
+
+    &:hover img {
+      transform: scale(1.05);
     }
   }
 
@@ -127,14 +143,15 @@
       font-size: 1rem;
       font-weight: 600;
       margin-bottom: 0.5rem;
-      flex-grow: 1;
-      color: $text-primary;
+      color: $body-color;
       cursor: pointer;
       transition: color 0.3s ease;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      text-overflow: ellipsis;
+      height: 2.5em; // 2 lines
 
       &:hover {
         color: $primary;
@@ -145,37 +162,73 @@
       font-size: 1.3rem;
       font-weight: 700;
       color: $primary;
-      margin-bottom: 0.8rem;
+      margin-top: auto;
+      padding-top: 0.5rem;
     }
   }
 
-  .product-buttons {
+  .product-actions {
     display: flex;
     gap: 0.5rem;
-    margin-top: auto;
-    align-items: stretch;
+    padding: 0 1rem 1rem;
 
-    .flex-grow-1 {
-      flex: 1;
+    .btn-wishlist {
+      background: bootstrap.$gray-200;
+      color: bootstrap.$gray-600;
+      border: none;
+      &:hover {
+        background: bootstrap.$gray-300;
+      }
+      &.in-wishlist {
+        background: color.adjust($danger, $alpha: -0.8);
+        color: $danger;
+        &:hover {
+          background: color.adjust($danger, $alpha: -0.7);
+        }
+      }
     }
 
-    .btn-success {
+    .btn-add-to-cart {
+      background: color.adjust($primary, $alpha: -0.8);
+      color: $primary;
+      border: none;
+      font-weight: 600;
+      width: 40px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      &:hover {
+        background: color.adjust($primary, $alpha: -0.7);
+      }
+      &:disabled {
+        background: bootstrap.$gray-200;
+        color: bootstrap.$gray-500;
+        cursor: not-allowed;
+      }
+    }
+
+    .btn-buy-now {
+      flex-grow: 1;
       background: linear-gradient(135deg, $primary, $secondary);
-      color: $white;
+      color: white;
+      border: none;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba($primary, 0.3);
+      transition: all 0.3s ease;
 
       &:hover {
-        background: linear-gradient(
-          135deg,
-          color.adjust($primary, $lightness: -5%),
-          color.adjust($secondary, $lightness: -5%)
-        );
+        background: linear-gradient(135deg,
+          color.adjust($primary, $lightness: -10%),
+          color.adjust($secondary, $lightness: -10%));
         transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba($primary, 0.4);
       }
 
       &:disabled {
-        background: #ccc;
+        background: bootstrap.$gray-200;
+        color: bootstrap.$gray-500;
         cursor: not-allowed;
-        transform: none;
       }
     }
   }

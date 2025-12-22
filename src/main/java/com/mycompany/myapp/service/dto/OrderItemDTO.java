@@ -1,21 +1,22 @@
 package com.mycompany.myapp.service.dto;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Objects;
 
 public class OrderItemDTO implements Serializable {
 
-    private Long productId;
+    private ProductDTO product;
     private Integer quantity;
-    private Double price; // Hoàn tác về Double
+    private BigDecimal price;
     private String productName;
 
-    public Long getProductId() {
-        return productId;
+    public ProductDTO getProduct() {
+        return product;
     }
 
-    public void setProductId(Long productId) {
-        this.productId = productId;
+    public void setProduct(ProductDTO product) {
+        this.product = product;
     }
 
     public Integer getQuantity() {
@@ -26,11 +27,11 @@ public class OrderItemDTO implements Serializable {
         this.quantity = quantity;
     }
 
-    public Double getPrice() { // Hoàn tác về Double
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) { // Hoàn tác về Double
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 
@@ -48,7 +49,7 @@ public class OrderItemDTO implements Serializable {
         if (o == null || getClass() != o.getClass()) return false;
         OrderItemDTO that = (OrderItemDTO) o;
         return (
-            Objects.equals(productId, that.productId) &&
+            Objects.equals(product, that.product) &&
             Objects.equals(quantity, that.quantity) &&
             Objects.equals(price, that.price) &&
             Objects.equals(productName, that.productName)
@@ -57,21 +58,17 @@ public class OrderItemDTO implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(productId, quantity, price, productName);
+        return Objects.hash(product, quantity, price, productName);
     }
 
     @Override
     public String toString() {
         return (
             "OrderItemDTO{" +
-            "productId=" +
-            productId +
-            ", quantity=" +
-            quantity +
-            ", price=" +
-            price +
-            ", productName='" +
-            productName +
+            "product=" + product +
+            ", quantity=" + quantity +
+            ", price=" + price +
+            ", productName='" + productName +
             "\'}"
         );
     }

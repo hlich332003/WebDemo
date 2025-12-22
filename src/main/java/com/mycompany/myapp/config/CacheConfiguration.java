@@ -1,6 +1,8 @@
 package com.mycompany.myapp.config;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.Duration;
 import java.util.HashMap;
@@ -24,8 +26,13 @@ public class CacheConfiguration {
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
+        
+        objectMapper.activateDefaultTyping(
+            LaissezFaireSubTypeValidator.instance,
+            ObjectMapper.DefaultTyping.NON_FINAL,
+            JsonTypeInfo.As.PROPERTY
+        );
 
-        // Default cache configuration (10 phút)
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
             .entryTtl(Duration.ofMinutes(10))
             .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
@@ -33,12 +40,10 @@ public class CacheConfiguration {
                 RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper))
             );
 
-        // Cấu hình TTL riêng cho từng cache
         Map<String, RedisCacheConfiguration> cacheConfigs = new HashMap<>();
 
-        // Product cache: 5 phút
         cacheConfigs.put(
-            "com.mycompany.myapp.domain.Product",
+            "products",
             RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(5))
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
@@ -47,7 +52,6 @@ public class CacheConfiguration {
                 )
         );
 
-        // Featured products: cache lâu hơn (30 phút)
         cacheConfigs.put(
             "featuredProducts",
             RedisCacheConfiguration.defaultCacheConfig()
@@ -58,11 +62,76 @@ public class CacheConfiguration {
                 )
         );
 
-        // Featured categories: cache lâu nhất (1 giờ)
         cacheConfigs.put(
             "featuredCategories",
             RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofHours(1))
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(
+                    RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper))
+                )
+        );
+
+        // Cache for active support tickets (short-lived)
+        cacheConfigs.put(
+            "activeTickets",
+            RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(5))
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(
+                    RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper))
+                )
+        );
+
+        // Cache for all active tickets list
+        cacheConfigs.put(
+            "allActiveTickets",
+            RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(2))
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(
+                    RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper))
+                )
+        );
+
+        // Cache for ticket messages (medium-lived)
+        cacheConfigs.put(
+            "ticketMessages",
+            RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(10))
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(
+                    RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper))
+                )
+        );
+
+        // Cache for user cart (short-lived, 5 minutes)
+        cacheConfigs.put(
+            "userCart",
+            RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(5))
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(
+                    RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper))
+                )
+        );
+
+        // Cache for categories (long-lived, 1 hour)
+        cacheConfigs.put(
+            "categories",
+            RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofHours(1))
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(
+                    RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper))
+                )
+        );
+
+        // Cache for user orders (medium-lived, 10 minutes)
+        cacheConfigs.put(
+            "userOrders",
+            RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(10))
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(
                     RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper))
@@ -75,9 +144,6 @@ public class CacheConfiguration {
             .build();
     }
 
-    /**
-     * RedisTemplate cho token blacklist và các operations khác
-     */
     @Bean
     public RedisTemplate<String, String> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, String> template = new RedisTemplate<>();

@@ -15,15 +15,13 @@ public class SpaWebFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException {
-        // Request we are processing
         String path = request.getRequestURI();
-        // If the path does not start with /api, /management, /v3/api-docs, /h2-console or does not contain a . (e.g. .js, .css)
-        // then it is a page refresh, so we redirect to index.html
+
         if (
-            !path.startsWith("/api") &&
-            !path.startsWith("/management") &&
-            !path.startsWith("/v3/api-docs") &&
-            !path.startsWith("/h2-console") &&
+            !path.startsWith("/api/") &&
+            !path.startsWith("/management/") &&
+            !path.startsWith("/v3/api-docs/") &&
+            !path.startsWith("/h2-console/") &&
             !path.contains(".") &&
             path.matches("/(.*)")
         ) {

@@ -1,5 +1,5 @@
 <div class="order-detail-container">
-  <h1>Chi tiết đơn hàng #{{ order?.id }}</h1>
+  <h1>Chi tiết đơn hàng #{{ order?.orderCode }}</h1>
 
   @if (isLoading) {
     <p>Đang tải chi tiết đơn hàng...</p>
@@ -14,7 +14,7 @@
       <div class="summary-item">
         <strong>Trạng thái:</strong>
         <span [class]="'order-status-' + (order.status | lowercase)">{{
-          order.status
+          translateStatus(order.status)
         }}</span>
       </div>
     </div>
@@ -68,7 +68,7 @@
         }
       </div>
       <div class="info-item">
-        <strong>Phương thức thanh toán:</strong> {{ order.paymentMethod }}
+        <strong>Phương thức thanh toán:</strong> {{ translatePaymentMethod(order.paymentMethod) }}
       </div>
     </div>
 

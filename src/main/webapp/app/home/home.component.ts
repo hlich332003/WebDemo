@@ -1,215 +1,127 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  signal,
-  computed,
-  inject,
-} from '@angular/core';
-import { Router, RouterModule, NavigationEnd } from '@angular/router';
-import { Subject, forkJoin, of } from 'rxjs';
-import { takeUntil, filter, map, switchMap } from 'rxjs/operators';
-import SharedModule from 'app/shared/shared.module';
-import { Account } from 'app/core/auth/account.model';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil, map } from 'rxjs/operators';
+import { HttpResponse } from '@angular/common/http';
+import { CommonModule } from '@angular/common';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+
 import { AccountService } from 'app/core/auth/account.service';
-import { ProductService } from 'app/entities/product/product.service';
+import { Account } from 'app/core/auth/account.model';
 import { IProduct } from 'app/entities/product/product.model';
-import { ICategory } from 'app/entities/product/category.model';
-import { UtilsService } from 'app/shared/utils/utils.service';
-import { NotificationService } from 'app/shared/notification/notification.service';
-import { CartService } from 'app/shared/services/cart.service';
+import { ProductService } from 'app/entities/product/product.service';
+import { ICategory } from 'app/entities/category/category.model';
 import { RecentlyViewedService } from 'app/shared/services/recently-viewed.service';
 import { WishlistService } from 'app/shared/services/wishlist.service';
-import { ProductComparisonService } from 'app/shared/services/product-comparison.service';
+import { CartService } from 'app/shared/services/cart.service';
 import { LoginModalService } from 'app/core/login/login-modal.service';
-import { IconName } from '@fortawesome/fontawesome-svg-core';
-import { HttpResponse } from '@angular/common/http';
+import { LazyLoadImageDirective } from 'app/shared/directives/lazy-load-image.directive';
+import { NotificationService } from 'app/shared/notification/notification.service';
 
 @Component({
   selector: 'jhi-home',
-  standalone: true,
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
-  imports: [SharedModule, RouterModule],
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    FontAwesomeModule,
+    LazyLoadImageDirective,
+  ],
 })
 export class HomeComponent implements OnInit, OnDestroy {
-  account = signal<Account | null>(null);
-  featuredCategories: ICategory[] = [];
-  newProducts: IProduct[] = [];
+  account: Account | null = null;
   bestSellerProducts: IProduct[] = [];
+  newProducts: IProduct[] = [];
   recentlyViewedProducts: IProduct[] = [];
+  featuredCategories: ICategory[] = [];
   isLoading = false;
-  bannerImageUrl =
-    'https://thuthuatnhanh.com/wp-content/uploads/2021/06/Hinh-anh-dan-PC-khung-dep-me-hon.jpg';
-
-  // Track wishlist items for realtime updates
-  wishlistItems = signal<IProduct[]>([]);
 
   private readonly destroy$ = new Subject<void>();
 
-  private readonly accountService = inject(AccountService);
-  private readonly router = inject(Router);
-  private readonly productService = inject(ProductService);
-  private readonly utils = inject(UtilsService);
-  private readonly notify = inject(NotificationService);
-  private readonly cartService = inject(CartService);
-  private readonly recentlyViewedService = inject(RecentlyViewedService);
-  public readonly wishlistService = inject(WishlistService);
-  private readonly comparisonService = inject(ProductComparisonService);
-  private readonly loginModalService = inject(LoginModalService);
-
-  isAdmin = computed(() => {
-    const currentAccount = this.account();
-    return currentAccount && currentAccount.authorities.includes('ROLE_ADMIN');
-  });
+  constructor(
+    private accountService: AccountService,
+    private productService: ProductService,
+    private recentlyViewedService: RecentlyViewedService,
+    private wishlistService: WishlistService,
+    private cartService: CartService,
+    private loginModalService: LoginModalService,
+    private router: Router,
+    private notificationService: NotificationService,
+  ) {}
 
   ngOnInit(): void {
-    console.warn('🎯 HomeComponent ngOnInit called');
-
-    // Load data immediately on init
-    this.loadAllData();
-
     this.accountService
       .getAuthenticationState()
       .pipe(takeUntil(this.destroy$))
       .subscribe((account) => {
-        this.account.set(account);
-      });
+        this.account = account;
 
-    // Subscribe to wishlist changes for realtime updates
-    this.wishlistService.items$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((items) => {
-        this.wishlistItems.set(items);
-      });
-
-    this.router.events
-      .pipe(
-        filter(
-          (event): event is NavigationEnd => event instanceof NavigationEnd,
-        ),
-        filter(
-          (event: NavigationEnd) => event.url === '/' || event.url === '/home',
-        ),
-        takeUntil(this.destroy$),
-      )
-      .subscribe(() => {
-        this.loadAllData();
-      });
-  }
-
-  loadAllData(): void {
-    console.warn('🚀 loadAllData() called');
-    this.isLoading = true;
-    const productService = this.productService;
-
-    // Use main endpoints as they are already public in SecurityConfiguration
-    const query = productService.query.bind(productService);
-    const getCategories = productService.getCategories.bind(productService);
-
-    console.warn('📡 Starting to load data...');
-
-    const newProducts$ = query({
-      page: 0,
-      size: 10,
-      sort: ['id,desc'],
-    }).pipe(map((res: HttpResponse<IProduct[]>) => res.body ?? []));
-
-    const bestSellerProducts$ = query({
-      page: 0,
-      size: 10,
-      sort: ['salesCount,desc'],
-    }).pipe(map((res: HttpResponse<IProduct[]>) => res.body ?? []));
-
-    const categoriesWithProducts$ = getCategories().pipe(
-      map((res: HttpResponse<ICategory[]>) => res.body ?? []),
-      switchMap((categories) => {
-        if (!categories || categories.length === 0) {
-          return of([]);
+        if (account?.authorities.includes('ROLE_ADMIN')) {
+          this.router.navigate(['/admin']);
+          return;
         }
-        const categoryProductRequests = categories.map((category) =>
-          query({
-            categorySlug: category.slug,
-            page: 0,
-            size: 5,
-            sort: ['id,desc'],
-          }).pipe(
-            map((res: HttpResponse<IProduct[]>) => {
-              (category as any).products = res.body ?? [];
-              return category;
-            }),
-          ),
-        );
-        return forkJoin(categoryProductRequests);
-      }),
-      map((categoriesWithProducts) =>
-        categoriesWithProducts.filter((c) => (c as any).products.length > 0),
-      ),
-    );
 
-    forkJoin({
-      newProducts: newProducts$,
-      bestSellerProducts: bestSellerProducts$,
-      featuredCategories: categoriesWithProducts$,
-    }).subscribe({
-      next: ({ newProducts, bestSellerProducts, featuredCategories }) => {
-        console.warn('✅ Data loaded:', {
-          newProducts: newProducts.length,
-          bestSellerProducts: bestSellerProducts.length,
-          featuredCategories: featuredCategories.length,
-        });
-
-        this.newProducts = newProducts;
-        this.bestSellerProducts = bestSellerProducts;
-
-        const unclassified = featuredCategories.find(
-          (c: ICategory) => c.slug === 'chua-phan-loai',
-        );
-        const others = featuredCategories.filter(
-          (c: ICategory) => c.slug !== 'chua-phan-loai',
-        );
-        this.featuredCategories = unclassified
-          ? [...others, unclassified]
-          : others;
-
-        console.warn('✅ Featured categories:', this.featuredCategories);
-
-        this.recentlyViewedProducts = this.recentlyViewedService
-          .getProducts()
-          .slice(0, 10);
-        this.isLoading = false;
-      },
-      error: (err) => {
-        this.isLoading = false;
-        console.error('❌ Error loading home page data', err);
-        this.notify.error('❌ Đã có lỗi xảy ra khi tải dữ liệu trang chủ.');
-      },
-    });
+        // Chỉ load data nếu không phải admin
+        this.loadAll();
+      });
   }
 
-  getCategoryIcon(slug: string | null | undefined): IconName {
-    switch (slug) {
-      case 'man-hinh':
-        return 'desktop';
-      case 'pc-gaming':
-        return 'gamepad';
-      case 'linh-kien':
-        return 'microchip';
-      case 'electronics':
-        return 'plug';
-      case 'books':
-        return 'book';
-      default:
-        return 'tags';
-    }
+  loadAll(): void {
+    this.isLoading = true;
+    this.productService
+      .query({ sort: ['salesCount,desc'], size: 5 })
+      .subscribe((res) => {
+        this.bestSellerProducts = res.body ?? [];
+        this.isLoading = false;
+      });
+    this.productService
+      .query({ sort: ['createdDate,desc'], size: 5 })
+      .subscribe((res) => {
+        this.newProducts = res.body ?? [];
+      });
+    this.recentlyViewedProducts = this.recentlyViewedService.getProducts();
+    this.loadFeaturedCategories();
+  }
+
+  loadFeaturedCategories(): void {
+    this.productService
+      .getCategories()
+      .pipe(map((res: HttpResponse<ICategory[]>) => res.body ?? []))
+      .subscribe((categories: ICategory[]) => {
+        const allProductsCategory: ICategory = {
+          id: 0,
+          name: 'Tất cả sản phẩm',
+          slug: '',
+        };
+        const unclassified = categories.find(
+          (c) => c.slug === 'chua-phan-loai',
+        );
+        const otherCategories = categories
+          .filter((c) => c.slug !== 'chua-phan-loai')
+          .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+
+        const sortedCategories = [allProductsCategory, ...otherCategories];
+        if (unclassified) {
+          sortedCategories.push(unclassified);
+        }
+
+        this.featuredCategories = sortedCategories;
+      });
   }
 
   login(): void {
     this.router.navigate(['/login']);
   }
 
-  viewProductDetail(id: number): void {
-    this.router.navigate(['/product', id]);
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  viewProductDetail(productId: number): void {
+    this.router.navigate(['/product', productId]);
   }
 
   addToCart(product: IProduct): void {
@@ -217,71 +129,91 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.loginModalService.open();
       return;
     }
-    if (!product.quantity || product.quantity <= 0) {
-      this.notify.error('❌ Sản phẩm đã hết hàng!');
-      return;
+    if (product.id) {
+      this.cartService.addToCart(product.id).subscribe({
+        next: () => {
+          this.cartService.loadCart();
+          this.notificationService.success('Đã thêm sản phẩm vào giỏ hàng');
+        },
+        error: (err) => {
+          console.error('Error adding to cart:', err);
+          this.notificationService.error(
+            'Không thể thêm vào giỏ hàng. Vui lòng thử lại.',
+          );
+        },
+      });
     }
-    this.cartService.addToCart(product.id!).subscribe(() => {
-      this.notify.success('✅ Đã thêm sản phẩm vào giỏ hàng!');
-      this.cartService.loadCart();
-    });
   }
 
-  toggleWishlist(product: IProduct, event: Event): void {
+  buyNow(product: IProduct): void {
+    if (!this.accountService.isAuthenticated()) {
+      this.loginModalService.open();
+      return;
+    }
+    if (product.id && product.quantity && product.quantity > 0) {
+      this.cartService.addToCart(product.id).subscribe({
+        next: () => {
+          this.cartService.loadCart();
+          this.router.navigate(['/checkout']);
+        },
+        error: (err) => {
+          console.error('Error adding to cart:', err);
+          this.notificationService.error(
+            'Không thể thêm vào giỏ hàng. Vui lòng thử lại.',
+          );
+        },
+      });
+    }
+  }
+
+  toggleWishlist(product: IProduct, event: MouseEvent): void {
     event.stopPropagation();
     if (!this.accountService.isAuthenticated()) {
       this.loginModalService.open();
       return;
     }
-    const isInWishlist = this.wishlistService.isInWishlist(product.id!);
-    this.wishlistService.toggleWishlist(product).subscribe({
-      next: () => {
-        if (isInWishlist) {
-          this.notify.info('💔 Đã xóa khỏi danh sách yêu thích!');
-        } else {
-          this.notify.success('💖 Đã thêm vào danh sách yêu thích!');
-        }
-      },
-    });
+    this.wishlistService.toggleWishlist(product).subscribe();
   }
 
   isInWishlist(productId: number): boolean {
-    return this.wishlistItems().some((item) => item.id === productId);
-  }
-
-  toggleComparison(product: IProduct, event: Event): void {
-    event.stopPropagation();
-    const added = this.comparisonService.toggleComparison(product);
-    if (added) {
-      this.notify.success('📊 Đã thêm vào danh sách so sánh!');
-    } else {
-      if (this.comparisonService.isFull()) {
-        this.notify.warning('⚠️ Chỉ có thể so sánh tối đa 4 sản phẩm!');
-      } else {
-        this.notify.info('❌ Đã xóa khỏi danh sách so sánh!');
-      }
-    }
-  }
-
-  isInComparison(productId: number): boolean {
-    return this.comparisonService.isInComparison(productId);
+    return this.wishlistService.isInWishlist(productId);
   }
 
   formatPrice(price: number | null | undefined): string {
-    return this.utils.formatPrice(price ?? 0);
+    if (price === null || price === undefined) {
+      return 'N/A';
+    }
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+    }).format(price);
   }
 
   getProxiedImageUrl(imageUrl: string | null | undefined): string {
-    return imageUrl || 'content/images/default-product.svg';
+    if (!imageUrl) {
+      return 'content/images/no-product-image.png';
+    }
+    return `/api/public/image-proxy?url=${encodeURIComponent(imageUrl)}`;
   }
 
   onImageError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    img.src = 'content/images/default-product.svg';
+    (event.target as HTMLImageElement).src =
+      'content/images/no-product-image.png';
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+  getCategoryIcon(slug: string | null | undefined): string {
+    if (!slug) return 'box';
+    switch (slug) {
+      case 'dien-thoai':
+        return 'mobile-alt';
+      case 'may-tinh-bang':
+        return 'tablet-alt';
+      case 'laptop':
+        return 'laptop';
+      case 'phu-kien':
+        return 'headphones';
+      default:
+        return 'box';
+    }
   }
 }

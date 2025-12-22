@@ -16,13 +16,7 @@
       "label": "Run DB (Docker MSSQL)",
       "type": "shell",
       "command": "docker",
-      "args": [
-        "compose",
-        "-f",
-        "src/main/docker/mssql.yml",
-        "up",
-        "-d"
-      ],
+      "args": ["compose", "-f", "src/main/docker/mssql.yml", "up", "-d"],
       "options": {
         "cwd": "${workspaceFolder}"
       },

@@ -1,10 +1,11 @@
 package com.mycompany.myapp.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.mycompany.myapp.domain.AbstractAuditingEntity; // Thêm import này
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 @Entity
 @Table(
@@ -30,22 +31,27 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
 
     @NotNull
     @DecimalMin(value = "0.0")
-    @Column(name = "price", nullable = false)
-    private Double price;
+    @Column(name = "price", precision = 18, scale = 2, nullable = false)
+    private BigDecimal price;
 
     @NotNull
-    @Min(value = 0L)
+    @Min(value = 0)
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
     @Column(name = "image_url", length = 1024)
     private String imageUrl;
 
-    @Column(name = "sales_count", nullable = false, columnDefinition = "int default 0")
-    private Integer salesCount = 0;
+    @NotNull
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
+
+    @Column(name = "sales_count", nullable = false)
+    private Long salesCount = 0L;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "category_id", nullable = false)
+    @JsonBackReference
     @JsonIgnoreProperties(value = { "products", "hibernateLazyInitializer", "handler" }, allowSetters = true)
     private Category category;
 
@@ -75,11 +81,11 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
         this.description = description;
     }
 
-    public Double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 
@@ -99,11 +105,19 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
         this.imageUrl = imageUrl;
     }
 
-    public Integer getSalesCount() {
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    public Long getSalesCount() {
         return salesCount;
     }
 
-    public void setSalesCount(Integer salesCount) {
+    public void setSalesCount(Long salesCount) {
         this.salesCount = salesCount;
     }
 

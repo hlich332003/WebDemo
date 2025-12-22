@@ -1,322 +1,152 @@
-<section
-  class="hero-section"
-  [style.background-image]="
-    'url(' +
-    (bannerImageUrl ||
-      'https://thuthuatnhanh.com/wp-content/uploads/2021/06/Hinh-anh-dan-PC-khung-dep-me-hon.jpg') +
-    ')'
-  "
->
-  <div class="hero-overlay"></div>
-  <div class="hero-content">
-    <h1 class="hero-title">Welcome</h1>
-    <p class="hero-subtitle">Cửa hàng điện tử & công nghệ hàng đầu Việt Nam</p>
-
-    @if (account()?.authorities?.includes('ROLE_ADMIN')) {
-      <div class="admin-notice">
-        <fa-icon icon="shield-alt"></fa-icon>
-        Bạn đang đăng nhập với quyền Admin
-      </div>
-      <div class="hero-actions">
-        <a routerLink="/admin" class="btn btn-primary btn-lg">
-          <fa-icon icon="cog"></fa-icon>
-          Quản lý hệ thống
-        </a>
-        <a routerLink="/products" class="btn btn-outline-light btn-lg">
-          <fa-icon icon="eye"></fa-icon>
-          Xem cửa hàng
+<div class="home-container">
+  <!-- Hero Section -->
+  <div class="hero-section text-center">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1 class="hero-title">Khám Phá Thế Giới Công Nghệ</h1>
+      <p class="hero-subtitle">Sản phẩm chất lượng, ưu đãi mỗi ngày</p>
+      <div class="admin-notice" *ngIf="account?.authorities?.includes('ROLE_ADMIN')">
+        <a routerLink="/admin">
+          <fa-icon icon="shield-alt" class="me-2"></fa-icon>
+          <span>Chế độ quản trị viên. Đi đến trang quản lý.</span>
         </a>
       </div>
-    } @else {
-      <div class="hero-actions">
-        <a routerLink="/products" class="btn btn-primary btn-lg">
-          <fa-icon icon="shopping-cart"></fa-icon>
-          Mua sắm ngay
-        </a>
-        <a routerLink="/cart" class="btn btn-outline-light btn-lg">
-          <fa-icon icon="shopping-cart"></fa-icon>
-          Xem giỏ hàng
-        </a>
-      </div>
-    }
+    </div>
   </div>
-</section>
 
-<!-- Category Icons Section -->
-<section class="category-icons">
-  <h2 class="section-title">Danh Mục</h2>
-  <div class="icon-grid">
-    @for (category of featuredCategories; track category.id) {
-      <a
-        [routerLink]="['/products']"
-        [queryParams]="{ categorySlug: category.slug }"
-        class="icon-card"
-      >
-        <div class="icon-wrapper">
-          <fa-icon [icon]="getCategoryIcon(category.slug)" class="category-icon"></fa-icon>
-        </div>
-        <span class="icon-label">{{ category.name }}</span>
-      </a>
-    }
-  </div>
-</section>
+  <div class="container-fluid mt-4">
+    <!-- Categories Section -->
+    <section class="category-showcase" *ngIf="featuredCategories.length > 0">
+      <h2 class="section-title">Danh Mục Sản Phẩm</h2>
+      <div class="category-grid">
+        <a class="category-card" *ngFor="let category of featuredCategories" [routerLink]="['/products']" [queryParams]="{ categorySlug: category.slug }">
+          <div class="category-icon-wrapper">
+            <fa-icon [icon]="getCategoryIcon(category.slug)" class="category-icon"></fa-icon>
+          </div>
+          <span class="category-name">{{ category.name }}</span>
+        </a>
+      </div>
+    </section>
 
-<!-- Sản phẩm hot -->
-<section class="best-sellers">
-  <h2 class="section-title">🔥 Sản Phẩm Bán Chạy</h2>
-  <div class="product-grid">
-    @if (isLoading) {
-      <p>Đang tải...</p>
-    } @else if (bestSellerProducts.length === 0) {
-      <p>Chưa có sản phẩm bán chạy nào.</p>
-    } @else {
-      @for (product of bestSellerProducts; track product.id; let idx = $index) {
-        <div class="product-card">
-          <img
-            [src]="getProxiedImageUrl(product.imageUrl)"
-            [alt]="product.name"
-            [attr.loading]="idx < 5 ? 'eager' : 'lazy'"
-            (click)="viewProductDetail(product.id!)"
-            (error)="onImageError($event)"
-          />
-          <div class="product-info">
-            <h4 class="product-name" (click)="viewProductDetail(product.id!)">
-              {{ product.name }}
-            </h4>
-            <p class="product-price">{{ formatPrice(product.price) }}</p>
-            @if (product.quantity !== null && product.quantity !== undefined) {
-              @if (product.quantity === 0) {
-                <p class="stock text-danger fw-bold">❌ Hết hàng</p>
-              } @else if (product.quantity < 10) {
-                <p class="stock text-warning">
-                  ⚠️ Chỉ còn {{ product.quantity }}
-                </p>
-              } @else {
-                <p class="stock text-muted">Còn {{ product.quantity }}</p>
-              }
-            }
-            <div class="product-buttons">
-              <button
-                type="button"
-                (click)="toggleWishlist(product, $event)"
-                class="btn-wishlist"
-                [class.in-wishlist]="isInWishlist(product.id!)"
-                title="Yêu thích"
-              >
-                <fa-icon icon="heart"></fa-icon>
-              </button>
-              <button
-                class="btn btn-sm btn-success flex-grow-1"
-                (click)="addToCart(product)"
-                [disabled]="product.quantity === 0"
-              >
-                <fa-icon icon="cart-plus"></fa-icon>
-                {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm giỏ' }}
-              </button>
+    <!-- Featured Products Section -->
+    <section class="product-showcase" *ngIf="bestSellerProducts.length > 0">
+      <h2 class="section-title">Sản Phẩm Nổi Bật</h2>
+      <div class="product-grid">
+        <div class="product-card" *ngFor="let product of bestSellerProducts">
+          <div class="product-image-wrapper" (click)="viewProductDetail(product.id)">
+            <img *ngIf="product.imageUrl" [jhiLazyLoad]="getProxiedImageUrl(product.imageUrl)" [alt]="product.name" (error)="onImageError($event)" loading="lazy" />
+            <div *ngIf="!product.imageUrl" class="image-placeholder">
+              <fa-icon icon="box-open"></fa-icon>
             </div>
           </div>
-        </div>
-      }
-    }
-  </div>
-</section>
-
-<!-- Sản phẩm mới -->
-<section class="new-products">
-  <h2 class="section-title">✨ Sản Phẩm Mới</h2>
-  <div class="product-grid">
-    @if (isLoading) {
-      <p>Đang tải...</p>
-    } @else if (newProducts.length === 0) {
-      <p>Đang cập nhật sản phẩm mới...</p>
-    } @else {
-      @for (product of newProducts; track product.id) {
-        <div class="product-card">
-          <div class="badge-new">NEW</div>
-          <img
-            [src]="getProxiedImageUrl(product.imageUrl)"
-            [alt]="product.name"
-            loading="lazy"
-            (click)="viewProductDetail(product.id!)"
-            (error)="onImageError($event)"
-          />
           <div class="product-info">
-            <h4 class="product-name" (click)="viewProductDetail(product.id!)">
-              {{ product.name }}
-            </h4>
+            <h5 class="product-name" (click)="viewProductDetail(product.id)">{{ product.name }}</h5>
             <p class="product-price">{{ formatPrice(product.price) }}</p>
-            @if (product.quantity !== null && product.quantity !== undefined) {
-              @if (product.quantity === 0) {
-                <p class="stock text-danger fw-bold">❌ Hết hàng</p>
-              } @else if (product.quantity < 10) {
-                <p class="stock text-warning">
-                  ⚠️ Chỉ còn {{ product.quantity }}
-                </p>
-              } @else {
-                <p class="stock text-muted">Kho: {{ product.quantity }}</p>
-              }
-            }
-            <div class="product-buttons">
-              <button
-                type="button"
-                (click)="toggleWishlist(product, $event)"
-                class="btn-wishlist"
-                [class.in-wishlist]="isInWishlist(product.id!)"
-                title="Yêu thích"
-              >
-                <fa-icon icon="heart"></fa-icon>
-              </button>
-              <button
-                class="btn btn-sm btn-success flex-grow-1"
-                (click)="addToCart(product)"
-                [disabled]="product.quantity === 0"
-              >
-                <fa-icon icon="cart-plus"></fa-icon>
-                {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm giỏ' }}
-              </button>
-            </div>
           </div>
-        </div>
-      }
-    }
-  </div>
-</section>
-
-<!-- Sản phẩm đã xem gần đây -->
-<section class="recently-viewed" *ngIf="recentlyViewedProducts.length > 0">
-  <h2 class="section-title">👁️ Sản Phẩm Đã Xem Gần Đây</h2>
-  <div class="product-grid">
-    @for (product of recentlyViewedProducts; track product.id) {
-      <div class="product-card">
-        <img
-          [src]="getProxiedImageUrl(product.imageUrl)"
-          [alt]="product.name"
-          loading="lazy"
-          (click)="viewProductDetail(product.id!)"
-          (error)="onImageError($event)"
-        />
-        <div class="product-info">
-          <h4 class="product-name" (click)="viewProductDetail(product.id!)">
-            {{ product.name }}
-          </h4>
-          <p class="product-price">{{ formatPrice(product.price) }}</p>
-          @if (product.quantity !== null && product.quantity !== undefined) {
-            @if (product.quantity === 0) {
-              <p class="stock text-danger fw-bold">❌ Hết hàng</p>
-            } @else if (product.quantity < 10) {
-              <p class="stock text-warning">
-                ⚠️ Chỉ còn {{ product.quantity }}
-              </p>
-            } @else {
-              <p class="stock text-muted">Kho: {{ product.quantity }}</p>
-            }
-          }
-          <div class="product-buttons">
+          <div class="product-actions">
             <button
-              type="button"
+              class="btn btn-sm btn-wishlist"
               (click)="toggleWishlist(product, $event)"
-              class="btn-wishlist"
-              [class.in-wishlist]="isInWishlist(product.id!)"
-              title="Yêu thích"
-            >
-              <fa-icon icon="heart"></fa-icon>
+              [class.in-wishlist]="isInWishlist(product.id)"
+              title="Thêm vào yêu thích">
+              <fa-icon [icon]="isInWishlist(product.id) ? 'heart-crack' : 'heart'"></fa-icon>
             </button>
             <button
-              class="btn btn-sm btn-success flex-grow-1"
+              class="btn btn-sm btn-add-to-cart"
+              (click)="addToCart(product)"
+              title="Thêm vào giỏ hàng">
+              <fa-icon icon="shopping-cart"></fa-icon>
+            </button>
+            <button
+              class="btn btn-sm btn-buy-now"
+              (click)="buyNow(product)">
+              Mua ngay
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- New Arrivals Section -->
+    <section class="product-showcase" *ngIf="newProducts.length > 0">
+      <h2 class="section-title">Hàng Mới Về</h2>
+      <div class="product-grid">
+        <div class="product-card" *ngFor="let product of newProducts">
+          <div class="product-image-wrapper" (click)="viewProductDetail(product.id)">
+            <img *ngIf="product.imageUrl" [jhiLazyLoad]="getProxiedImageUrl(product.imageUrl)" [alt]="product.name" (error)="onImageError($event)" loading="lazy" />
+            <div *ngIf="!product.imageUrl" class="image-placeholder">
+              <fa-icon icon="box-open"></fa-icon>
+            </div>
+          </div>
+          <div class="product-info">
+            <h5 class="product-name" (click)="viewProductDetail(product.id)">{{ product.name }}</h5>
+            <p class="product-price">{{ formatPrice(product.price) }}</p>
+          </div>
+          <div class="product-actions">
+            <button
+              class="btn btn-sm btn-wishlist"
+              (click)="toggleWishlist(product, $event)"
+              [class.in-wishlist]="isInWishlist(product.id)"
+              title="Thêm vào yêu thích">
+              <fa-icon [icon]="isInWishlist(product.id) ? 'heart-crack' : 'heart'"></fa-icon>
+            </button>
+            <button
+              class="btn btn-sm btn-add-to-cart"
               (click)="addToCart(product)"
               [disabled]="product.quantity === 0"
-            >
-              <fa-icon icon="cart-plus"></fa-icon>
-              {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm giỏ' }}
+              title="Thêm vào giỏ hàng">
+              <fa-icon icon="shopping-cart"></fa-icon>
+            </button>
+            <button
+              class="btn btn-sm btn-buy-now"
+              (click)="buyNow(product)"
+              [disabled]="product.quantity === 0">
+              {{ product.quantity === 0 ? 'Hết hàng' : 'Mua ngay' }}
             </button>
           </div>
         </div>
       </div>
-    }
-  </div>
-</section>
+    </section>
 
-<!-- Mục nổi bật-->
-<section class="featured-categories">
-  <div class="category-grid">
-    @if (isLoading) {
-      <p>Đang tải danh mục...</p>
-    } @else if (featuredCategories.length === 0) {
-      <p>Không có danh mục nổi bật nào.</p>
-    } @else {
-      @for (category of featuredCategories; track category.id) {
-        <div class="category-card">
-          <h3 class="category-title">{{ category.name }}</h3>
-          <div class="product-grid">
-            @if (category.products && category.products.length > 0) {
-              @for (product of category.products; track product.id) {
-              <div class="product-card">
-                <img
-                  [src]="getProxiedImageUrl(product.imageUrl)"
-                  [alt]="product.name"
-                  loading="lazy"
-                  (click)="viewProductDetail(product.id!)"
-                  (error)="onImageError($event)"
-                />
-                <div class="product-info">
-                  <h4
-                    class="product-name"
-                    (click)="viewProductDetail(product.id!)"
-                  >
-                    {{ product.name }}
-                  </h4>
-                  <p class="product-price">{{ formatPrice(product.price) }}</p>
-                  @if (
-                    product.quantity !== null && product.quantity !== undefined
-                  ) {
-                    @if (product.quantity === 0) {
-                      <p class="stock text-danger fw-bold">❌ Hết hàng</p>
-                    } @else if (product.quantity < 10) {
-                      <p class="stock text-warning">
-                        ⚠️ Còn {{ product.quantity }}
-                      </p>
-                    } @else {
-                      <p class="stock text-muted">
-                        Kho: {{ product.quantity }}
-                      </p>
-                    }
-                  }
-                  <div class="product-buttons">
-                    <button
-                      type="button"
-                      (click)="toggleWishlist(product, $event)"
-                      class="btn-wishlist"
-                      [class.in-wishlist]="isInWishlist(product.id!)"
-                      title="Yêu thích"
-                    >
-                      <fa-icon icon="heart"></fa-icon>
-                    </button>
-                    <button
-                      class="btn btn-sm btn-success flex-grow-1"
-                      (click)="addToCart(product)"
-                      [disabled]="product.quantity === 0"
-                    >
-                      <fa-icon icon="cart-plus"></fa-icon>
-                      {{ product.quantity === 0 ? 'Hết hàng' : 'Thêm giỏ' }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-              }
-            } @else {
-              <p class="text-muted">Không có sản phẩm nào trong danh mục này.</p>
-            }
+    <!-- Recently Viewed Section -->
+    <section class="product-showcase" *ngIf="recentlyViewedProducts.length > 0">
+      <h2 class="section-title">Đã Xem Gần Đây</h2>
+      <div class="product-grid">
+        <div class="product-card" *ngFor="let product of recentlyViewedProducts">
+          <div class="product-image-wrapper" (click)="viewProductDetail(product.id)">
+            <img *ngIf="product.imageUrl" [jhiLazyLoad]="getProxiedImageUrl(product.imageUrl)" [alt]="product.name" (error)="onImageError($event)" loading="lazy" />
+            <div *ngIf="!product.imageUrl" class="image-placeholder">
+              <fa-icon icon="box-open"></fa-icon>
+            </div>
           </div>
-          <a
-            [routerLink]="['/products']"
-            [queryParams]="{ categorySlug: category.slug }"
-            class="btn btn-primary btn-lg mt-3"
-            >
-            <fa-icon icon="arrow-right"></fa-icon>
-            Xem thêm
-          </a>
+          <div class="product-info">
+            <h5 class="product-name" (click)="viewProductDetail(product.id)">{{ product.name }}</h5>
+            <p class="product-price">{{ formatPrice(product.price) }}</p>
+          </div>
+          <div class="product-actions">
+            <button
+              class="btn btn-sm btn-wishlist"
+              (click)="toggleWishlist(product, $event)"
+              [class.in-wishlist]="isInWishlist(product.id)"
+              title="Thêm vào yêu thích">
+              <fa-icon [icon]="isInWishlist(product.id) ? 'heart-crack' : 'heart'"></fa-icon>
+            </button>
+            <button
+              class="btn btn-sm btn-add-to-cart"
+              (click)="addToCart(product)"
+              [disabled]="product.quantity === 0"
+              title="Thêm vào giỏ hàng">
+              <fa-icon icon="shopping-cart"></fa-icon>
+            </button>
+            <button
+              class="btn btn-sm btn-buy-now"
+              (click)="buyNow(product)"
+              [disabled]="product.quantity === 0">
+              {{ product.quantity === 0 ? 'Hết hàng' : 'Mua ngay' }}
+            </button>
+          </div>
         </div>
-      }
-    }
+      </div>
+    </section>
   </div>
-</section>
+</div>

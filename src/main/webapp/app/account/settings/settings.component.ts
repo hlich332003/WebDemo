@@ -6,6 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 
 import SharedModule from 'app/shared/shared.module';
 import { AccountService } from 'app/core/auth/account.service';
@@ -14,7 +15,7 @@ import { Account } from 'app/core/auth/account.model';
 @Component({
   selector: 'jhi-settings',
   standalone: true,
-  imports: [SharedModule, FormsModule, ReactiveFormsModule],
+  imports: [SharedModule, FormsModule, ReactiveFormsModule, TranslateModule],
   templateUrl: './settings.component.html',
 })
 export default class SettingsComponent implements OnInit {

@@ -31,14 +31,15 @@ spring:
     docker:
         compose:
             enabled: false
-            profiles:
-                active: dev
+            skip:
+                in-tests: false
+            lifecycle-management: none
     jackson:
         serialization:
             indent-output: true
     datasource:
         type: com.zaxxer.hikari.HikariDataSource
-        # Cấu hình cho SQL Server
+        # Cấu hình cho SQL Server - Primary DB (jhipster_db)
         url: jdbc:sqlserver://localhost:1433;databaseName=jhipster_db;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true
         username: jhipster_user
         password: Jhip@123
@@ -46,9 +47,47 @@ spring:
         hikari:
             poolName: Hikari
             auto-commit: false
+        # Analytics Database (analytics_db)
+        analytics:
+            url: jdbc:sqlserver://localhost:1433;databaseName=analytics_db;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true
+            username: jhipster_user
+            password: Jhip@123
+            driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+            hikari:
+                poolName: HikariAnalytics
+                auto-commit: false
+                maximum-pool-size: 5
     liquibase:
         # Remove 'faker' if you do not want the sample data to be loaded automatically
         contexts: dev, faker
+    # Redis Configuration
+    data:
+        redis:
+            host: localhost
+            port: 6379
+            timeout: 2000ms
+            lettuce:
+                pool:
+                    max-active: 8
+                    max-idle: 8
+                    min-idle: 0
+    cache:
+        type: redis
+        redis:
+            time-to-live: 600000 # 10 minutes
+            cache-null-values: false
+    # RabbitMQ Configuration
+    rabbitmq:
+        host: localhost
+        port: 5672
+        username: guest
+        password: guest
+        listener:
+            simple:
+                acknowledge-mode: auto
+                retry:
+                    enabled: true
+                    max-attempts: 3
     mail:
         # Use environment variables in dev. Set SPRING_MAIL_HOST, SPRING_MAIL_PORT, SPRING_MAIL_USERNAME and SPRING_MAIL_PASSWORD in your environment.
         # Example (PowerShell):
@@ -56,7 +95,7 @@ spring:
         host: ${SPRING_MAIL_HOST:smtp.gmail.com}
         port: ${SPRING_MAIL_PORT:587}
         username: catbamaytongdai@gmail.com
-        password: acyu mvpz vcyk enoz
+        password: hkqu khsu pxmj tncw
         properties:
             mail:
                 smtp:
@@ -91,9 +130,9 @@ jhipster:
     # CORS is only enabled by default with the "dev" profile
     cors:
         # Allow Ionic for JHipster by default (* no longer allowed in Spring Boot 2.4+)
-        allowed-origins: 'http://localhost:8100,https://localhost:8100,http://localhost:9000,https://localhost:9000,http://localhost:4200,https://localhost:4200'
+        # allowed-origins: 'http://localhost:8100,https://localhost:8100,http://localhost:9000,https://localhost:9000,http://localhost:4200,https://localhost:4200'
         # Enable CORS when running in GitHub Codespaces
-        allowed-origin-patterns: 'https://*.githubpreview.dev'
+        allowed-origin-patterns: '*'
         allowed-methods: '*'
         allowed-headers: '*'
         exposed-headers: 'Authorization,Link,X-Total-Count,X-${jhipster.clientApp.name}-alert,X-${jhipster.clientApp.name}-error,X-${jhipster.clientApp.name}-params'

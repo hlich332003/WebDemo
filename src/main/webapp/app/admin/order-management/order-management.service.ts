@@ -40,7 +40,7 @@ export class OrderManagementService {
     return this.http
       .patch<IOrder>(
         `${this.resourceUrl}/${id}/status`,
-        { status: status },
+        { status },
         { observe: 'response' },
       ) // Sửa payload
       .pipe(map((res: EntityResponseType) => this.convertDateFromServer(res)));

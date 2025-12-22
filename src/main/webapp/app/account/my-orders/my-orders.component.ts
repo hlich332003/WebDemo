@@ -76,7 +76,7 @@ export class MyOrdersComponent implements OnInit {
   }
 
   getStatusText(status: string | null | undefined): string {
-    const statusMap: { [key: string]: string } = {
+    const statusMap: Record<string, string> = {
       PENDING: 'Chờ xử lý',
       PROCESSING: 'Đang xử lý',
       SHIPPED: 'Đang giao',

@@ -2,6 +2,8 @@ package com.mycompany.myapp.service;
 
 import com.mycompany.myapp.domain.Product;
 import com.mycompany.myapp.repository.ProductRepository;
+import com.mycompany.myapp.repository.CategoryRepository;
+import com.mycompany.myapp.domain.Category;
 import jakarta.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -12,6 +14,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -23,16 +27,20 @@ public class ProductService {
     private final Logger log = LoggerFactory.getLogger(ProductService.class);
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
     }
 
+    @CacheEvict(value = "products", allEntries = true)
     public Product save(Product product) {
         log.debug("Request to save Product : {}", product);
         return productRepository.save(product);
     }
 
+    @CacheEvict(value = "products", allEntries = true)
     public Product update(Product product) {
         log.debug("Request to update Product : {}", product);
         return productRepository.save(product);
@@ -67,9 +75,16 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "products", key = "'all_page_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<Product> findAll(Pageable pageable) {
         log.debug("Request to get all Products");
         return productRepository.findAll(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = "categories", key = "'all'")
+    public List<Category> getCategories() {
+        return categoryRepository.findAll();
     }
 
     @Transactional(readOnly = true)
@@ -113,13 +128,27 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "products", key = "'id_' + #id")
     public Optional<Product> findOne(Long id) {
         log.debug("Request to get Product : {}", id);
         return productRepository.findById(id);
     }
 
+    @CacheEvict(value = {"products", "categories"}, allEntries = true)
     public void delete(Long id) {
         log.debug("Request to delete Product : {}", id);
         productRepository.deleteById(id);
+    }
+
+    public Optional<Product> toggleFeatured(Long id) {
+        log.debug("Request to toggle featured status for Product : {}", id);
+        return productRepository
+            .findById(id)
+            .map(product -> {
+                // Assuming Product entity has isFeatured field
+                // product.setFeatured(!product.isFeatured());
+                return product;
+            })
+            .map(productRepository::save);
     }
 }

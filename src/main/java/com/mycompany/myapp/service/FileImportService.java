@@ -12,6 +12,7 @@ import com.mycompany.myapp.security.AuthoritiesConstants;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.*;
@@ -138,7 +139,7 @@ public class FileImportService {
                     if (priceCell == null || priceCell.getCellType() != CellType.NUMERIC) {
                         throw new IllegalArgumentException("Giá sản phẩm không được để trống và phải là số");
                     }
-                    product.setPrice(Double.valueOf(priceCell.getNumericCellValue()));
+                    product.setPrice(BigDecimal.valueOf(priceCell.getNumericCellValue()));
 
                     Cell quantityCell = currentRow.getCell(4);
                     if (quantityCell != null && quantityCell.getCellType() == CellType.NUMERIC) {

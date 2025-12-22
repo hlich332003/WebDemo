@@ -1,24 +1,24 @@
 /* ==========================================================================
-   Variables
+   Variables - Biến màu sắc đồng bộ toàn dự án
    ========================================================================== */
 
-@use '../../app/layouts/_theme.scss' as theme; // Import theme variables
+@use '../../app/layouts/_theme.scss' as theme;
 
-// Colors
-$primary: theme.$primary-purple; // Màu tím chủ đạo
-$secondary: theme.$primary-pink; // Màu hồng phụ
-$success: #28a745; // Giữ nguyên màu xanh lá cây thành công
-$info: #17a2b8; // Màu xanh ngọc thông tin
-$warning: theme.$accent-color; // Màu vàng cảnh báo từ theme
-$danger: #dc3545; // Màu đỏ nguy hiểm
-$light: #ffffff; // Màu sáng (trắng)
-$dark: theme.$dark-background; // Màu tối (nền) từ theme
+// Colors - Màu sắc chính
+$primary: theme.$primary-pink;           // Màu hồng chủ đạo
+$secondary: theme.$primary-purple;       // Màu tím phụ
+$success: theme.$success-color;          // Màu xanh lá thành công
+$info: theme.$info-color;                // Màu xanh ngọc thông tin
+$warning: theme.$warning-color;          // Màu vàng cảnh báo
+$danger: theme.$danger-color;            // Màu đỏ nguy hiểm
+$light: theme.$light-background;         // Màu nền sáng
+$dark: theme.$dark-background;           // Màu nền tối
 
-// Body
-$body-bg: #f3e5f5; // Màu nền hồng tím nhạt cho toàn trang
-$body-color: #4a148c; // Màu chữ tím đậm, dễ đọc
+// Body - Màu nền và chữ
+$body-bg: #f3e5f5;                       // Nền hồng tím nhạt
+$body-color: theme.$dark-text;           // Chữ tối dễ đọc
 
-// Typography
+// Typography - Font chữ
 $font-family-sans-serif:
   'Inter',
   -apple-system,
@@ -34,19 +34,19 @@ $font-family-sans-serif:
   'Segoe UI Symbol',
   'Noto Color Emoji';
 
-// Borders
-$border-radius: 0.375rem;
-$border-color: #e1e8ed; // Màu viền sáng, dễ nhìn
+// Borders - Viền và bo góc
+$border-radius: 12px;
+$border-color: theme.$border-color;
 
-// Box shadow
-$box-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-$box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-$box-shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+// Box shadow - Đổ bóng
+$box-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+$box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+$box-shadow-lg: 0 6px 20px rgba(0, 0, 0, 0.15);
 
-// Card
-$card-bg: theme.$card-background; // Màu nền card từ theme
+// Card - Thẻ nội dung
+$card-bg: theme.$card-background;
 $card-border-radius: $border-radius;
 $card-box-shadow: $box-shadow-sm;
 
-// Buttons
+// Buttons - Nút bấm
 $btn-border-radius: $border-radius;

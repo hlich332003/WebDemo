@@ -2,6 +2,7 @@ package com.mycompany.myapp.service.dto;
 
 import com.mycompany.myapp.domain.Product;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Objects;
 
 public class ProductDTO implements Serializable {
@@ -9,10 +10,10 @@ public class ProductDTO implements Serializable {
     private Long id;
     private String name;
     private String description;
-    private Double price;
+    private BigDecimal price;
     private Integer quantity;
     private String imageUrl;
-    private Integer salesCount;
+    private Long salesCount;
     private CategoryDTO category;
 
     public ProductDTO() {}
@@ -54,11 +55,11 @@ public class ProductDTO implements Serializable {
         this.description = description;
     }
 
-    public Double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 
@@ -78,11 +79,11 @@ public class ProductDTO implements Serializable {
         this.imageUrl = imageUrl;
     }
 
-    public Integer getSalesCount() {
+    public Long getSalesCount() {
         return salesCount;
     }
 
-    public void setSalesCount(Integer salesCount) {
+    public void setSalesCount(Long salesCount) {
         this.salesCount = salesCount;
     }
 

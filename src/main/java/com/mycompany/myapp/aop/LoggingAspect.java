@@ -5,14 +5,14 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 /**
  * Aspect để log execution time của các method được đánh dấu @Loggable
  * Đây là Custom Aspect theo yêu cầu lộ trình đào tạo
+ *
+ * Note: Không dùng @Component vì JHipster đã có LoggingAspect riêng trong aop/logging/
  */
 @Aspect
-@Component
 public class LoggingAspect {
 
     private static final Logger log = LoggerFactory.getLogger(LoggingAspect.class);

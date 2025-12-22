@@ -3,6 +3,7 @@ package com.mycompany.myapp.domain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * A OrderItem.
@@ -19,8 +20,9 @@ public class OrderItem implements Serializable {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "product_id")
-    private Long productId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
+    private Product product;
 
     @Column(name = "product_name", length = 255, columnDefinition = "NVARCHAR(255)")
     private String productName;
@@ -28,8 +30,11 @@ public class OrderItem implements Serializable {
     @Column(name = "quantity")
     private Integer quantity;
 
-    @Column(name = "price") // Hoàn tác về Double
-    private Double price; // Hoàn tác về Double
+    @Column(name = "price", precision = 18, scale = 2)
+    private BigDecimal price;
+
+    @Column(name = "price_at_purchase", precision = 18, scale = 2)
+    private BigDecimal priceAtPurchase;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
@@ -42,35 +47,20 @@ public class OrderItem implements Serializable {
         return this.id;
     }
 
-    public OrderItem id(Long id) {
-        this.setId(id);
-        return this;
-    }
-
     public void setId(Long id) {
         this.id = id;
     }
 
-    public Long getProductId() {
-        return this.productId;
+    public Product getProduct() {
+        return this.product;
     }
 
-    public OrderItem productId(Long productId) {
-        this.setProductId(productId);
-        return this;
-    }
-
-    public void setProductId(Long productId) {
-        this.productId = productId;
+    public void setProduct(Product product) {
+        this.product = product;
     }
 
     public String getProductName() {
         return this.productName;
-    }
-
-    public OrderItem productName(String productName) {
-        this.setProductName(productName);
-        return this;
     }
 
     public void setProductName(String productName) {
@@ -81,21 +71,26 @@ public class OrderItem implements Serializable {
         return this.quantity;
     }
 
-    public OrderItem quantity(Integer quantity) {
-        this.setQuantity(quantity);
-        return this;
-    }
+
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
-    public Double getPrice() { // Hoàn tác về Double
+    public BigDecimal getPrice() {
         return this.price;
     }
 
-    public void setPrice(Double price) { // Hoàn tác về Double
+    public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public BigDecimal getPriceAtPurchase() {
+        return priceAtPurchase;
+    }
+
+    public void setPriceAtPurchase(BigDecimal priceAtPurchase) {
+        this.priceAtPurchase = priceAtPurchase;
     }
 
     public Order getOrder() {
@@ -105,13 +100,6 @@ public class OrderItem implements Serializable {
     public void setOrder(Order order) {
         this.order = order;
     }
-
-    public OrderItem order(Order order) {
-        this.setOrder(order);
-        return this;
-    }
-
-    // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
 
     @Override
     public boolean equals(Object o) {
@@ -130,16 +118,13 @@ public class OrderItem implements Serializable {
 
     @Override
     public int hashCode() {
-        // see https://vladmihalcea.com/how-to-implement-equals-and-hashcode-using-the-jpa-entity-identifier/
         return getClass().hashCode();
     }
 
-    // prettier-ignore
     @Override
     public String toString() {
         return "OrderItem{" +
             "id=" + getId() +
-            ", productId=" + getProductId() +
             ", productName='" + getProductName() + "'" +
             ", quantity=" + getQuantity() +
             ", price=" + getPrice() +

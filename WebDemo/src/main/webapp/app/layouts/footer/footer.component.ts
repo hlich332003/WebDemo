@@ -1,8 +1,20 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { FaIconLibrary, FontAwesomeModule } from '@fortawesome/angular-fontawesome'; // Import FontAwesomeModule
-import { faFacebookF, faTwitter, faInstagram, faLinkedinIn } from '@fortawesome/free-brands-svg-icons';
-import { faMapMarkerAlt, faPhone, faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import {
+  FaIconLibrary,
+  FontAwesomeModule,
+} from '@fortawesome/angular-fontawesome'; // Import FontAwesomeModule
+import {
+  faFacebookF,
+  faTwitter,
+  faInstagram,
+  faLinkedinIn,
+} from '@fortawesome/free-brands-svg-icons';
+import {
+  faMapMarkerAlt,
+  faPhone,
+  faEnvelope,
+} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'jhi-footer',
@@ -17,6 +29,14 @@ export default class FooterComponent implements OnInit {
   private readonly iconLibrary = inject(FaIconLibrary);
 
   ngOnInit(): void {
-    this.iconLibrary.addIcons(faFacebookF, faTwitter, faInstagram, faLinkedinIn, faMapMarkerAlt, faPhone, faEnvelope);
+    this.iconLibrary.addIcons(
+      faFacebookF,
+      faTwitter,
+      faInstagram,
+      faLinkedinIn,
+      faMapMarkerAlt,
+      faPhone,
+      faEnvelope,
+    );
   }
 }

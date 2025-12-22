@@ -1,15 +1,17 @@
 package com.mycompany.myapp.web.rest.dto;
 
+import java.math.BigDecimal;
+
 public class ProductSearchDTO {
 
     private Long id;
     private String name;
     private String description;
-    private Double price;
+    private BigDecimal price;
     private String imageUrl;
     private String categoryName; // Thêm tên danh mục để hiển thị
 
-    public ProductSearchDTO(Long id, String name, String description, Double price, String imageUrl, String categoryName) {
+    public ProductSearchDTO(Long id, String name, String description, BigDecimal price, String imageUrl, String categoryName) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -43,11 +45,11 @@ public class ProductSearchDTO {
         this.description = description;
     }
 
-    public Double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 

@@ -1,0 +1,26 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:lang="${#locale.language}"
+  lang="en"
+>
+  <head>
+    <title>Đơn hàng đã hoàn thành</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  </head>
+  <body>
+    <p>Kính gửi <span th:text="${order.customerFullName}">Khách hàng</span>,</p>
+    <p>Đơn hàng của bạn đã được giao thành công!</p>
+    <p>
+      <span>Mã đơn hàng:</span>
+      <strong th:text="${order.orderCode}">ORD-12345</strong>
+    </p>
+    <p>Cảm ơn bạn đã mua sắm tại WebDemo. Hy vọng bạn hài lòng với sản phẩm.</p>
+    <p>Nếu có bất kỳ vấn đề gì, vui lòng liên hệ với bộ phận hỗ trợ của chúng tôi.</p>
+    <p>
+      <span>Trân trọng,</span>
+      <br />
+      <em>Đội ngũ WebDemo.</em>
+    </p>
+  </body>
+</html>

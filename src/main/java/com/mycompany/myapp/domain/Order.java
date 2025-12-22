@@ -5,6 +5,7 @@ import com.mycompany.myapp.domain.enumeration.OrderStatus;
 import com.mycompany.myapp.web.rest.dto.OrderSearchDTO;
 import jakarta.persistence.*;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
@@ -19,7 +20,7 @@ import java.util.Set;
             @ColumnResult(name = "id", type = Long.class),
             @ColumnResult(name = "customerLogin", type = String.class),
             @ColumnResult(name = "orderDate", type = Instant.class),
-            @ColumnResult(name = "totalAmount", type = Double.class), // Hoàn tác về Double
+            @ColumnResult(name = "totalAmount", type = BigDecimal.class),
             @ColumnResult(name = "status", type = String.class),
         }
     )
@@ -37,8 +38,8 @@ public class Order implements Serializable {
     @Column(name = "order_date")
     private Instant orderDate;
 
-    @Column(name = "total_amount")
-    private Double totalAmount; // Hoàn tác về Double
+    @Column(name = "total_amount", precision = 18, scale = 2)
+    private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50, columnDefinition = "NVARCHAR(50)")
@@ -92,11 +93,11 @@ public class Order implements Serializable {
         this.orderDate = orderDate;
     }
 
-    public Double getTotalAmount() { // Hoàn tác về Double
+    public BigDecimal getTotalAmount() {
         return this.totalAmount;
     }
 
-    public void setTotalAmount(Double totalAmount) { // Hoàn tác về Double
+    public void setTotalAmount(BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
     }
 

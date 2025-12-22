@@ -5,9 +5,28 @@
     @if (cartItems.length === 0) {
       <div class="alert alert-warning">Giỏ hàng của bạn đang trống.</div>
     } @else {
+      <div class="cart-header">
+        <div class="select-all">
+          <input
+            type="checkbox"
+            [checked]="isAllSelected()"
+            (change)="toggleSelectAll($event)"
+            id="selectAll"
+          />
+          <label for="selectAll">Chọn tất cả</label>
+        </div>
+      </div>
+
       <div class="cart-items">
         @for (item of cartItems; track item.product.id) {
-          <div class="cart-item">
+          <div class="cart-item" [class.selected]="item.selected">
+            <div class="item-select">
+              <input
+                type="checkbox"
+                [checked]="item.selected"
+                (change)="toggleSelection(item.product.id!)"
+              />
+            </div>
             <img
               [src]="
                 item.product.imageUrl || 'content/images/default-product.svg'
@@ -112,14 +131,19 @@
 
       <div class="cart-summary">
         <h3>
-          Tổng cộng:
+          Tổng cộng ({{ (cartService.selectedItems$ | async)?.length }} sản
+          phẩm):
           <span class="total-price">{{
-            formatPrice((cartService.totalPrice$ | async) ?? 0)
+            formatPrice((cartService.selectedTotalPrice$ | async) ?? 0)
           }}</span>
         </h3>
-        <a routerLink="/checkout" class="btn btn-primary btn-lg"
-          >Tiến hành thanh toán</a
+        <button
+          (click)="proceedToCheckout()"
+          class="btn btn-primary btn-lg"
+          [disabled]="(cartService.selectedItems$ | async)?.length === 0"
         >
+          Mua hàng
+        </button>
       </div>
     }
   </ng-container>

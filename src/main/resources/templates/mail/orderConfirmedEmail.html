@@ -1,0 +1,29 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:lang="${#locale.language}"
+  lang="en"
+>
+  <head>
+    <title>Đơn hàng đã được xác nhận</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  </head>
+  <body>
+    <p>Kính gửi <span th:text="${order.customerFullName}">Khách hàng</span>,</p>
+    <p>Đơn hàng của bạn đã được xác nhận và đang được xử lý!</p>
+    <p>
+      <span>Mã đơn hàng:</span>
+      <strong th:text="${order.orderCode}">ORD-12345</strong>
+    </p>
+    <p>
+      <span>Trạng thái hiện tại:</span>
+      <strong>Đang xử lý</strong>
+    </p>
+    <p>Chúng tôi sẽ thông báo cho bạn khi đơn hàng được giao cho đơn vị vận chuyển.</p>
+    <p>
+      <span>Trân trọng,</span>
+      <br />
+      <em>Đội ngũ WebDemo.</em>
+    </p>
+  </body>
+</html>

@@ -1,0 +1,63 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <div *ngIf="payment()">
+      <h2 data-cy="paymentDetailsHeading"><span>Payment</span></h2>
+
+      <hr />
+
+      <jhi-alert-error></jhi-alert-error>
+
+      <jhi-alert></jhi-alert>
+
+      <dl class="row-md jh-entity-details">
+        <dt><span>ID</span></dt>
+        <dd>
+          <span>{{ payment()!.id }}</span>
+        </dd>
+        <dt><span>Method</span></dt>
+        <dd>
+          <span>{{ payment()!.method }}</span>
+        </dd>
+        <dt><span>Status</span></dt>
+        <dd>
+          <span>{{ payment()!.status }}</span>
+        </dd>
+        <dt><span>Paid At</span></dt>
+        <dd>
+          <span>{{
+            payment()!.paidAt | castToDayjs | formatMediumDatetime
+          }}</span>
+        </dd>
+        <dt><span>Amount</span></dt>
+        <dd>
+          <span>{{ payment()!.amount }}</span>
+        </dd>
+        <dt><span>Order</span></dt>
+        <dd>
+          <div *ngIf="payment()!.order">
+            <a [routerLink]="['/order', payment()!.order!.id, 'view']">{{
+              payment()!.order!.id
+            }}</a>
+          </div>
+        </dd>
+      </dl>
+
+      <button
+        type="submit"
+        (click)="previousState()"
+        class="btn btn-info"
+        data-cy="entityDetailsBackButton"
+      >
+        <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span>Back</span>
+      </button>
+
+      <button
+        type="button"
+        [routerLink]="['/payment', payment()!.id, 'edit']"
+        class="btn btn-primary"
+      >
+        <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span>Edit</span>
+      </button>
+    </div>
+  </div>
+</div>

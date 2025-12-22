@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.http.HttpMethod;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -37,6 +38,11 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
         String uri = request.getRequestURI();
         String query = request.getQueryString();
         log.info("Incoming request: {} {}{}", method, uri, (query != null ? "?" + query : ""));
+
+        // Bỏ qua kiểm tra cho tất cả các yêu cầu GET
+        if (HttpMethod.GET.name().equalsIgnoreCase(method)) {
+            return true;
+        }
 
         // quick skip for management or swagger endpoints
         for (String p : SKIP_PATHS) {

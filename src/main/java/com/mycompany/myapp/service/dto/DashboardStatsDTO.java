@@ -1,28 +1,29 @@
 package com.mycompany.myapp.service.dto;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 public class DashboardStatsDTO implements Serializable {
 
-    private Double totalRevenue;
+    private BigDecimal totalRevenue;
     private Long totalOrders;
     private Long totalCustomers;
     private Long totalProducts;
 
     public DashboardStatsDTO() {}
 
-    public DashboardStatsDTO(Double totalRevenue, Long totalOrders, Long totalCustomers, Long totalProducts) {
+    public DashboardStatsDTO(BigDecimal totalRevenue, Long totalOrders, Long totalCustomers, Long totalProducts) {
         this.totalRevenue = totalRevenue;
         this.totalOrders = totalOrders;
         this.totalCustomers = totalCustomers;
         this.totalProducts = totalProducts;
     }
 
-    public Double getTotalRevenue() {
+    public BigDecimal getTotalRevenue() {
         return totalRevenue;
     }
 
-    public void setTotalRevenue(Double totalRevenue) {
+    public void setTotalRevenue(BigDecimal totalRevenue) {
         this.totalRevenue = totalRevenue;
     }
 

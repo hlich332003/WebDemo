@@ -27,5 +27,8 @@
   "background_color": "#e0e0e0",
   "start_url": ".",
   "display": "standalone",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "scope": "/",
+  "description": "Web Demo Application",
+  "lang": "vi"
 }

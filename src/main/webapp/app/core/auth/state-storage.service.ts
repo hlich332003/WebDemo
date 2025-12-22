@@ -21,36 +21,55 @@ export class StateStorageService {
   }
 
   /**
-   * Lưu JWT token vào localStorage để persist qua page reload
+   * Lưu JWT token vào localStorage hoặc sessionStorage
    * @param authenticationToken - JWT token
-   * @param _rememberMe - (Unused) Giữ lại để tương thích với interface
+   * @param rememberMe - true để lưu vào localStorage, false để lưu vào sessionStorage
    */
   storeAuthenticationToken(
     authenticationToken: string,
-    _rememberMe: boolean,
+    rememberMe: boolean,
   ): void {
-    // Luôn lưu vào localStorage để không bị mất khi refresh
-    localStorage.setItem(this.authenticationKey, authenticationToken);
-    console.log(
-      '✅ Token saved to localStorage:',
-      authenticationToken.substring(0, 20) + '...',
-    );
+    if (rememberMe) {
+      localStorage.setItem(this.authenticationKey, authenticationToken);
+      console.log(
+        '✅ Token saved to localStorage:',
+        authenticationToken.substring(0, 20) + '...',
+      );
+    } else {
+      sessionStorage.setItem(this.authenticationKey, authenticationToken);
+      console.log(
+        '✅ Token saved to sessionStorage:',
+        authenticationToken.substring(0, 20) + '...',
+      );
+    }
   }
 
   /**
-   * Lấy JWT token từ localStorage
+   * Lấy JWT token từ localStorage hoặc sessionStorage
    */
   getAuthenticationToken(): string | null {
-    const token = localStorage.getItem(this.authenticationKey);
-    if (token) {
+    const tokenFromLocalStorage = localStorage.getItem(this.authenticationKey);
+    if (tokenFromLocalStorage) {
       console.log(
         '🔑 Token retrieved from localStorage:',
-        token.substring(0, 20) + '...',
+        tokenFromLocalStorage.substring(0, 20) + '...',
       );
-    } else {
-      console.log('⚠️ No token found in localStorage');
+      return tokenFromLocalStorage;
     }
-    return token;
+
+    const tokenFromSessionStorage = sessionStorage.getItem(
+      this.authenticationKey,
+    );
+    if (tokenFromSessionStorage) {
+      console.log(
+        '🔑 Token retrieved from sessionStorage:',
+        tokenFromSessionStorage.substring(0, 20) + '...',
+      );
+      return tokenFromSessionStorage;
+    }
+
+    console.log('⚠️ No token found in localStorage or sessionStorage');
+    return null;
   }
 
   /**
@@ -58,6 +77,7 @@ export class StateStorageService {
    */
   clearAuthenticationToken(): void {
     localStorage.removeItem(this.authenticationKey);
-    console.log('🗑️ Token cleared from localStorage');
+    sessionStorage.removeItem(this.authenticationKey);
+    console.log('🗑️ Token cleared from localStorage and sessionStorage');
   }
 }

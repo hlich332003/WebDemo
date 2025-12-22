@@ -5,7 +5,7 @@ import PasswordResetInitComponent from './password-reset-init.component';
 const passwordResetInitRoute: Route = {
   path: 'reset/request',
   component: PasswordResetInitComponent,
-  title: 'Password',
+  title: 'Quên mật khẩu',
 };
 
 export default passwordResetInitRoute;

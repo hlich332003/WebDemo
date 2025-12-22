@@ -105,7 +105,9 @@ const routes: Routes = [
   {
     path: 'order/:id',
     loadComponent: () =>
-      import('./order-detail/order-detail.component').then((m) => m.default),
+      import('./order-detail/order-detail.component').then(
+        (m) => m.OrderDetailComponent,
+      ),
     title: 'Chi tiết đơn hàng',
     canActivate: [UserRouteAccessService], // Yêu cầu đăng nhập
   },
