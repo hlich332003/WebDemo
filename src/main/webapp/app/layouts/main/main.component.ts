@@ -1,45 +1,24 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { takeUntil } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { Component, OnInit, inject } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
 
 import { AccountService } from 'app/core/auth/account.service';
+import { AppPageTitleStrategy } from 'app/app-page-title-strategy';
 import FooterComponent from '../footer/footer.component';
-import { ChatWidgetComponent } from '../chat-widget/chat-widget.component';
+import PageRibbonComponent from '../profiles/page-ribbon.component';
 
 @Component({
   selector: 'jhi-main',
-  standalone: true,
   templateUrl: './main.component.html',
-  styleUrls: ['./main.component.scss'],
-  imports: [CommonModule, RouterOutlet, FooterComponent, ChatWidgetComponent],
+  providers: [AppPageTitleStrategy],
+  imports: [RouterOutlet, FooterComponent, PageRibbonComponent],
 })
-export default class MainComponent implements OnInit, OnDestroy {
-  showChatWidget = false;
-
+export default class MainComponent implements OnInit {
+  private readonly router = inject(Router);
+  private readonly appPageTitleStrategy = inject(AppPageTitleStrategy);
   private readonly accountService = inject(AccountService);
-  private readonly destroy$ = new Subject<void>();
 
   ngOnInit(): void {
-    this.accountService
-      .getAuthenticationState()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((account) => {
-        if (account) {
-          // Chỉ hiển thị chat widget cho người dùng thường (không phải admin/CSKH)
-          this.showChatWidget = !this.accountService.hasAnyAuthority([
-            'ROLE_ADMIN',
-            'ROLE_CSKH',
-          ]);
-        } else {
-          this.showChatWidget = false;
-        }
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    // try to log in automatically
+    this.accountService.identity().subscribe();
   }
 }

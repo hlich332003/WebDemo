@@ -1,11 +1,4 @@
-import {
-  Component,
-  ElementRef,
-  Renderer2,
-  effect,
-  inject,
-  input,
-} from '@angular/core';
+import { Component, ElementRef, Renderer2, effect, inject, input } from '@angular/core';
 
 import SharedModule from 'app/shared/shared.module';
 
@@ -53,9 +46,7 @@ export default class PasswordStrengthBarComponent {
     const symbols = regex.test(p);
 
     const flags = [lowerLetters, upperLetters, numbers, symbols];
-    const passedMatches = flags.filter(
-      (isMatchedFlag: boolean) => isMatchedFlag,
-    ).length;
+    const passedMatches = flags.filter((isMatchedFlag: boolean) => isMatchedFlag).length;
 
     force += 2 * p.length + (p.length >= 10 ? 1 : 0);
     force += passedMatches * 10;

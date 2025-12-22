@@ -8,10 +8,7 @@ export class SortService {
     sensitivity: 'base',
   });
 
-  startSort(
-    { predicate, order }: Required<SortState>,
-    fallback?: Required<SortState>,
-  ): (a: any, b: any) => number {
+  startSort({ predicate, order }: Required<SortState>, fallback?: Required<SortState>): (a: any, b: any) => number {
     const multiply = order === 'desc' ? -1 : 1;
     return (a: any, b: any) => {
       const compare = this.collator.compare(a[predicate], b[predicate]);

@@ -1,259 +1,236 @@
-@use 'variables' as vars;
-@use 'sass:color';
-@use 'loading-states';
-@use 'buttons';
-@use 'wishlist-button';
-@use '../../app/layouts/_theme' as theme;
+@import 'bootstrap-variables';
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
 
-/* ==========================================================================
-   Global styles - Style toàn cục cho dự án
-   ========================================================================== */
+/* ==============================================================
+Bootstrap tweaks
+===============================================================*/
 
-body {
-  background-color: vars.$body-bg;
-  color: vars.$body-color;
-  font-family: vars.$font-family-sans-serif;
-  line-height: 1.6;
-}
-
+body,
 h1,
 h2,
 h3,
-h4,
-h5,
-h6 {
-  font-weight: 600;
-  color: vars.$body-color;
-  margin-bottom: 1rem;
+h4 {
+  font-weight: 300;
 }
 
+/* Increase contrast of links to get 100% on Lighthouse Accessibility Audit. Override this color if you want to change the link color, or use a Bootswatch theme */
 a {
-  color: vars.$primary;
-  text-decoration: none;
-  transition: color 0.2s ease;
+  color: #533f03;
+  font-weight: bold;
+}
 
-  &:hover {
-    color: color.adjust(vars.$primary, $lightness: -10%);
-    text-decoration: none;
-  }
+/* override hover color for dropdown-item forced by bootstrap to all a:not([href]):not([tabindex]) elements in _reboot.scss */
+a:not([href]):not([tabindex]):hover.dropdown-item {
+  color: $dropdown-link-hover-color;
+}
+
+/* override .dropdown-item.active background-color on hover */
+.dropdown-item.active:hover {
+  background-color: mix($dropdown-link-hover-bg, $dropdown-link-active-bg, 50%);
+}
+
+a:hover {
+  color: #533f03;
+  /* make sure browsers use the pointer cursor for anchors, even with no href */
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  color: $dropdown-link-hover-color;
 }
 
 /* ==========================================================================
-   Button styles - Nút bấm đồng bộ toàn dự án
-   ========================================================================== */
-
-.btn {
-  @include theme.themed-button;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  white-space: nowrap;
-  user-select: none;
-  text-decoration: none;
-
-  fa-icon {
-    margin-right: 0.5rem;
-  }
-
-  &:focus,
-  &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(vars.$primary, 0.25);
-  }
-}
-
-.btn-primary {
-  @include theme.themed-button;
-}
-
-.btn-secondary {
-  background: linear-gradient(135deg, vars.$secondary 0%, theme.$secondary-purple 100%);
-  color: theme.$light-text;
-
-  &:hover:not(:disabled) {
-    background: linear-gradient(135deg,
-      color.adjust(vars.$secondary, $lightness: -10%) 0%,
-      color.adjust(theme.$secondary-purple, $lightness: -10%) 100%);
-    color: theme.$light-text;
-  }
-}
-
-.btn-success {
-  background: vars.$success;
-  color: theme.$light-text;
-
-  &:hover:not(:disabled) {
-    background: color.adjust(vars.$success, $lightness: -10%);
-    color: theme.$light-text;
-  }
-}
-
-.btn-danger {
-  background: vars.$danger;
-  color: theme.$light-text;
-
-  &:hover:not(:disabled) {
-    background: color.adjust(vars.$danger, $lightness: -10%);
-    color: theme.$light-text;
-  }
-}
-
-.btn-warning {
-  background: vars.$warning;
-  color: theme.$dark-text;
-
-  &:hover:not(:disabled) {
-    background: color.adjust(vars.$warning, $lightness: -10%);
-    color: theme.$dark-text;
-  }
-}
-
-.btn-info {
-  background: vars.$info;
-  color: theme.$light-text;
-
-  &:hover:not(:disabled) {
-    background: color.adjust(vars.$info, $lightness: -10%);
-    color: theme.$light-text;
-  }
-}
-
-.btn-outline-primary {
-  background: transparent;
-  border: 2px solid vars.$primary;
-  color: vars.$primary;
-  box-shadow: none;
-
-  &:hover:not(:disabled) {
-    background: vars.$primary;
-    color: theme.$light-text;
-  }
-}
-
-// Button sizes
-.btn-sm {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  border-radius: 8px;
-}
-
-.btn-lg {
-  padding: 1rem 2rem;
-  font-size: 1.125rem;
-  border-radius: 16px;
+Browser Upgrade Prompt
+========================================================================== */
+.browserupgrade {
+  margin: 0.2em 0;
+  background: #ccc;
+  color: #000;
+  padding: 0.2em 0;
 }
 
 /* ==========================================================================
-   Card styles - Thẻ nội dung
-   ========================================================================== */
+Generic styles
+========================================================================== */
 
-.card {
-  @include theme.themed-card;
-  padding: 1.5rem;
+/* Error highlight on input fields */
+.ng-valid[required],
+.ng-valid.required {
+  border-left: 5px solid green;
 }
+
+.ng-invalid:not(form) {
+  border-left: 5px solid red;
+}
+
+/* other generic styles */
 
 .jh-card {
-  @extend .card;
-  margin-top: 2rem;
-  margin-bottom: 2rem;
+  padding: 1.5%;
+  margin-top: 20px;
+  border: none;
 }
 
-/* ==========================================================================
-   Notification styles - Thông báo
-   ========================================================================== */
-
-.notification {
-  position: fixed;
-  top: 80px;
-  right: 20px;
-  padding: 1rem 1.5rem;
-  border-radius: vars.$border-radius;
-  color: theme.$light-text;
-  font-weight: 600;
-  z-index: 1050;
-  transition:
-    transform 0.3s ease-in-out,
-    opacity 0.3s ease-in-out;
-  transform: translateY(-20px);
-  opacity: 0;
-  pointer-events: none;
-  box-shadow: vars.$box-shadow;
-
-  &.show {
-    transform: translateY(0);
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  &.success {
-    background: vars.$success;
-  }
-
-  &.error {
-    background: vars.$danger;
-  }
-
-  &.info {
-    background: vars.$info;
-  }
-
-  &.warning {
-    background: vars.$warning;
-    color: theme.$dark-text;
-  }
+.error {
+  color: white;
+  background-color: red;
 }
 
-/* ==========================================================================
-   Form styles - Form nhập liệu
-   ========================================================================== */
+.pad {
+  padding: 10px;
+}
+
+.w-40 {
+  width: 40% !important;
+}
+
+.w-60 {
+  width: 60% !important;
+}
+
+.break {
+  white-space: normal;
+  word-break: break-all;
+}
 
 .form-control {
-  border-radius: vars.$border-radius;
-  border: 1px solid vars.$border-color;
-  padding: 0.75rem 1rem;
-  transition: all 0.2s ease;
+  background-color: #fff;
+}
 
-  &:focus {
-    border-color: vars.$primary;
-    box-shadow: 0 0 0 0.2rem rgba(vars.$primary, 0.25);
-    outline: none;
+.readonly {
+  background-color: #eee;
+  opacity: 1;
+}
+
+.footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.hand,
+[jhisortby] {
+  cursor: pointer;
+}
+
+/* ==========================================================================
+Custom alerts for notification
+========================================================================== */
+.alerts {
+  .alert {
+    text-overflow: ellipsis;
+    pre {
+      background: none;
+      border: none;
+      font: inherit;
+      color: inherit;
+      padding: 0;
+      margin: 0;
+    }
+    .popover pre {
+      font-size: 10px;
+    }
+  }
+  .jhi-toast {
+    position: fixed;
+    width: 100%;
+    &.left {
+      left: 5px;
+    }
+    &.right {
+      right: 5px;
+    }
+    &.top {
+      top: 55px;
+    }
+    &.bottom {
+      bottom: 55px;
+    }
+  }
+}
+
+@media screen and (min-width: 480px) {
+  .alerts .jhi-toast {
+    width: 50%;
   }
 }
 
 /* ==========================================================================
-   Table styles - Bảng dữ liệu
-   ========================================================================== */
+entity list page css
+========================================================================== */
 
-.table {
-  background: theme.$card-background;
-  border-radius: vars.$border-radius;
-  overflow: hidden;
-  box-shadow: vars.$box-shadow-sm;
+.table-entities thead th .d-flex > * {
+  margin: auto 0;
+}
 
-  thead {
-    background: theme.$gradient-primary;
-    color: theme.$light-text;
+/* ==========================================================================
+entity detail page css
+========================================================================== */
+.row-md.jh-entity-details {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 10px;
+  line-height: 1.5;
+}
 
-    th {
-      padding: 1rem;
-      font-weight: 600;
-      border: none;
+@media screen and (min-width: 768px) {
+  .row-md.jh-entity-details > {
+    dt {
+      float: left;
+      overflow: hidden;
+      clear: left;
+      text-align: right;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 0.5em 0;
     }
-  }
-
-  tbody {
-    tr {
-      transition: background 0.2s ease;
-
-      &:hover {
-        background: rgba(vars.$primary, 0.05);
-      }
-    }
-
-    td {
-      padding: 1rem;
-      border-top: 1px solid vars.$border-color;
+    dd {
+      border-bottom: 1px solid #eee;
+      padding: 0.5em 0;
+      margin-left: 0;
     }
   }
 }
+
+/* ==========================================================================
+ui bootstrap tweaks
+========================================================================== */
+.nav,
+.pagination,
+.carousel,
+.panel-title a {
+  cursor: pointer;
+}
+
+.thread-dump-modal-lock {
+  max-width: 450px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-menu {
+  padding-left: 0;
+}
+
+/* ==========================================================================
+angular-cli removes postcss-rtl processed inline css, processed rules must be added here instead
+========================================================================== */
+/* page-ribbon.component.scss */
+.ribbon {
+  left: -3.5em;
+  -moz-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+}
+
+/* navbar.component.scss */
+.navbar {
+  ul.navbar-nav {
+    .nav-item {
+      margin-left: 0.5em;
+    }
+  }
+}
+/* jhipster-needle-scss-add-main JHipster will add new css style */

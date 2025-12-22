@@ -1,18 +1,7 @@
 jest.mock('app/core/auth/account.service');
 
-import {
-  ComponentFixture,
-  TestBed,
-  fakeAsync,
-  inject,
-  tick,
-  waitForAsync,
-} from '@angular/core/testing';
-import {
-  HttpHeaders,
-  HttpResponse,
-  provideHttpClient,
-} from '@angular/common/http';
+import { ComponentFixture, TestBed, fakeAsync, inject, tick, waitForAsync } from '@angular/core/testing';
+import { HttpHeaders, HttpResponse, provideHttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 
@@ -41,11 +30,7 @@ describe('User Management Component', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [UserManagementComponent],
-      providers: [
-        provideHttpClient(),
-        { provide: ActivatedRoute, useValue: { data, queryParamMap } },
-        AccountService,
-      ],
+      providers: [provideHttpClient(), { provide: ActivatedRoute, useValue: { data, queryParamMap } }, AccountService],
     })
       .overrideTemplate(UserManagementComponent, '')
       .compileComponents();
@@ -107,10 +92,7 @@ describe('User Management Component', () => {
         tick(); // simulate async
 
         // THEN
-        expect(service.update).toHaveBeenCalledWith({
-          ...user,
-          activated: true,
-        });
+        expect(service.update).toHaveBeenCalledWith({ ...user, activated: true });
         expect(service.query).toHaveBeenCalled();
         expect(comp.users()?.[0]).toEqual(expect.objectContaining({ id: 123 }));
       }),

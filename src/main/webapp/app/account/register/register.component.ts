@@ -1,139 +1,78 @@
-import {
-  AfterViewInit,
-  Component,
-  ElementRef,
-  ViewChild,
-  inject,
-  signal,
-} from '@angular/core';
-import {
-  FormControl,
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
-
-import SharedModule from 'app/shared/shared.module';
-import { RegisterService } from './register.service';
-import { LoginService } from 'app/login/login.service';
-import { NotificationService } from 'app/shared/notification/notification.service';
+import { AfterViewInit, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { RouterModule } from '@angular/router';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+
+import { EMAIL_ALREADY_USED_TYPE, LOGIN_ALREADY_USED_TYPE } from 'app/config/error.constants';
+import SharedModule from 'app/shared/shared.module';
+import PasswordStrengthBarComponent from '../password/password-strength-bar/password-strength-bar.component';
+import { RegisterService } from './register.service';
 
 @Component({
   selector: 'jhi-register',
-  standalone: true,
-  imports: [
-    SharedModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule,
-    TranslateModule,
-  ],
+  imports: [SharedModule, RouterModule, FormsModule, ReactiveFormsModule, PasswordStrengthBarComponent],
   templateUrl: './register.component.html',
 })
 export default class RegisterComponent implements AfterViewInit {
-  @ViewChild('email', { static: false })
-  email?: ElementRef;
+  login = viewChild.required<ElementRef>('login');
 
   doNotMatch = signal(false);
   error = signal(false);
   errorEmailExists = signal(false);
+  errorUserExists = signal(false);
   success = signal(false);
 
   registerForm = new FormGroup({
-    firstName: new FormControl(''),
-    lastName: new FormControl(''),
-    email: new FormControl('', {
+    login: new FormControl('', {
       nonNullable: true,
       validators: [
         Validators.required,
-        Validators.minLength(5),
-        Validators.maxLength(254),
-        Validators.email,
+        Validators.minLength(1),
+        Validators.maxLength(50),
+        Validators.pattern('^[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$|^[_.@A-Za-z0-9-]+$'),
       ],
     }),
-    phone: new FormControl(''),
+    email: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(5), Validators.maxLength(254), Validators.email],
+    }),
     password: new FormControl('', {
       nonNullable: true,
-      validators: [
-        Validators.required,
-        Validators.minLength(4),
-        Validators.maxLength(50),
-      ],
+      validators: [Validators.required, Validators.minLength(4), Validators.maxLength(50)],
     }),
     confirmPassword: new FormControl('', {
       nonNullable: true,
-      validators: [
-        Validators.required,
-        Validators.minLength(4),
-        Validators.maxLength(50),
-      ],
+      validators: [Validators.required, Validators.minLength(4), Validators.maxLength(50)],
     }),
   });
 
-  private registerService = inject(RegisterService);
-  private loginService = inject(LoginService);
-  private router = inject(Router);
-  private notify = inject(NotificationService);
+  private readonly registerService = inject(RegisterService);
 
   ngAfterViewInit(): void {
-    this.email?.nativeElement.focus();
+    this.login().nativeElement.focus();
   }
 
   register(): void {
     this.doNotMatch.set(false);
     this.error.set(false);
     this.errorEmailExists.set(false);
+    this.errorUserExists.set(false);
 
-    const password = this.registerForm.get(['password'])!.value;
-    if (password !== this.registerForm.get(['confirmPassword'])!.value) {
+    const { password, confirmPassword } = this.registerForm.getRawValue();
+    if (password !== confirmPassword) {
       this.doNotMatch.set(true);
     } else {
-      const { firstName, lastName, email, phone, password } =
-        this.registerForm.getRawValue();
+      const { login, email } = this.registerForm.getRawValue();
       this.registerService
-        .save({
-          firstName,
-          lastName,
-          email,
-          phone,
-          password,
-          langKey: 'vi',
-        })
-        .subscribe({
-          next: () => {
-            this.success.set(true);
-            this.notify.success(
-              'Đăng ký tài khoản thành công! Đang đăng nhập...',
-            );
-            this.loginService
-              .login({ username: email, password, rememberMe: false })
-              .subscribe({
-                next: () => {
-                  this.router.navigate(['/']);
-                  this.notify.success('Đăng nhập thành công!');
-                },
-                error: () => {
-                  this.notify.error(
-                    'Đăng nhập tự động thất bại. Vui lòng đăng nhập thủ công.',
-                  );
-                  this.router.navigate(['/login']);
-                },
-              });
-          },
-          error: (response) => this.processError(response),
-        });
+        .save({ login, email, password, langKey: 'en' })
+        .subscribe({ next: () => this.success.set(true), error: response => this.processError(response) });
     }
   }
 
   private processError(response: HttpErrorResponse): void {
-    if (
-      response.status === 400 &&
-      response.error?.type === 'EMAIL_ALREADY_USED'
-    ) {
+    if (response.status === 400 && response.error.type === LOGIN_ALREADY_USED_TYPE) {
+      this.errorUserExists.set(true);
+    } else if (response.status === 400 && response.error.type === EMAIL_ALREADY_USED_TYPE) {
       this.errorEmailExists.set(true);
     } else {
       this.error.set(true);

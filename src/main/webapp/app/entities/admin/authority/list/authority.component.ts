@@ -1,46 +1,20 @@
 import { Component, NgZone, OnInit, inject, signal } from '@angular/core';
-import {
-  ActivatedRoute,
-  Data,
-  ParamMap,
-  Router,
-  RouterModule,
-} from '@angular/router';
+import { ActivatedRoute, Data, ParamMap, Router, RouterModule } from '@angular/router';
 import { Observable, Subscription, combineLatest, filter, tap } from 'rxjs';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 import SharedModule from 'app/shared/shared.module';
-import {
-  SortByDirective,
-  SortDirective,
-  SortService,
-  type SortState,
-  sortStateSignal,
-} from 'app/shared/sort';
+import { SortByDirective, SortDirective, SortService, type SortState, sortStateSignal } from 'app/shared/sort';
 import { FormsModule } from '@angular/forms';
-import {
-  DEFAULT_SORT_DATA,
-  ITEM_DELETED_EVENT,
-  SORT,
-} from 'app/config/navigation.constants';
+import { DEFAULT_SORT_DATA, ITEM_DELETED_EVENT, SORT } from 'app/config/navigation.constants';
 import { IAuthority } from '../authority.model';
-import {
-  AuthorityService,
-  EntityArrayResponseType,
-} from '../service/authority.service';
+import { AuthorityService, EntityArrayResponseType } from '../service/authority.service';
 import { AuthorityDeleteDialogComponent } from '../delete/authority-delete-dialog.component';
 
 @Component({
   selector: 'jhi-authority',
-  standalone: true,
   templateUrl: './authority.component.html',
-  imports: [
-    RouterModule,
-    FormsModule,
-    SharedModule,
-    SortDirective,
-    SortByDirective,
-  ],
+  imports: [RouterModule, FormsModule, SharedModule, SortDirective, SortByDirective],
 })
 export class AuthorityComponent implements OnInit {
   subscription: Subscription | null = null;
@@ -56,18 +30,12 @@ export class AuthorityComponent implements OnInit {
   protected modalService = inject(NgbModal);
   protected ngZone = inject(NgZone);
 
-  trackName = (item: IAuthority): string =>
-    this.authorityService.getAuthorityIdentifier(item);
+  trackName = (item: IAuthority): string => this.authorityService.getAuthorityIdentifier(item);
 
   ngOnInit(): void {
-    this.subscription = combineLatest([
-      this.activatedRoute.queryParamMap,
-      this.activatedRoute.data,
-    ])
+    this.subscription = combineLatest([this.activatedRoute.queryParamMap, this.activatedRoute.data])
       .pipe(
-        tap(([params, data]) =>
-          this.fillComponentAttributeFromRoute(params, data),
-        ),
+        tap(([params, data]) => this.fillComponentAttributeFromRoute(params, data)),
         tap(() => {
           if (this.authorities().length === 0) {
             this.load();
@@ -80,15 +48,12 @@ export class AuthorityComponent implements OnInit {
   }
 
   delete(authority: IAuthority): void {
-    const modalRef = this.modalService.open(AuthorityDeleteDialogComponent, {
-      size: 'lg',
-      backdrop: 'static',
-    });
+    const modalRef = this.modalService.open(AuthorityDeleteDialogComponent, { size: 'lg', backdrop: 'static' });
     modalRef.componentInstance.authority = authority;
     // unsubscribe not needed because closed completes on modal close
     modalRef.closed
       .pipe(
-        filter((reason) => reason === ITEM_DELETED_EVENT),
+        filter(reason => reason === ITEM_DELETED_EVENT),
         tap(() => this.load()),
       )
       .subscribe();
@@ -106,34 +71,21 @@ export class AuthorityComponent implements OnInit {
     this.handleNavigation(event);
   }
 
-  protected fillComponentAttributeFromRoute(
-    params: ParamMap,
-    data: Data,
-  ): void {
-    this.sortState.set(
-      this.sortService.parseSortParam(
-        params.get(SORT) ?? data[DEFAULT_SORT_DATA],
-      ),
-    );
+  protected fillComponentAttributeFromRoute(params: ParamMap, data: Data): void {
+    this.sortState.set(this.sortService.parseSortParam(params.get(SORT) ?? data[DEFAULT_SORT_DATA]));
   }
 
   protected onResponseSuccess(response: EntityArrayResponseType): void {
-    const dataFromBody = this.fillComponentAttributesFromResponseBody(
-      response.body,
-    );
+    const dataFromBody = this.fillComponentAttributesFromResponseBody(response.body);
     this.authorities.set(this.refineData(dataFromBody));
   }
 
   protected refineData(data: IAuthority[]): IAuthority[] {
     const { predicate, order } = this.sortState();
-    return predicate && order
-      ? data.sort(this.sortService.startSort({ predicate, order }))
-      : data;
+    return predicate && order ? data.sort(this.sortService.startSort({ predicate, order })) : data;
   }
 
-  protected fillComponentAttributesFromResponseBody(
-    data: IAuthority[] | null,
-  ): IAuthority[] {
+  protected fillComponentAttributesFromResponseBody(data: IAuthority[] | null): IAuthority[] {
     return data ?? [];
   }
 
@@ -142,9 +94,7 @@ export class AuthorityComponent implements OnInit {
     const queryObject: any = {
       sort: this.sortService.buildSortParam(this.sortState()),
     };
-    return this.authorityService
-      .query(queryObject)
-      .pipe(tap(() => (this.isLoading = false)));
+    return this.authorityService.query(queryObject).pipe(tap(() => (this.isLoading = false)));
   }
 
   protected handleNavigation(sortState: SortState): void {

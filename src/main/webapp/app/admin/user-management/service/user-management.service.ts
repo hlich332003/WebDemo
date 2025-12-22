@@ -12,8 +12,7 @@ export class UserManagementService {
   private readonly http = inject(HttpClient);
   private readonly applicationConfigService = inject(ApplicationConfigService);
 
-  private readonly resourceUrl =
-    this.applicationConfigService.getEndpointFor('api/admin/users');
+  private readonly resourceUrl = this.applicationConfigService.getEndpointFor('api/admin/users');
 
   create(user: IUser): Observable<IUser> {
     return this.http.post<IUser>(this.resourceUrl, user);
@@ -23,27 +22,22 @@ export class UserManagementService {
     return this.http.put<IUser>(this.resourceUrl, user);
   }
 
-  find(email: string): Observable<IUser> {
-    return this.http.get<IUser>(`${this.resourceUrl}/${email}`);
+  find(login: string): Observable<IUser> {
+    return this.http.get<IUser>(`${this.resourceUrl}/${login}`);
   }
 
   query(req?: Pagination): Observable<HttpResponse<IUser[]>> {
     const options = createRequestOption(req);
-    return this.http.get<IUser[]>(this.resourceUrl, {
-      params: options,
-      observe: 'response',
-    });
+    return this.http.get<IUser[]>(this.resourceUrl, { params: options, observe: 'response' });
   }
 
-  delete(email: string): Observable<{}> {
-    return this.http.delete(`${this.resourceUrl}/${email}`);
+  delete(login: string): Observable<{}> {
+    return this.http.delete(`${this.resourceUrl}/${login}`);
   }
 
   authorities(): Observable<string[]> {
     return this.http
-      .get<
-        { name: string }[]
-      >(this.applicationConfigService.getEndpointFor('api/authorities'))
-      .pipe(map((authorities) => authorities.map((a) => a.name)));
+      .get<{ name: string }[]>(this.applicationConfigService.getEndpointFor('api/authorities'))
+      .pipe(map(authorities => authorities.map(a => a.name)));
   }
 }

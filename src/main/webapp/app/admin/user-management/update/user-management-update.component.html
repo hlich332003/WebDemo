@@ -1,65 +1,60 @@
 <div class="d-flex justify-content-center">
   <div class="col-8">
     <form name="editForm" novalidate (ngSubmit)="save()" [formGroup]="editForm">
-      <h2 id="myUserLabel">Tạo hoặc sửa người dùng</h2>
+      <h2 id="myUserLabel">Create or edit a user</h2>
 
       <jhi-alert-error />
 
       <div class="mb-3" [hidden]="!editForm.value.id">
         <label class="form-label" for="field_id">ID</label>
-        <input
-          type="text"
-          id="field_id"
-          class="form-control"
-          name="id"
-          formControlName="id"
-          readonly
-        />
+        <input type="text" id="field_id" class="form-control" name="id" formControlName="id" readonly />
       </div>
 
       <div class="mb-3">
-        <label class="form-label" for="field_firstName">Họ</label>
-        <input
-          type="text"
-          id="field_firstName"
-          class="form-control"
-          name="firstName"
-          formControlName="firstName"
-        />
+        <label class="form-label" for="field_login">Login</label>
+        <input type="text" id="field_login" class="form-control" name="login" formControlName="login" />
 
-        @let firstNameRef = editForm.get('firstName')!;
-        @if (
-          firstNameRef.invalid && (firstNameRef.dirty || firstNameRef.touched)
-        ) {
+        @let loginRef = editForm.get('login')!;
+        @if (loginRef.invalid && (loginRef.dirty || loginRef.touched)) {
           <div>
-            @if (firstNameRef?.errors?.maxlength) {
-              <small class="form-text text-danger"
-                >Trường này không được dài quá 50 ký tự.</small
-              >
+            @if (loginRef?.errors?.required) {
+              <small class="form-text text-danger">This field is required.</small>
+            }
+
+            @if (loginRef?.errors?.maxlength) {
+              <small class="form-text text-danger">This field cannot be longer than 50 characters.</small>
+            }
+
+            @if (loginRef?.errors?.pattern) {
+              <small class="form-text text-danger">This field can only contain letters, digits and e-mail addresses.</small>
             }
           </div>
         }
       </div>
 
       <div class="mb-3">
-        <label class="form-label" for="field_lastName">Tên</label>
-        <input
-          type="text"
-          id="field_lastName"
-          class="form-control"
-          name="lastName"
-          formControlName="lastName"
-        />
+        <label class="form-label" for="field_firstName">First name</label>
+        <input type="text" id="field_firstName" class="form-control" name="firstName" formControlName="firstName" />
+
+        @let firstNameRef = editForm.get('firstName')!;
+        @if (firstNameRef.invalid && (firstNameRef.dirty || firstNameRef.touched)) {
+          <div>
+            @if (firstNameRef?.errors?.maxlength) {
+              <small class="form-text text-danger">This field cannot be longer than 50 characters.</small>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="field_lastName">Last name</label>
+        <input type="text" id="field_lastName" class="form-control" name="lastName" formControlName="lastName" />
 
         @let lastNameRef = editForm.get('lastName')!;
-        @if (
-          lastNameRef.invalid && (lastNameRef.dirty || lastNameRef.touched)
-        ) {
+        @if (lastNameRef.invalid && (lastNameRef.dirty || lastNameRef.touched)) {
           <div>
             @if (lastNameRef?.errors?.maxlength) {
-              <small class="form-text text-danger"
-                >Trường này không được dài quá 50 ký tự.</small
-              >
+              <small class="form-text text-danger">This field cannot be longer than 50 characters.</small>
             }
           </div>
         }
@@ -67,83 +62,25 @@
 
       <div class="mb-3">
         <label class="form-label" for="field_email">Email</label>
-        <input
-          type="email"
-          id="field_email"
-          class="form-control"
-          name="email"
-          formControlName="email"
-        />
+        <input type="email" id="field_email" class="form-control" name="email" formControlName="email" />
 
         @let emailRef = editForm.get('email')!;
         @if (emailRef.invalid && (emailRef.dirty || emailRef.touched)) {
           <div>
             @if (emailRef?.errors?.required) {
-              <small class="form-text text-danger"
-                >Trường này là bắt buộc.</small
-              >
+              <small class="form-text text-danger">This field is required.</small>
             }
 
             @if (emailRef?.errors?.maxlength) {
-              <small class="form-text text-danger"
-                >Trường này không được dài quá 100 ký tự.</small
-              >
+              <small class="form-text text-danger">This field cannot be longer than 100 characters.</small>
             }
 
             @if (emailRef?.errors?.minlength) {
-              <small class="form-text text-danger"
-                >Trường này phải có ít nhất 5 ký tự.</small
-              >
+              <small class="form-text text-danger">This field is required to be at least 5 characters.</small>
             }
 
             @if (emailRef?.errors?.email) {
-              <small class="form-text text-danger">Email không hợp lệ.</small>
-            }
-          </div>
-        }
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label" for="field_phone">Số điện thoại</label>
-        <input
-          type="text"
-          id="field_phone"
-          class="form-control"
-          name="phone"
-          formControlName="phone"
-        />
-
-        @let phoneRef = editForm.get('phone')!;
-        @if (phoneRef.invalid && (phoneRef.dirty || phoneRef.touched)) {
-          <div>
-            @if (phoneRef?.errors?.maxlength) {
-              <small class="form-text text-danger"
-                >Trường này không được dài quá 20 ký tự.</small
-              >
-            }
-          </div>
-        }
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label" for="field_imageUrl">Image URL</label>
-        <input
-          type="text"
-          id="field_imageUrl"
-          class="form-control"
-          name="imageUrl"
-          formControlName="imageUrl"
-        />
-
-        @let imageUrlRef = editForm.get('imageUrl')!;
-        @if (
-          imageUrlRef.invalid && (imageUrlRef.dirty || imageUrlRef.touched)
-        ) {
-          <div>
-            @if (imageUrlRef?.errors?.maxlength) {
-              <small class="form-text text-danger"
-                >Trường này không được dài quá 256 ký tự.</small
-              >
+              <small class="form-text text-danger">Your email is invalid.</small>
             }
           </div>
         }
@@ -153,41 +90,30 @@
         <label class="form-check-label" for="activated">
           <input
             class="form-check-input"
-            [attr.disabled]="
-              editForm.value.id === undefined ? 'disabled' : null
-            "
+            [attr.disabled]="editForm.value.id === undefined ? 'disabled' : null"
             type="checkbox"
             id="activated"
             name="activated"
             formControlName="activated"
           />
-          <span>Kích hoạt</span>
+          <span>Activated</span>
         </label>
       </div>
 
       <div class="mb-3">
-        <label class="form-label" for="field_authority">Vai trò</label>
-        <select
-          class="form-control"
-          id="field_authority"
-          name="authority"
-          formControlName="authority"
-        >
+        <label class="form-label" for="field_authority">Profiles</label>
+        <select class="form-control" id="field_authority" multiple name="authority" formControlName="authorities">
           @for (authority of authorities(); track $index) {
             <option [value]="authority">{{ authority }}</option>
           }
         </select>
       </div>
       <button type="button" class="btn btn-secondary" (click)="previousState()">
-        <fa-icon icon="ban"></fa-icon>&nbsp;<span>Hủy</span>
+        <fa-icon icon="ban"></fa-icon>&nbsp;<span>Cancel</span>
       </button>
 
-      <button
-        type="submit"
-        [disabled]="editForm.invalid || isSaving()"
-        class="btn btn-primary"
-      >
-        <fa-icon icon="save"></fa-icon>&nbsp;<span>Lưu</span>
+      <button type="submit" [disabled]="editForm.invalid || isSaving()" class="btn btn-primary">
+        <fa-icon icon="save"></fa-icon>&nbsp;<span>Save</span>
       </button>
     </form>
   </div>

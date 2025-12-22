@@ -1,12 +1,10 @@
 const path = require('path');
 const webpack = require('webpack');
 const { merge } = require('webpack-merge');
+const BrowserSyncPlugin = require('browser-sync-webpack-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const WebpackNotifierPlugin = require('webpack-notifier');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-
-// Import error handler to prevent dev server crashes
-require('./error-handler');
 
 const environment = require('./environment');
 const proxyConfig = require('./proxy.conf');
@@ -26,6 +24,48 @@ module.exports = async (config, options, targetOptions) => {
   const tls = config.devServer?.server?.type === 'https';
   if (config.devServer) {
     config.devServer.proxy = proxyConfig({ tls });
+  }
+
+  if (targetOptions.target === 'serve' || config.watch) {
+    config.plugins.push(
+      new BrowserSyncPlugin(
+        {
+          host: 'localhost',
+          port: 9000,
+          https: tls,
+          proxy: {
+            target: `http${tls ? 's' : ''}://localhost:${targetOptions.target === 'serve' ? '4200' : '8080'}`,
+            ws: true,
+            proxyOptions: {
+              changeOrigin: false, //pass the Host header to the backend unchanged https://github.com/Browsersync/browser-sync/issues/430
+            },
+            proxyReq: [
+              function (proxyReq) {
+                // URI that will be retrieved by the ForwardedHeaderFilter on the server side
+                proxyReq.setHeader('X-Forwarded-Host', 'localhost:9000');
+                proxyReq.setHeader('X-Forwarded-Proto', `http${tls ? 's' : ''}`);
+              },
+            ],
+          },
+          socket: {
+            clients: {
+              heartbeatTimeout: 60000,
+            },
+          },
+          /*
+          ghostMode: { // uncomment this part to disable BrowserSync ghostMode; https://github.com/jhipster/generator-jhipster/issues/11116
+            clicks: false,
+            location: false,
+            forms: false,
+            scroll: false,
+          },
+          */
+        },
+        {
+          reload: targetOptions.target === 'build', // enabled for build --watch
+        },
+      ),
+    );
   }
 
   if (config.mode === 'production') {
@@ -48,10 +88,7 @@ module.exports = async (config, options, targetOptions) => {
       globOptions: { ignore: ['**/index.html'] },
     },
     {
-      from: path.join(
-        path.dirname(require.resolve('axios/package.json')),
-        'dist/axios.min.js',
-      ),
+      from: path.join(path.dirname(require.resolve('axios/package.json')), 'dist/axios.min.js'),
       to: 'swagger-ui/',
     },
     { from: './src/main/webapp/swagger-ui/', to: 'swagger-ui/' },

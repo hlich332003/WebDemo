@@ -5,12 +5,10 @@ import { of } from 'rxjs';
 import { IUser } from './user-management.model';
 import { UserManagementService } from './service/user-management.service';
 
-export const userManagementResolve: ResolveFn<IUser | null> = (
-  route: ActivatedRouteSnapshot,
-) => {
-  const email = route.paramMap.get('email');
-  if (email) {
-    return inject(UserManagementService).find(email);
+export const userManagementResolve: ResolveFn<IUser | null> = (route: ActivatedRouteSnapshot) => {
+  const login = route.paramMap.get('login');
+  if (login) {
+    return inject(UserManagementService).find(login);
   }
   return of(null);
 };
@@ -24,7 +22,7 @@ const userManagementRoute: Routes = [
     },
   },
   {
-    path: ':email/view',
+    path: ':login/view',
     loadComponent: () => import('./detail/user-management-detail.component'),
     resolve: {
       user: userManagementResolve,
@@ -38,7 +36,7 @@ const userManagementRoute: Routes = [
     },
   },
   {
-    path: ':email/edit',
+    path: ':login/edit',
     loadComponent: () => import('./update/user-management-update.component'),
     resolve: {
       user: userManagementResolve,

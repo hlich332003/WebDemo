@@ -14,12 +14,14 @@ import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerF
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CharacterEncodingFilter;
 import org.springframework.web.filter.CorsFilter;
+import tech.jhipster.config.JHipsterConstants;
 import tech.jhipster.config.JHipsterProperties;
+import tech.jhipster.config.h2.H2ConfigurationHelper;
 
 /**
  * Configuration of web application with Servlet 3.0 APIs.
@@ -44,6 +46,9 @@ public class WebConfigurer implements ServletContextInitializer, WebServerFactor
             LOG.info("Web application configuration, using profiles: {}", (Object[]) env.getActiveProfiles());
         }
 
+        if (h2ConsoleIsEnabled(env)) {
+            initH2Console(servletContext);
+        }
         LOG.info("Web application fully configured");
     }
 
@@ -53,7 +58,7 @@ public class WebConfigurer implements ServletContextInitializer, WebServerFactor
     @Override
     public void customize(WebServerFactory server) {
         // When running in an IDE or with ./mvnw spring-boot:run, set location of the static web assets.
-        // setLocationForStaticAssets(server); // Tạm thời vô hiệu hóa
+        setLocationForStaticAssets(server);
     }
 
     private void setLocationForStaticAssets(WebServerFactory server) {
@@ -91,16 +96,22 @@ public class WebConfigurer implements ServletContextInitializer, WebServerFactor
             source.registerCorsConfiguration("/management/**", config);
             source.registerCorsConfiguration("/v3/api-docs", config);
             source.registerCorsConfiguration("/swagger-ui/**", config);
-            source.registerCorsConfiguration("/ws/**", config);
         }
         return new CorsFilter(source);
     }
 
-    @Bean
-    public CharacterEncodingFilter characterEncodingFilter() {
-        CharacterEncodingFilter filter = new CharacterEncodingFilter();
-        filter.setEncoding("UTF-8");
-        filter.setForceEncoding(true);
-        return filter;
+    private boolean h2ConsoleIsEnabled(Environment env) {
+        return (
+            env.acceptsProfiles(Profiles.of(JHipsterConstants.SPRING_PROFILE_DEVELOPMENT)) &&
+            "true".equals(env.getProperty("spring.h2.console.enabled"))
+        );
+    }
+
+    /**
+     * Initializes H2 console.
+     */
+    private void initH2Console(ServletContext servletContext) {
+        LOG.info("Initialize H2 console");
+        H2ConfigurationHelper.initH2Console(servletContext);
     }
 }

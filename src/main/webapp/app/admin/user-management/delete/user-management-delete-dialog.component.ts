@@ -8,7 +8,6 @@ import { UserManagementService } from '../service/user-management.service';
 
 @Component({
   selector: 'jhi-user-mgmt-delete-dialog',
-  standalone: true,
   templateUrl: './user-management-delete-dialog.component.html',
   imports: [SharedModule, FormsModule],
 })

@@ -1,8 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import {
-  HttpTestingController,
-  provideHttpClientTesting,
-} from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 
 import { ApplicationConfigService } from 'app/core/config/application-config.service';
@@ -46,12 +43,7 @@ describe('RegisterService Service', () => {
       });
 
       // THEN
-      expect(testRequest.request.body).toEqual({
-        email,
-        langKey,
-        login,
-        password,
-      });
+      expect(testRequest.request.body).toEqual({ email, langKey, login, password });
     });
   });
 });

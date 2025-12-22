@@ -1,8 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import {
-  HttpTestingController,
-  provideHttpClientTesting,
-} from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 
 import { ApplicationConfigService } from 'app/core/config/application-config.service';
@@ -38,16 +35,11 @@ describe('Password Service', () => {
 
       const testRequest = httpMock.expectOne({
         method: 'POST',
-        url: applicationConfigService.getEndpointFor(
-          'api/account/change-password',
-        ),
+        url: applicationConfigService.getEndpointFor('api/account/change-password'),
       });
 
       // THEN
-      expect(testRequest.request.body).toEqual({
-        currentPassword: password1,
-        newPassword: password2,
-      });
+      expect(testRequest.request.body).toEqual({ currentPassword: password1, newPassword: password2 });
     });
   });
 });

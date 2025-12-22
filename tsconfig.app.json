@@ -1,32 +1,9 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "src/main/webapp/",
     "outDir": "./target/out-tsc/app",
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "strictNullChecks": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "sourceMap": true,
-    "declaration": false,
-    "downlevelIteration": true,
-    "experimentalDecorators": true,
-    "moduleResolution": "node",
-    "importHelpers": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "useDefineForClassFields": false,
-    "target": "es2022",
-    "module": "es2020",
-    "types": ["@angular/localize"],
-    "lib": ["es2018", "es2020", "dom"]
+    "types": ["@angular/localize"]
   },
-  "angularCompilerOptions": {
-    "strictInjectionParameters": true,
-    "strictInputAccessModifiers": true,
-    "strictTemplates": true,
-    "preserveWhitespaces": true
-  },
-  "include": ["src/main/webapp/**/*.ts"],
-  "exclude": ["src/main/webapp/**/*.spec.ts"]
+  "files": ["src/main/webapp/main.ts"],
+  "include": ["src/main/webapp/**/*.d.ts"]
 }

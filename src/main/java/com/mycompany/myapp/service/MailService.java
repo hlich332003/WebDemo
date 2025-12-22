@@ -1,6 +1,5 @@
 package com.mycompany.myapp.service;
 
-import com.mycompany.myapp.domain.Order;
 import com.mycompany.myapp.domain.User;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -20,6 +19,8 @@ import tech.jhipster.config.JHipsterProperties;
 
 /**
  * Service for sending emails asynchronously.
+ * <p>
+ * We use the {@link Async} annotation to send emails asynchronously.
  */
 @Service
 public class MailService {
@@ -27,12 +28,15 @@ public class MailService {
     private static final Logger LOG = LoggerFactory.getLogger(MailService.class);
 
     private static final String USER = "user";
-    private static final String ORDER = "order";
+
     private static final String BASE_URL = "baseUrl";
 
     private final JHipsterProperties jHipsterProperties;
+
     private final JavaMailSender javaMailSender;
+
     private final MessageSource messageSource;
+
     private final SpringTemplateEngine templateEngine;
 
     public MailService(
@@ -62,6 +66,7 @@ public class MailService {
             content
         );
 
+        // Prepare message using a Spring helper
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         try {
             MimeMessageHelper message = new MimeMessageHelper(mimeMessage, isMultipart, StandardCharsets.UTF_8.name());
@@ -78,8 +83,12 @@ public class MailService {
 
     @Async
     public void sendEmailFromTemplate(User user, String templateName, String titleKey) {
+        sendEmailFromTemplateSync(user, templateName, titleKey);
+    }
+
+    private void sendEmailFromTemplateSync(User user, String templateName, String titleKey) {
         if (user.getEmail() == null) {
-            LOG.debug("Email doesn't exist for user '{}'", user.getEmail());
+            LOG.debug("Email doesn't exist for user '{}'", user.getLogin());
             return;
         }
         Locale locale = Locale.forLanguageTag(user.getLangKey());
@@ -92,35 +101,20 @@ public class MailService {
     }
 
     @Async
-    public void sendOrderStatusUpdateEmail(Order order, String titleKey, String templateName) {
-        if (order.getCustomerEmail() == null) {
-            LOG.debug("Email doesn't exist for order '{}'", order.getId());
-            return;
-        }
-        Locale locale = Locale.forLanguageTag("vi"); // Default to Vietnamese
-        Context context = new Context(locale);
-        context.setVariable(ORDER, order);
-        context.setVariable(BASE_URL, jHipsterProperties.getMail().getBaseUrl());
-        String content = templateEngine.process("mail/" + templateName, context);
-        String subject = messageSource.getMessage(titleKey, new Object[]{order.getOrderCode()}, locale);
-        sendEmailSync(order.getCustomerEmail(), subject, content, false, true);
-    }
-
-    @Async
     public void sendActivationEmail(User user) {
         LOG.debug("Sending activation email to '{}'", user.getEmail());
-        sendEmailFromTemplate(user, "mail/activationEmail", "email.activation.title");
+        sendEmailFromTemplateSync(user, "mail/activationEmail", "email.activation.title");
     }
 
     @Async
     public void sendCreationEmail(User user) {
         LOG.debug("Sending creation email to '{}'", user.getEmail());
-        sendEmailFromTemplate(user, "mail/creationEmail", "email.creation.title");
+        sendEmailFromTemplateSync(user, "mail/creationEmail", "email.activation.title");
     }
 
     @Async
     public void sendPasswordResetMail(User user) {
         LOG.debug("Sending password reset email to '{}'", user.getEmail());
-        sendEmailFromTemplate(user, "mail/passwordResetEmail", "email.reset.title");
+        sendEmailFromTemplateSync(user, "mail/passwordResetEmail", "email.reset.title");
     }
 }

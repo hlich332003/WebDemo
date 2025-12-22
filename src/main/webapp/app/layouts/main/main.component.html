@@ -1,16 +1,13 @@
-<div class="app-container">
-  <router-outlet name="navbar" />
+<jhi-page-ribbon />
 
-  <main class="app-content">
-    <div class="container-fluid">
-      <div class="card jh-card">
-        <router-outlet />
-      </div>
-    </div>
-  </main>
+<div>
+  <router-outlet name="navbar" />
+</div>
+
+<div class="container-fluid">
+  <div class="card jh-card">
+    <router-outlet />
+  </div>
 
   <jhi-footer />
-  @if (showChatWidget) {
-    <jhi-chat-widget />
-  }
 </div>

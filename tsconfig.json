@@ -1,5 +1,4 @@
 {
-  "files": [],
   "compilerOptions": {
     "baseUrl": "src/main/webapp/",
     "outDir": "./target/out-tsc/root",
@@ -9,7 +8,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "sourceMap": true,
-    "declaration": true,
+    "declaration": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,
     "moduleResolution": "node",
@@ -23,9 +22,6 @@
     "lib": ["es2018", "es2020", "dom"]
   },
   "references": [
-    {
-      "path": "tsconfig.app.json"
-    },
     {
       "path": "tsconfig.spec.json"
     }

@@ -35,10 +35,7 @@
               "src/main/webapp/manifest.webapp",
               "src/main/webapp/robots.txt"
             ],
-            "styles": [
-              "src/main/webapp/content/scss/vendor.scss",
-              "src/main/webapp/content/scss/global.scss"
-            ],
+            "styles": ["src/main/webapp/content/scss/vendor.scss", "src/main/webapp/content/scss/global.scss"],
             "scripts": []
           },
           "configurations": {
@@ -86,7 +83,7 @@
           "builder": "@angular-builders/custom-webpack:dev-server",
           "options": {
             "buildTarget": "web-demo:build:development",
-            "port": 9000
+            "port": 4200
           },
           "configurations": {
             "production": {
