@@ -59,7 +59,10 @@ describe('Parse links service test', () => {
     }));
 
     it('should return links when headers are passed', inject([ParseLinks], (service: ParseLinks) => {
-      const links = { last: { page: '0', size: '20' }, first: { page: '0', size: '20' } };
+      const links = {
+        last: { page: '0', size: '20' },
+        first: { page: '0', size: '20' },
+      };
       expect(service.parseAll(' </api/audits?page=0&size=20>; rel="last",</api/audits?page=0&size=20>; rel="first"')).toEqual(links);
     }));
   });

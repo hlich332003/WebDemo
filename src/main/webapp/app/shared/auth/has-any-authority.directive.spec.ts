@@ -30,7 +30,10 @@ describe('HasAnyAuthorityDirective tests', () => {
 
   beforeEach(() => {
     mockAccountService = TestBed.inject(AccountService);
-    currentAccount = signal<Account | null>({ activated: true, authorities: [] } as any);
+    currentAccount = signal<Account | null>({
+      activated: true,
+      authorities: [],
+    } as any);
     mockAccountService.trackCurrentAccount = jest.fn(() => currentAccount);
   });
 

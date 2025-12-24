@@ -39,7 +39,10 @@ describe('Password Service', () => {
       });
 
       // THEN
-      expect(testRequest.request.body).toEqual({ currentPassword: password1, newPassword: password2 });
+      expect(testRequest.request.body).toEqual({
+        currentPassword: password1,
+        newPassword: password2,
+      });
     });
   });
 });

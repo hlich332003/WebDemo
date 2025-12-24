@@ -13,7 +13,7 @@ public class UserDTO implements Serializable {
 
     private Long id;
 
-    private String login;
+    private String email;
 
     public UserDTO() {
         // Empty constructor needed for Jackson.
@@ -21,8 +21,7 @@ public class UserDTO implements Serializable {
 
     public UserDTO(User user) {
         this.id = user.getId();
-        // Customize it here if you need, or not, firstName/lastName/etc
-        this.login = user.getLogin();
+        this.email = user.getEmail();
     }
 
     public Long getId() {
@@ -33,12 +32,12 @@ public class UserDTO implements Serializable {
         this.id = id;
     }
 
-    public String getLogin() {
-        return login;
+    public String getEmail() {
+        return email;
     }
 
-    public void setLogin(String login) {
-        this.login = login;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     @Override
@@ -55,12 +54,12 @@ public class UserDTO implements Serializable {
             return false;
         }
 
-        return Objects.equals(getId(), userDTO.getId()) && Objects.equals(getLogin(), userDTO.getLogin());
+        return Objects.equals(getId(), userDTO.getId()) && Objects.equals(getEmail(), userDTO.getEmail());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getLogin());
+        return Objects.hash(getId(), getEmail());
     }
 
     // prettier-ignore
@@ -68,7 +67,7 @@ public class UserDTO implements Serializable {
     public String toString() {
         return "UserDTO{" +
             "id='" + id + '\'' +
-            ", login='" + login + '\'' +
+            ", email='" + email + '\'' +
             "}";
     }
 }

@@ -1,175 +1,72 @@
-<div>
-  <div class="d-flex justify-content-center">
-    <div class="col-md-8">
-      <h1 data-cy="registerTitle">Registration</h1>
+<div class="register-container">
+  <div class="register-card">
+    <h1 data-cy="registerTitle">Tạo tài khoản</h1>
 
-      @if (success()) {
-        <div class="alert alert-success"><strong>Registration saved!</strong> Please check your email for confirmation.</div>
-      }
-
-      @if (error()) {
-        <div class="alert alert-danger"><strong>Registration failed!</strong> Please try again later.</div>
-      }
-
-      @if (errorUserExists()) {
-        <div class="alert alert-danger"><strong>Login name already registered!</strong> Please choose another one.</div>
-      }
-
-      @if (errorEmailExists()) {
-        <div class="alert alert-danger"><strong>Email is already in use!</strong> Please choose another one.</div>
-      }
-
-      @if (doNotMatch()) {
-        <div class="alert alert-danger">The password and its confirmation do not match!</div>
-      }
+    <div *ngIf="success()">
+      <div class="alert alert-success">
+        <h4 class="alert-heading">Đăng ký thành công!</h4>
+        <p>Tài khoản của bạn đã được tạo và kích hoạt tự động. Bạn có thể đăng nhập ngay.</p>
+      </div>
+      <div class="text-center mt-3">
+        <a class="btn btn-primary" routerLink="/login">Đi đến trang đăng nhập</a>
+      </div>
+      <div class="mt-3 text-center">
+        <span>Bạn đã có tài khoản? </span>
+        <a class="alert-link" routerLink="/login">Đăng nhập</a>
+      </div>
     </div>
-  </div>
 
-  <div class="d-flex justify-content-center">
-    <div class="col-md-8">
-      @if (!success()) {
-        <form name="form" (ngSubmit)="register()" [formGroup]="registerForm">
-          <div class="mb-3">
-            <label class="form-label" for="login">Username</label>
-            <input
-              type="text"
-              class="form-control"
-              id="login"
-              name="login"
-              placeholder="Your username"
-              formControlName="login"
-              data-cy="username"
-            />
+    <div *ngIf="error()">
+      <div class="alert alert-danger"><strong>Đăng ký thất bại!</strong> Vui lòng thử lại sau.</div>
+    </div>
 
-            @let loginRef = registerForm.get('login')!;
-            @if (loginRef.invalid && (loginRef.dirty || loginRef.touched)) {
-              <div>
-                @if (loginRef?.errors?.required) {
-                  <small class="form-text text-danger">Your username is required.</small>
-                }
+    <div *ngIf="errorEmailExists()">
+      <div class="alert alert-danger"><strong>Email này đã được sử dụng!</strong> Vui lòng chọn email khác.</div>
+    </div>
 
-                @if (loginRef?.errors?.minlength) {
-                  <small class="form-text text-danger">Your username is required to be at least 1 character.</small>
-                }
+    <div *ngIf="doNotMatch()">
+      <div class="alert alert-danger">Mật khẩu và xác nhận mật khẩu không khớp!</div>
+    </div>
 
-                @if (loginRef?.errors?.maxlength) {
-                  <small class="form-text text-danger">Your username cannot be longer than 50 characters.</small>
-                }
-
-                @if (loginRef?.errors?.pattern) {
-                  <small class="form-text text-danger">Your username is invalid.</small>
-                }
-              </div>
-            }
+    <div *ngIf="!success()">
+      <form name="form" (ngSubmit)="register()" [formGroup]="registerForm" novalidate>
+        <div class="row">
+          <div class="col-md-6 form-group">
+            <label class="form-label" for="firstName">Họ</label>
+            <input type="text" class="form-control" id="firstName" formControlName="firstName" />
           </div>
-
-          <div class="mb-3">
-            <label class="form-label" for="email">Email</label>
-            <input
-              type="email"
-              class="form-control"
-              id="email"
-              name="email"
-              placeholder="Your email"
-              formControlName="email"
-              data-cy="email"
-            />
-
-            @let emailRef = registerForm.get('email')!;
-            @if (emailRef.invalid && (emailRef.dirty || emailRef.touched)) {
-              <div>
-                @if (emailRef?.errors?.required) {
-                  <small class="form-text text-danger">Your email is required.</small>
-                }
-
-                @if (emailRef?.errors?.invalid) {
-                  <small class="form-text text-danger">Your email is invalid.</small>
-                }
-
-                @if (emailRef?.errors?.minlength) {
-                  <small class="form-text text-danger">Your email is required to be at least 5 characters.</small>
-                }
-
-                @if (emailRef?.errors?.maxlength) {
-                  <small class="form-text text-danger">Your email cannot be longer than 50 characters.</small>
-                }
-              </div>
-            }
+          <div class="col-md-6 form-group">
+            <label class="form-label" for="lastName">Tên</label>
+            <input type="text" class="form-control" id="lastName" formControlName="lastName" />
           </div>
+        </div>
 
-          <div class="mb-3">
-            <label class="form-label" for="password">New password</label>
-            <input
-              type="password"
-              class="form-control"
-              id="password"
-              name="password"
-              placeholder="New password"
-              formControlName="password"
-              data-cy="firstPassword"
-            />
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input type="email" class="form-control" id="email" formControlName="email" data-cy="email" #email />
+        </div>
 
-            @let passwordRef = registerForm.get('password')!;
-            @if (passwordRef.invalid && (passwordRef.dirty || passwordRef.touched)) {
-              <div>
-                @if (passwordRef?.errors?.required) {
-                  <small class="form-text text-danger">Your password is required.</small>
-                }
+        <div class="form-group">
+          <label class="form-label" for="phone">Số điện thoại</label>
+          <input type="tel" class="form-control" id="phone" formControlName="phone" data-cy="phone" />
+        </div>
 
-                @if (passwordRef?.errors?.minlength) {
-                  <small class="form-text text-danger">Your password is required to be at least 4 characters.</small>
-                }
+        <div class="form-group">
+          <label class="form-label" for="password">Mật khẩu</label>
+          <input type="password" class="form-control" id="password" formControlName="password" data-cy="firstPassword" />
+        </div>
 
-                @if (passwordRef?.errors?.maxlength) {
-                  <small class="form-text text-danger">Your password cannot be longer than 50 characters.</small>
-                }
-              </div>
-            }
+        <div class="form-group">
+          <label class="form-label" for="confirmPassword">Xác nhận mật khẩu</label>
+          <input type="password" class="form-control" id="confirmPassword" formControlName="confirmPassword" data-cy="secondPassword" />
+        </div>
 
-            <jhi-password-strength-bar [passwordToCheck]="passwordRef.value" />
-          </div>
+        <button type="submit" [disabled]="registerForm.invalid" class="btn btn-primary btn-register" data-cy="submit">Đăng ký</button>
+      </form>
 
-          <div class="mb-3">
-            <label class="form-label" for="confirmPassword">New password confirmation</label>
-            <input
-              type="password"
-              class="form-control"
-              id="confirmPassword"
-              name="confirmPassword"
-              placeholder="Confirm the new password"
-              formControlName="confirmPassword"
-              data-cy="secondPassword"
-            />
-
-            @let confirmPasswordRef = registerForm.get('confirmPassword')!;
-            @if (confirmPasswordRef.invalid && (confirmPasswordRef.dirty || confirmPasswordRef.touched)) {
-              <div>
-                @if (confirmPasswordRef?.errors?.required) {
-                  <small class="form-text text-danger">Your confirmation password is required.</small>
-                }
-
-                @if (confirmPasswordRef?.errors?.minlength) {
-                  <small class="form-text text-danger">Your confirmation password is required to be at least 4 characters.</small>
-                }
-
-                @if (confirmPasswordRef?.errors?.maxlength) {
-                  <small class="form-text text-danger">Your confirmation password cannot be longer than 50 characters.</small>
-                }
-              </div>
-            }
-          </div>
-
-          <button type="submit" [disabled]="registerForm.invalid" class="btn btn-primary" data-cy="submit">Register</button>
-        </form>
-      }
-
-      <div class="mt-3 alert alert-warning">
-        <span>If you want to </span>
-        <a class="alert-link" routerLink="/login">sign in</a
-        ><span
-          >, you can try the default accounts:<br />- Administrator (login=&quot;admin&quot; and password=&quot;admin&quot;) <br />- User
-          (login=&quot;user&quot; and password=&quot;user&quot;).</span
-        >
+      <div class="mt-3 text-center">
+        <span>Bạn đã có tài khoản? </span>
+        <a class="alert-link" routerLink="/login">Đăng nhập</a>
       </div>
     </div>
   </div>

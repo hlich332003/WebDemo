@@ -9,13 +9,11 @@ import { ApplicationConfigService } from 'app/core/config/application-config.ser
 import { createRequestOption } from 'app/core/request/request-util';
 import { IProduct, NewProduct } from './product.model';
 import { ICategory } from 'app/entities/category/category.model';
+import { AccountService } from 'app/core/auth/account.service';
 
 export type PartialUpdateProduct = Partial<IProduct> & Pick<IProduct, 'id'>;
 
-type RestOf<T extends IProduct | NewProduct | PartialUpdateProduct> = Omit<
-  T,
-  'createdDate' | 'lastModifiedDate'
-> & {
+type RestOf<T extends IProduct | NewProduct | PartialUpdateProduct> = Omit<T, 'createdDate' | 'lastModifiedDate'> & {
   createdDate?: string | null;
   lastModifiedDate?: string | null;
 };
@@ -31,11 +29,12 @@ export type EntityArrayResponseType = HttpResponse<IProduct[]>;
 export class ProductService {
   protected http = inject(HttpClient);
   protected applicationConfigService = inject(ApplicationConfigService);
+  private accountService = inject(AccountService);
 
-  protected resourceUrl =
-    this.applicationConfigService.getEndpointFor('api/products');
-  protected categoryResourceUrl =
-    this.applicationConfigService.getEndpointFor('api/categories');
+  protected resourceUrl = this.applicationConfigService.getEndpointFor('api/products');
+  protected publicResourceUrl = this.applicationConfigService.getEndpointFor('api/public/products');
+  protected categoryResourceUrl = this.applicationConfigService.getEndpointFor('api/categories');
+  protected publicCategoryResourceUrl = this.applicationConfigService.getEndpointFor('api/public/categories');
 
   create(product: NewProduct): Observable<EntityResponseType> {
     return this.http.post<IProduct>(this.resourceUrl, product, {
@@ -44,34 +43,28 @@ export class ProductService {
   }
 
   update(product: IProduct): Observable<EntityResponseType> {
-    return this.http.put<IProduct>(
-      `${this.resourceUrl}/${product.id}`,
-      product,
-      {
-        observe: 'response',
-      },
-    );
+    return this.http.put<IProduct>(`${this.resourceUrl}/${product.id}`, product, {
+      observe: 'response',
+    });
   }
 
   partialUpdate(product: PartialUpdateProduct): Observable<EntityResponseType> {
-    return this.http.patch<IProduct>(
-      `${this.resourceUrl}/${product.id}`,
-      product,
-      {
-        observe: 'response',
-      },
-    );
+    return this.http.patch<IProduct>(`${this.resourceUrl}/${product.id}`, product, {
+      observe: 'response',
+    });
   }
 
   find(id: number): Observable<EntityResponseType> {
-    return this.http.get<IProduct>(`${this.resourceUrl}/${id}`, {
+    const url = this.accountService.isAuthenticated() ? `${this.resourceUrl}/${id}` : `${this.publicResourceUrl}/${id}`;
+    return this.http.get<IProduct>(url, {
       observe: 'response',
     });
   }
 
   query(req?: any): Observable<EntityArrayResponseType> {
     const options = createRequestOption(req);
-    return this.http.get<IProduct[]>(this.resourceUrl, {
+    const url = this.accountService.isAuthenticated() ? this.resourceUrl : this.publicResourceUrl;
+    return this.http.get<IProduct[]>(url, {
       params: options,
       observe: 'response',
     });
@@ -84,7 +77,8 @@ export class ProductService {
   }
 
   getCategories(): Observable<HttpResponse<ICategory[]>> {
-    return this.http.get<ICategory[]>(this.categoryResourceUrl, {
+    const url = this.accountService.isAuthenticated() ? this.categoryResourceUrl : this.publicCategoryResourceUrl;
+    return this.http.get<ICategory[]>(url, {
       observe: 'response',
     });
   }
@@ -99,14 +93,9 @@ export class ProductService {
   ): Type[] {
     const products: Type[] = productsToCheck.filter(isPresent);
     if (products.length > 0) {
-      const productCollectionIdentifiers = productCollection.map(
-        (productItem) => productItem.id,
-      );
-      const productsToAdd = products.filter((productItem) => {
-        if (
-          productItem.id == null ||
-          productCollectionIdentifiers.includes(productItem.id)
-        ) {
+      const productCollectionIdentifiers = productCollection.map(productItem => productItem.id);
+      const productsToAdd = products.filter(productItem => {
+        if (productItem.id == null || productCollectionIdentifiers.includes(productItem.id)) {
           return false;
         }
         productCollectionIdentifiers.push(productItem.id);

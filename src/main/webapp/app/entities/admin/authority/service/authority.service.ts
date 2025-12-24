@@ -18,20 +18,29 @@ export class AuthorityService {
   protected resourceUrl = this.applicationConfigService.getEndpointFor('api/authorities');
 
   create(authority: NewAuthority): Observable<EntityResponseType> {
-    return this.http.post<IAuthority>(this.resourceUrl, authority, { observe: 'response' });
+    return this.http.post<IAuthority>(this.resourceUrl, authority, {
+      observe: 'response',
+    });
   }
 
   find(id: string): Observable<EntityResponseType> {
-    return this.http.get<IAuthority>(`${this.resourceUrl}/${id}`, { observe: 'response' });
+    return this.http.get<IAuthority>(`${this.resourceUrl}/${id}`, {
+      observe: 'response',
+    });
   }
 
   query(req?: any): Observable<EntityArrayResponseType> {
     const options = createRequestOption(req);
-    return this.http.get<IAuthority[]>(this.resourceUrl, { params: options, observe: 'response' });
+    return this.http.get<IAuthority[]>(this.resourceUrl, {
+      params: options,
+      observe: 'response',
+    });
   }
 
   delete(id: string): Observable<HttpResponse<{}>> {
-    return this.http.delete(`${this.resourceUrl}/${id}`, { observe: 'response' });
+    return this.http.delete(`${this.resourceUrl}/${id}`, {
+      observe: 'response',
+    });
   }
 
   getAuthorityIdentifier(authority: Pick<IAuthority, 'name'>): string {

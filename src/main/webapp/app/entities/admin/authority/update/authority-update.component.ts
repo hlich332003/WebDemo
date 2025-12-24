@@ -13,6 +13,7 @@ import { AuthorityFormGroup, AuthorityFormService } from './authority-form.servi
 
 @Component({
   selector: 'jhi-authority-update',
+  standalone: true,
   templateUrl: './authority-update.component.html',
   imports: [SharedModule, FormsModule, ReactiveFormsModule],
 })

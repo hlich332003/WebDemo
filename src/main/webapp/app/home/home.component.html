@@ -1,58 +1,167 @@
-<div class="row">
-  <div class="col-md-3">
-    <span class="hipster img-fluid rounded"></span>
+<div class="home-container">
+  <!-- Hero Section -->
+  <div class="hero-section text-center">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1 class="hero-title">Khám Phá Thế Giới Công Nghệ</h1>
+      <p class="hero-subtitle">Sản phẩm chất lượng, ưu đãi mỗi ngày</p>
+      <div class="admin-notice" *ngIf="account?.authorities?.includes('ROLE_ADMIN')">
+        <a routerLink="/admin">
+          <fa-icon icon="shield-alt" class="me-2"></fa-icon>
+          <span>Chế độ quản trị viên. Đi đến trang quản lý.</span>
+        </a>
+      </div>
+    </div>
   </div>
 
-  <div class="col-md-9">
-    <h1 class="display-4"><span>Welcome, Java Hipster!</span> (Web Demo)</h1>
-
-    <p class="lead">This is your homepage</p>
-
-    <div>
-      @if (account() !== null) {
-        <div class="alert alert-success">
-          @if (account(); as accountRef) {
-            <span id="home-logged-message">You are logged in as user &quot;{{ accountRef.login }}&quot;.</span>
-          }
-        </div>
-      } @else {
-        <div class="alert alert-warning">
-          <span>If you want to </span>
-          <a class="alert-link" (click)="login()">sign in</a
-          ><span
-            >, you can try the default accounts:<br />- Administrator (login=&quot;admin&quot; and password=&quot;admin&quot;) <br />- User
-            (login=&quot;user&quot; and password=&quot;user&quot;).</span
-          >
-        </div>
-
-        <div class="alert alert-warning">
-          <span>You don&apos;t have an account yet?</span>&nbsp;
-          <a class="alert-link" routerLink="/account/register">Register a new account</a>
-        </div>
-      }
-    </div>
-
-    <p>If you have any question on JHipster:</p>
-
-    <ul>
-      <li><a href="https://www.jhipster.tech/" target="_blank" rel="noopener noreferrer">JHipster homepage</a></li>
-      <li>
-        <a href="https://stackoverflow.com/tags/jhipster/info" target="_blank" rel="noopener noreferrer">JHipster on Stack Overflow</a>
-      </li>
-      <li>
-        <a href="https://github.com/jhipster/generator-jhipster/issues?state=open" target="_blank" rel="noopener noreferrer"
-          >JHipster bug tracker</a
+  <div class="container-fluid mt-4">
+    <!-- Categories Section -->
+    <section class="category-showcase" *ngIf="featuredCategories.length > 0">
+      <h2 class="section-title">Danh Mục Sản Phẩm</h2>
+      <div class="category-grid">
+        <a
+          class="category-card"
+          *ngFor="let category of featuredCategories"
+          [routerLink]="['/products']"
+          [queryParams]="{ categorySlug: category.slug }"
         >
-      </li>
-      <li>
-        <a href="https://gitter.im/jhipster/generator-jhipster" target="_blank" rel="noopener noreferrer">JHipster public chat room</a>
-      </li>
-      <li><a href="https://twitter.com/jhipster" target="_blank" rel="noopener noreferrer">follow &#64;jhipster on Twitter</a></li>
-    </ul>
+          <div class="category-icon-wrapper">
+            <fa-icon [icon]="getCategoryIcon(category.slug)" class="category-icon"></fa-icon>
+          </div>
+          <span class="category-name">{{ category.name }}</span>
+        </a>
+      </div>
+    </section>
 
-    <p>
-      <span>If you like JHipster, don&apos;t forget to give us a star on</span>
-      <a href="https://github.com/jhipster/generator-jhipster" target="_blank" rel="noopener noreferrer">GitHub</a>!
-    </p>
+    <!-- Featured Products Section -->
+    <section class="product-showcase" *ngIf="bestSellerProducts.length > 0">
+      <h2 class="section-title">Sản Phẩm Nổi Bật</h2>
+      <div class="product-grid">
+        <div class="product-card" *ngFor="let product of bestSellerProducts">
+          <div class="product-image-wrapper" (click)="viewProductDetail(product.id)">
+            <img
+              *ngIf="product.imageUrl"
+              [jhiLazyLoad]="getProxiedImageUrl(product.imageUrl)"
+              [alt]="product.name"
+              (error)="onImageError($event)"
+              loading="lazy"
+            />
+            <div *ngIf="!product.imageUrl" class="image-placeholder">
+              <fa-icon icon="box-open"></fa-icon>
+            </div>
+          </div>
+          <div class="product-info">
+            <h5 class="product-name" (click)="viewProductDetail(product.id)">{{ product.name }}</h5>
+            <p class="product-price">{{ formatPrice(product.price) }}</p>
+          </div>
+          <div class="product-actions">
+            <button
+              class="btn btn-sm btn-wishlist"
+              (click)="toggleWishlist(product, $event)"
+              [class.in-wishlist]="isInWishlist(product.id)"
+              title="Thêm vào yêu thích"
+            >
+              <fa-icon [icon]="isInWishlist(product.id) ? 'heart-crack' : 'heart'"></fa-icon>
+            </button>
+            <button class="btn btn-sm btn-add-to-cart" (click)="addToCart(product)" title="Thêm vào giỏ hàng">
+              <fa-icon icon="shopping-cart"></fa-icon>
+            </button>
+            <button class="btn btn-sm btn-buy-now" (click)="buyNow(product)">Mua ngay</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- New Arrivals Section -->
+    <section class="product-showcase" *ngIf="newProducts.length > 0">
+      <h2 class="section-title">Hàng Mới Về</h2>
+      <div class="product-grid">
+        <div class="product-card" *ngFor="let product of newProducts">
+          <div class="product-image-wrapper" (click)="viewProductDetail(product.id)">
+            <img
+              *ngIf="product.imageUrl"
+              [jhiLazyLoad]="getProxiedImageUrl(product.imageUrl)"
+              [alt]="product.name"
+              (error)="onImageError($event)"
+              loading="lazy"
+            />
+            <div *ngIf="!product.imageUrl" class="image-placeholder">
+              <fa-icon icon="box-open"></fa-icon>
+            </div>
+          </div>
+          <div class="product-info">
+            <h5 class="product-name" (click)="viewProductDetail(product.id)">{{ product.name }}</h5>
+            <p class="product-price">{{ formatPrice(product.price) }}</p>
+          </div>
+          <div class="product-actions">
+            <button
+              class="btn btn-sm btn-wishlist"
+              (click)="toggleWishlist(product, $event)"
+              [class.in-wishlist]="isInWishlist(product.id)"
+              title="Thêm vào yêu thích"
+            >
+              <fa-icon [icon]="isInWishlist(product.id) ? 'heart-crack' : 'heart'"></fa-icon>
+            </button>
+            <button
+              class="btn btn-sm btn-add-to-cart"
+              (click)="addToCart(product)"
+              [disabled]="product.quantity === 0"
+              title="Thêm vào giỏ hàng"
+            >
+              <fa-icon icon="shopping-cart"></fa-icon>
+            </button>
+            <button class="btn btn-sm btn-buy-now" (click)="buyNow(product)" [disabled]="product.quantity === 0">
+              {{ product.quantity === 0 ? 'Hết hàng' : 'Mua ngay' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recently Viewed Section -->
+    <section class="product-showcase" *ngIf="recentlyViewedProducts.length > 0">
+      <h2 class="section-title">Đã Xem Gần Đây</h2>
+      <div class="product-grid">
+        <div class="product-card" *ngFor="let product of recentlyViewedProducts">
+          <div class="product-image-wrapper" (click)="viewProductDetail(product.id)">
+            <img
+              *ngIf="product.imageUrl"
+              [jhiLazyLoad]="getProxiedImageUrl(product.imageUrl)"
+              [alt]="product.name"
+              (error)="onImageError($event)"
+              loading="lazy"
+            />
+            <div *ngIf="!product.imageUrl" class="image-placeholder">
+              <fa-icon icon="box-open"></fa-icon>
+            </div>
+          </div>
+          <div class="product-info">
+            <h5 class="product-name" (click)="viewProductDetail(product.id)">{{ product.name }}</h5>
+            <p class="product-price">{{ formatPrice(product.price) }}</p>
+          </div>
+          <div class="product-actions">
+            <button
+              class="btn btn-sm btn-wishlist"
+              (click)="toggleWishlist(product, $event)"
+              [class.in-wishlist]="isInWishlist(product.id)"
+              title="Thêm vào yêu thích"
+            >
+              <fa-icon [icon]="isInWishlist(product.id) ? 'heart-crack' : 'heart'"></fa-icon>
+            </button>
+            <button
+              class="btn btn-sm btn-add-to-cart"
+              (click)="addToCart(product)"
+              [disabled]="product.quantity === 0"
+              title="Thêm vào giỏ hàng"
+            >
+              <fa-icon icon="shopping-cart"></fa-icon>
+            </button>
+            <button class="btn btn-sm btn-buy-now" (click)="buyNow(product)" [disabled]="product.quantity === 0">
+              {{ product.quantity === 0 ? 'Hết hàng' : 'Mua ngay' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </div>

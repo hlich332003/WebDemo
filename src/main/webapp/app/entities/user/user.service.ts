@@ -14,8 +14,7 @@ export class UserService {
   protected http = inject(HttpClient);
   protected applicationConfigService = inject(ApplicationConfigService);
 
-  protected resourceUrl =
-    this.applicationConfigService.getEndpointFor('api/users');
+  protected resourceUrl = this.applicationConfigService.getEndpointFor('api/users');
 
   query(req?: any): Observable<EntityArrayResponseType> {
     const options = createRequestOption(req);
@@ -35,10 +34,8 @@ export class UserService {
   ): Type[] {
     const users: Type[] = usersToCheck.filter(isPresent);
     if (users.length > 0) {
-      const userCollectionIdentifiers = userCollection.map((userItem) =>
-        getUserIdentifier(userItem),
-      );
-      const usersToAdd = users.filter((userItem) => {
+      const userCollectionIdentifiers = userCollection.map(userItem => getUserIdentifier(userItem));
+      const usersToAdd = users.filter(userItem => {
         const userIdentifier = getUserIdentifier(userItem);
         if (userCollectionIdentifiers.includes(userIdentifier)) {
           return false;

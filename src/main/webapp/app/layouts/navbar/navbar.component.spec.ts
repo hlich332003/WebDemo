@@ -11,7 +11,7 @@ import { AccountService } from 'app/core/auth/account.service';
 import { ProfileService } from 'app/layouts/profiles/profile.service';
 import { LoginService } from 'app/login/login.service';
 
-import NavbarComponent from './navbar.component';
+import { NavbarComponent } from './navbar.component';
 
 describe('Navbar Component', () => {
   let comp: NavbarComponent;
@@ -25,7 +25,6 @@ describe('Navbar Component', () => {
     firstName: 'John',
     langKey: '',
     lastName: 'Doe',
-    login: 'john.doe',
     imageUrl: '',
   };
 

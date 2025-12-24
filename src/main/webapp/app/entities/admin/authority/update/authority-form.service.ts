@@ -31,7 +31,10 @@ export class AuthorityFormService {
     };
     return new FormGroup<AuthorityFormGroupContent>({
       name: new FormControl(
-        { value: authorityRawValue.name, disabled: authorityRawValue.name !== null },
+        {
+          value: authorityRawValue.name,
+          disabled: authorityRawValue.name !== null,
+        },
         {
           nonNullable: true,
           validators: [Validators.required, Validators.maxLength(50)],
@@ -49,7 +52,10 @@ export class AuthorityFormService {
     form.reset(
       {
         ...authorityRawValue,
-        name: { value: authorityRawValue.name, disabled: authorityRawValue.name !== null },
+        name: {
+          value: authorityRawValue.name,
+          disabled: authorityRawValue.name !== null,
+        },
       } as any /* cast to workaround https://github.com/angular/angular/issues/46458 */,
     );
   }

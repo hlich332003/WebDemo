@@ -125,7 +125,6 @@ class MailServiceIT {
     void testSendEmailFromTemplate() throws Exception {
         User user = new User();
         user.setLangKey(Constants.DEFAULT_LANGUAGE);
-        user.setLogin("john");
         user.setEmail("john.doe@example.com");
         mailService.sendEmailFromTemplate(user, "mail/testEmail", "email.test.title");
         verify(javaMailSender).send(messageCaptor.capture());
@@ -141,7 +140,6 @@ class MailServiceIT {
     void testSendActivationEmail() throws Exception {
         User user = new User();
         user.setLangKey(Constants.DEFAULT_LANGUAGE);
-        user.setLogin("john");
         user.setEmail("john.doe@example.com");
         mailService.sendActivationEmail(user);
         verify(javaMailSender).send(messageCaptor.capture());
@@ -156,7 +154,6 @@ class MailServiceIT {
     void testCreationEmail() throws Exception {
         User user = new User();
         user.setLangKey(Constants.DEFAULT_LANGUAGE);
-        user.setLogin("john");
         user.setEmail("john.doe@example.com");
         mailService.sendCreationEmail(user);
         verify(javaMailSender).send(messageCaptor.capture());
@@ -171,7 +168,6 @@ class MailServiceIT {
     void testSendPasswordResetMail() throws Exception {
         User user = new User();
         user.setLangKey(Constants.DEFAULT_LANGUAGE);
-        user.setLogin("john");
         user.setEmail("john.doe@example.com");
         mailService.sendPasswordResetMail(user);
         verify(javaMailSender).send(messageCaptor.capture());
@@ -195,7 +191,6 @@ class MailServiceIT {
     @Test
     void testSendLocalizedEmailForAllSupportedLanguages() throws Exception {
         User user = new User();
-        user.setLogin("john");
         user.setEmail("john.doe@example.com");
         for (String langKey : languages) {
             user.setLangKey(langKey);

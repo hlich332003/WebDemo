@@ -7,7 +7,7 @@ import { Subject, of } from 'rxjs';
 import { AccountService } from 'app/core/auth/account.service';
 import { Account } from 'app/core/auth/account.model';
 
-import HomeComponent from './home.component';
+import { HomeComponent } from './home.component';
 
 describe('Home Component', () => {
   let comp: HomeComponent;
@@ -21,7 +21,6 @@ describe('Home Component', () => {
     firstName: null,
     langKey: '',
     lastName: null,
-    login: 'login',
     imageUrl: null,
   };
 
@@ -55,19 +54,19 @@ describe('Home Component', () => {
       comp.ngOnInit();
 
       // THEN
-      expect(comp.account()).toBeNull();
+      expect(comp.account).toBeNull();
 
       // WHEN
       authenticationState.next(account);
 
       // THEN
-      expect(comp.account()).toEqual(account);
+      expect(comp.account).toEqual(account);
 
       // WHEN
       authenticationState.next(null);
 
       // THEN
-      expect(comp.account()).toBeNull();
+      expect(comp.account).toBeNull();
     });
   });
 
@@ -91,20 +90,20 @@ describe('Home Component', () => {
       comp.ngOnInit();
 
       // THEN
-      expect(comp.account()).toBeNull();
+      expect(comp.account).toBeNull();
 
       // WHEN
       authenticationState.next(account);
 
       // THEN
-      expect(comp.account()).toEqual(account);
+      expect(comp.account).toEqual(account);
 
       // WHEN
       comp.ngOnDestroy();
       authenticationState.next(null);
 
       // THEN
-      expect(comp.account()).toEqual(account);
+      expect(comp.account).toEqual(account);
     });
   });
 });

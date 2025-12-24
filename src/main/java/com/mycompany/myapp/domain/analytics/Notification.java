@@ -1,15 +1,9 @@
 package com.mycompany.myapp.domain.analytics;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.Instant;
 
-/**
- * Entity Notification - Lưu trong analytics_db
- * Quản lý thông báo real-time cho người dùng
- */
 @Entity
 @Table(name = "notification")
 public class Notification implements Serializable {
@@ -18,61 +12,54 @@ public class Notification implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
-    @NotNull
-    @Size(max = 500)
-    @Column(name = "message", length = 500, nullable = false)
+    @Column(name = "title")
+    private String title;
+
+    @Column(name = "message", nullable = false)
     private String message;
 
-    @NotNull
-    @Size(max = 20)
-    @Column(name = "type", length = 20, nullable = false)
+    @Column(name = "type", nullable = false)
     private String type;
 
-    @NotNull
-    @Column(name = "created_at", nullable = false)
-    private Instant createdAt;
+    @Column(name = "receiver_type", nullable = false)
+    private String receiverType; // USER / ADMIN
 
-    @NotNull
-    @Size(max = 255)
-    @Column(name = "user_id", length = 255, nullable = false)
-    private String userId;
+    @Column(name = "receiver_id")
+    private Long receiverId; // USER → userId, ADMIN → null
 
-    @NotNull
-    @Column(name = "is_read", nullable = false)
+    @Column(name = "is_read")
     private Boolean isRead = false;
 
-    @Size(max = 500)
-    @Column(name = "link", length = 500)
+    @Column(name = "created_at")
+    private Instant createdAt = Instant.now();
+
+    @Column(name = "link")
     private String link;
 
-    @Size(max = 50)
-    @Column(name = "target_role", length = 50)
-    private String targetRole;
+    @Column(name = "related_entity_type")
+    private String relatedEntityType;
 
-    // Constructors
-    public Notification() {
-        this.createdAt = Instant.now();
-        this.isRead = false;
-    }
+    @Column(name = "related_entity_id")
+    private Long relatedEntityId;
 
-    public Notification(String message, String type, String userId) {
-        this.message = message;
-        this.type = type;
-        this.userId = userId;
-        this.createdAt = Instant.now();
-        this.isRead = false;
-    }
+    // Getters and setters
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getMessage() {
@@ -91,20 +78,20 @@ public class Notification implements Serializable {
         this.type = type;
     }
 
-    public Instant getCreatedAt() {
-        return createdAt;
+    public String getReceiverType() {
+        return receiverType;
     }
 
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
+    public void setReceiverType(String receiverType) {
+        this.receiverType = receiverType;
     }
 
-    public String getUserId() {
-        return userId;
+    public Long getReceiverId() {
+        return receiverId;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setReceiverId(Long receiverId) {
+        this.receiverId = receiverId;
     }
 
     public Boolean getIsRead() {
@@ -115,6 +102,14 @@ public class Notification implements Serializable {
         this.isRead = isRead;
     }
 
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public String getLink() {
         return link;
     }
@@ -123,41 +118,19 @@ public class Notification implements Serializable {
         this.link = link;
     }
 
-    public String getTargetRole() {
-        return targetRole;
+    public String getRelatedEntityType() {
+        return relatedEntityType;
     }
 
-    public void setTargetRole(String targetRole) {
-        this.targetRole = targetRole;
+    public void setRelatedEntityType(String relatedEntityType) {
+        this.relatedEntityType = relatedEntityType;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof Notification)) {
-            return false;
-        }
-        return id != null && id.equals(((Notification) o).id);
+    public Long getRelatedEntityId() {
+        return relatedEntityId;
     }
 
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return "Notification{" +
-            "id=" + getId() +
-            ", message='" + getMessage() + "'" +
-            ", type='" + getType() + "'" +
-            ", createdAt='" + getCreatedAt() + "'" +
-            ", userId='" + getUserId() + "'" +
-            ", isRead='" + getIsRead() + "'" +
-            ", link='" + getLink() + "'" +
-            ", targetRole='" + getTargetRole() + "'" +
-            "}";
+    public void setRelatedEntityId(Long relatedEntityId) {
+        this.relatedEntityId = relatedEntityId;
     }
 }

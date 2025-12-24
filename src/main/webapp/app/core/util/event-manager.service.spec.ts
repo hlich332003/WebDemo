@@ -25,7 +25,10 @@ describe('Event Manager tests', () => {
 
     it('should not fail when nosubscriber and broadcasting', inject([EventManager], (eventManager: EventManager) => {
       expect(eventManager.observer).toBeUndefined();
-      eventManager.broadcast({ name: 'modifier', content: 'modified something' });
+      eventManager.broadcast({
+        name: 'modifier',
+        content: 'modified something',
+      });
     }));
 
     it('should create an observable and callback when broadcasted EventWithContent', inject(
@@ -35,14 +38,23 @@ describe('Event Manager tests', () => {
         eventManager.subscribe('modifier', (event: EventWithContent<unknown> | string) => (receivedEvent = event));
 
         // WHEN
-        eventManager.broadcast({ name: 'unrelatedModifier', content: 'unrelated modification' });
+        eventManager.broadcast({
+          name: 'unrelatedModifier',
+          content: 'unrelated modification',
+        });
         // THEN
         expect(receivedEvent).toBeNull();
 
         // WHEN
-        eventManager.broadcast({ name: 'modifier', content: 'modified something' });
+        eventManager.broadcast({
+          name: 'modifier',
+          content: 'modified something',
+        });
         // THEN
-        expect(receivedEvent).toEqual({ name: 'modifier', content: 'modified something' });
+        expect(receivedEvent).toEqual({
+          name: 'modifier',
+          content: 'modified something',
+        });
       },
     ));
 
@@ -71,9 +83,15 @@ describe('Event Manager tests', () => {
       expect(receivedEvent).toBeNull();
 
       // WHEN
-      eventManager.broadcast({ name: 'modifier', content: 'modified something' });
+      eventManager.broadcast({
+        name: 'modifier',
+        content: 'modified something',
+      });
       // THEN
-      expect(receivedEvent).toEqual({ name: 'modifier', content: 'modified something' });
+      expect(receivedEvent).toEqual({
+        name: 'modifier',
+        content: 'modified something',
+      });
 
       // WHEN
       eventManager.broadcast('modifier2');

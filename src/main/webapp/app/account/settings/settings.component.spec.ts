@@ -20,7 +20,6 @@ describe('SettingsComponent', () => {
     activated: true,
     email: 'john.doe@mail.com',
     langKey: 'en',
-    login: 'john',
     authorities: [],
     imageUrl: '',
   };

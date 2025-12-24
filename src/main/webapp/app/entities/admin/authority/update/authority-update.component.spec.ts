@@ -44,7 +44,9 @@ describe('Authority Management Update Component', () => {
 
   describe('ngOnInit', () => {
     it('should update editForm', () => {
-      const authority: IAuthority = { name: 'c56c1cf7-aca8-48fe-ad81-eeebbf872cb1' };
+      const authority: IAuthority = {
+        name: 'c56c1cf7-aca8-48fe-ad81-eeebbf872cb1',
+      };
 
       activatedRoute.data = of({ authority });
       comp.ngOnInit();

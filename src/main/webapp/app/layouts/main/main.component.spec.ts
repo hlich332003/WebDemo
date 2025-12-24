@@ -84,7 +84,13 @@ describe('MainComponent', () => {
           {
             path: 'home',
             title: parentRoutePageTitle,
-            children: [{ path: '', title: childRoutePageTitle, component: BlankComponent }],
+            children: [
+              {
+                path: '',
+                title: childRoutePageTitle,
+                component: BlankComponent,
+              },
+            ],
           },
         ]);
 

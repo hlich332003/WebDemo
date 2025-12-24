@@ -145,11 +145,21 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Binding orderEmailToAppExchangeBinding(Queue orderEmailQueue, TopicExchange appExchange) {
+        return BindingBuilder.bind(orderEmailQueue).to(appExchange).with(ORDER_CREATED_KEY);
+    }
+
+    @Bean
     public Queue userRegistrationQueue() {
         return QueueBuilder.durable(USER_REGISTRATION_QUEUE)
             .withArgument("x-dead-letter-exchange", DLQ_EXCHANGE)
             .withArgument("x-dead-letter-routing-key", DLQ_ROUTING_KEY)
             .build();
+    }
+
+    @Bean
+    public Binding userRegistrationToAppExchangeBinding(Queue userRegistrationQueue, TopicExchange appExchange) {
+        return BindingBuilder.bind(userRegistrationQueue).to(appExchange).with(USER_REGISTERED_KEY);
     }
 
     // ===================================================================
@@ -187,4 +197,3 @@ public class RabbitMQConfig {
         return rabbitTemplate;
     }
 }
-

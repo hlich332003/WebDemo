@@ -2,6 +2,7 @@ package com.mycompany.myapp.service;
 
 import java.time.Duration;
 import java.time.Instant;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +17,7 @@ public class TokenBlacklistService implements ITokenBlacklistService {
     private static final String BLACKLIST_PREFIX = "token:blacklist:";
     private final RedisTemplate<String, String> redisTemplate;
 
-    public TokenBlacklistService(RedisTemplate<String, String> redisTemplate) {
+    public TokenBlacklistService(@Qualifier("tokenBlacklistRedisTemplate") RedisTemplate<String, String> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 

@@ -1,6 +1,5 @@
 package com.mycompany.myapp.security;
 
-import com.mycompany.myapp.domain.Authority;
 import com.mycompany.myapp.domain.User;
 import com.mycompany.myapp.repository.UserRepository;
 import java.util.*;
@@ -15,13 +14,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Authenticate a user from the database.
- */
 @Component("userDetailsService")
 public class DomainUserDetailsService implements UserDetailsService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DomainUserDetailsService.class);
+    private final Logger log = LoggerFactory.getLogger(DomainUserDetailsService.class);
 
     private final UserRepository userRepository;
 
@@ -32,59 +28,44 @@ public class DomainUserDetailsService implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(final String login) {
-        LOG.debug("Authenticating {}", login);
+        log.debug("Authenticating {}", login);
 
-        if (new EmailValidator().isValid(login, null)) {
-            return userRepository
-                .findOneWithAuthoritiesByEmailIgnoreCase(login)
-                .map(user -> createSpringSecurityUser(login, user))
-                .orElseThrow(() -> new UsernameNotFoundException("User with email " + login + " was not found in the database"));
-        }
-
-        String lowercaseLogin = login.toLowerCase(Locale.ENGLISH);
+        // Sử dụng phương thức tìm kiếm linh hoạt cho cả Email và SĐT
         return userRepository
-            .findOneWithAuthoritiesByLogin(lowercaseLogin)
-            .map(user -> createSpringSecurityUser(lowercaseLogin, user))
-            .orElseThrow(() -> new UsernameNotFoundException("User " + lowercaseLogin + " was not found in the database"));
+            .findOneWithAuthoritiesByEmailOrPhone(login)
+            .map(user -> createSpringSecurityUser(login, user))
+            .orElseThrow(() -> new UsernameNotFoundException("User with email or phone " + login + " was not found in the database"));
     }
 
     private org.springframework.security.core.userdetails.User createSpringSecurityUser(String lowercaseLogin, User user) {
         if (!user.isActivated()) {
             throw new UserNotActivatedException("User " + lowercaseLogin + " was not activated");
         }
-        return UserWithId.fromUser(user);
+        // Authority trong User entity là quan hệ ManyToOne (User -> Authority)
+        // Nhưng Spring Security cần List<GrantedAuthority>
+        List<SimpleGrantedAuthority> grantedAuthorities = Collections.singletonList(
+            new SimpleGrantedAuthority(user.getAuthority().getName())
+        );
+
+        // Luôn sử dụng Email làm username cho Spring Security Principal
+        // Điều này đảm bảo tính nhất quán cho WebSocket và các dịch vụ khác
+        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), grantedAuthorities);
     }
 
+    /**
+     * Inner class to hold User details with ID
+     */
     public static class UserWithId extends org.springframework.security.core.userdetails.User {
 
         private final Long id;
 
-        public UserWithId(String login, String password, Collection<? extends GrantedAuthority> authorities, Long id) {
-            super(login, password, authorities);
+        public UserWithId(String username, String password, Collection<? extends GrantedAuthority> authorities, Long id) {
+            super(username, password, authorities);
             this.id = id;
         }
 
         public Long getId() {
             return id;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return super.equals(obj);
-        }
-
-        @Override
-        public int hashCode() {
-            return super.hashCode();
-        }
-
-        public static UserWithId fromUser(User user) {
-            return new UserWithId(
-                user.getLogin(),
-                user.getPassword(),
-                user.getAuthorities().stream().map(Authority::getName).map(SimpleGrantedAuthority::new).toList(),
-                user.getId()
-            );
         }
     }
 }

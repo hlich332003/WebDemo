@@ -1,4 +1,6 @@
-import { ApplicationConfig, LOCALE_ID, importProvidersFrom, inject } from '@angular/core';
+import { ApplicationConfig, LOCALE_ID, importProvidersFrom, inject, isDevMode } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localeVi from '@angular/common/locales/vi';
 import { BrowserModule, Title } from '@angular/platform-browser';
 import {
   NavigationError,
@@ -11,17 +13,24 @@ import {
   withNavigationErrorHandler,
 } from '@angular/router';
 import { ServiceWorkerModule } from '@angular/service-worker';
-import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-
+import { provideHttpClient, withInterceptors, withInterceptorsFromDi } from '@angular/common/http';
 import { NgbDateAdapter } from '@ng-bootstrap/ng-bootstrap';
+import { provideStore } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import { provideStoreDevtools } from '@ngrx/store-devtools';
+import { reducers, metaReducers } from './store';
+import { CartEffects } from './store/cart/cart.effects';
 
 import './config/dayjs';
 import { environment } from 'environments/environment';
 import { httpInterceptorProviders } from './core/interceptor';
+import { authInterceptor } from './core/interceptor/auth.interceptor';
 import routes from './app.routes';
-// jhipster-needle-angular-add-module-import JHipster will add new module here
 import { NgbDateDayjsAdapter } from './config/datepicker-adapter';
 import { AppPageTitleStrategy } from './app-page-title-strategy';
+
+// Đăng ký locale tiếng Việt cho các pipe/định dạng mặc định
+registerLocaleData(localeVi);
 
 const routerFeatures: RouterFeatures[] = [
   withComponentInputBinding(),
@@ -38,6 +47,7 @@ const routerFeatures: RouterFeatures[] = [
     }
   }),
 ];
+
 if (environment.DEBUG_INFO_ENABLED) {
   routerFeatures.push(withDebugTracing());
 }
@@ -46,11 +56,23 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes, ...routerFeatures),
     importProvidersFrom(BrowserModule),
-    // Set this to true to enable service worker (PWA)
-    importProvidersFrom(ServiceWorkerModule.register('ngsw-worker.js', { enabled: false })),
-    provideHttpClient(withInterceptorsFromDi()),
+    importProvidersFrom(
+      ServiceWorkerModule.register('ngsw-worker.js', {
+        enabled: environment.production,
+        registrationStrategy: 'registerWhenStable:30000',
+      }),
+    ),
+    provideHttpClient(withInterceptors([authInterceptor]), withInterceptorsFromDi()),
+    // NgRx Store
+    provideStore(reducers, { metaReducers }),
+    provideEffects([CartEffects]),
+    provideStoreDevtools({
+      maxAge: 25,
+      logOnly: !isDevMode(),
+      connectInZone: true,
+    }),
     Title,
-    { provide: LOCALE_ID, useValue: 'en' },
+    { provide: LOCALE_ID, useValue: 'vi' },
     { provide: NgbDateAdapter, useClass: NgbDateDayjsAdapter },
     httpInterceptorProviders,
     { provide: TitleStrategy, useClass: AppPageTitleStrategy },

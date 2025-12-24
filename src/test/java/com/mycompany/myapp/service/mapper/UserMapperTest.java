@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
  */
 class UserMapperTest {
 
-    private static final String DEFAULT_LOGIN = "johndoe";
+    private static final String DEFAULT_EMAIL = "johndoe@localhost";
     private static final Long DEFAULT_ID = 1L;
 
     private UserMapper userMapper;
@@ -32,24 +32,21 @@ class UserMapperTest {
     void init() {
         userMapper = new UserMapper();
         user = new User();
-        user.setLogin(DEFAULT_LOGIN);
         user.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));
         user.setActivated(true);
-        user.setEmail("johndoe@localhost");
+        user.setEmail(DEFAULT_EMAIL);
         user.setFirstName("john");
         user.setLastName("doe");
         user.setImageUrl("image_url");
-        user.setCreatedBy(DEFAULT_LOGIN);
+        user.setCreatedBy(DEFAULT_EMAIL);
         user.setCreatedDate(Instant.now());
-        user.setLastModifiedBy(DEFAULT_LOGIN);
+        user.setLastModifiedBy(DEFAULT_EMAIL);
         user.setLastModifiedDate(Instant.now());
         user.setLangKey("en");
 
-        Set<Authority> authorities = new HashSet<>();
         Authority authority = new Authority();
         authority.setName(AuthoritiesConstants.USER);
-        authorities.add(authority);
-        user.setAuthorities(authorities);
+        user.setAuthority(authority);
 
         userDto = new AdminUserDTO(user);
     }
@@ -59,7 +56,6 @@ class UserMapperTest {
         AdminUserDTO convertedUserDto = userMapper.userToAdminUserDTO(user);
 
         assertThat(convertedUserDto.getId()).isEqualTo(user.getId());
-        assertThat(convertedUserDto.getLogin()).isEqualTo(user.getLogin());
         assertThat(convertedUserDto.getFirstName()).isEqualTo(user.getFirstName());
         assertThat(convertedUserDto.getLastName()).isEqualTo(user.getLastName());
         assertThat(convertedUserDto.getEmail()).isEqualTo(user.getEmail());
@@ -78,7 +74,6 @@ class UserMapperTest {
         User convertedUser = userMapper.userDTOToUser(userDto);
 
         assertThat(convertedUser.getId()).isEqualTo(userDto.getId());
-        assertThat(convertedUser.getLogin()).isEqualTo(userDto.getLogin());
         assertThat(convertedUser.getFirstName()).isEqualTo(userDto.getFirstName());
         assertThat(convertedUser.getLastName()).isEqualTo(userDto.getLastName());
         assertThat(convertedUser.getEmail()).isEqualTo(userDto.getEmail());
@@ -89,7 +84,8 @@ class UserMapperTest {
         assertThat(convertedUser.getCreatedDate()).isEqualTo(userDto.getCreatedDate());
         assertThat(convertedUser.getLastModifiedBy()).isEqualTo(userDto.getLastModifiedBy());
         assertThat(convertedUser.getLastModifiedDate()).isEqualTo(userDto.getLastModifiedDate());
-        assertThat(convertedUser.getAuthorities()).extracting("name").containsExactly(AuthoritiesConstants.USER);
+        assertThat(convertedUser.getAuthority()).isNotNull();
+        assertThat(convertedUser.getAuthority().getName()).isEqualTo(AuthoritiesConstants.USER);
     }
 
     @Test
@@ -126,9 +122,8 @@ class UserMapperTest {
         List<User> users = userMapper.userDTOsToUsers(usersDto);
 
         assertThat(users).isNotEmpty().size().isEqualTo(1);
-        assertThat(users.get(0).getAuthorities()).isNotNull();
-        assertThat(users.get(0).getAuthorities()).isNotEmpty();
-        assertThat(users.get(0).getAuthorities().iterator().next().getName()).isEqualTo("ADMIN");
+        assertThat(users.get(0).getAuthority()).isNotNull();
+        assertThat(users.get(0).getAuthority().getName()).isEqualTo("ADMIN");
     }
 
     @Test
@@ -141,8 +136,7 @@ class UserMapperTest {
         List<User> users = userMapper.userDTOsToUsers(usersDto);
 
         assertThat(users).isNotEmpty().size().isEqualTo(1);
-        assertThat(users.get(0).getAuthorities()).isNotNull();
-        assertThat(users.get(0).getAuthorities()).isEmpty();
+        assertThat(users.get(0).getAuthority()).isNull();
     }
 
     @Test
@@ -150,9 +144,8 @@ class UserMapperTest {
         User convertedUser = userMapper.userDTOToUser(userDto);
 
         assertThat(convertedUser).isNotNull();
-        assertThat(convertedUser.getAuthorities()).isNotNull();
-        assertThat(convertedUser.getAuthorities()).isNotEmpty();
-        assertThat(convertedUser.getAuthorities().iterator().next().getName()).isEqualTo(AuthoritiesConstants.USER);
+        assertThat(convertedUser.getAuthority()).isNotNull();
+        assertThat(convertedUser.getAuthority().getName()).isEqualTo(AuthoritiesConstants.USER);
     }
 
     @Test
@@ -162,8 +155,7 @@ class UserMapperTest {
         User persistUser = userMapper.userDTOToUser(userDto);
 
         assertThat(persistUser).isNotNull();
-        assertThat(persistUser.getAuthorities()).isNotNull();
-        assertThat(persistUser.getAuthorities()).isEmpty();
+        assertThat(persistUser.getAuthority()).isNull();
     }
 
     @Test

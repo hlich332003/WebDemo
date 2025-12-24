@@ -6,18 +6,25 @@ import { Router } from '@angular/router';
 
 import { LoginService } from 'app/login/login.service';
 import { StateStorageService } from 'app/core/auth/state-storage.service';
+import { AuthServerProvider } from 'app/core/auth/auth-jwt.service';
 
 @Injectable()
 export class AuthExpiredInterceptor implements HttpInterceptor {
   private readonly loginService = inject(LoginService);
   private readonly stateStorageService = inject(StateStorageService);
   private readonly router = inject(Router);
+  private readonly authServerProvider = inject(AuthServerProvider);
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     return next.handle(request).pipe(
       tap({
         error: (err: HttpErrorResponse) => {
-          if (err.status === 401 && err.url && !err.url.includes('api/account')) {
+          if (
+            err.status === 401 &&
+            err.url &&
+            !err.url.includes('api/account') &&
+            this.authServerProvider.getToken() // CHỈ chuyển hướng nếu người dùng ĐÃ CÓ token (tức là token hết hạn)
+          ) {
             this.stateStorageService.storeUrl(this.router.routerState.snapshot.url);
             this.loginService.logout();
             this.router.navigate(['/login']);

@@ -17,44 +17,94 @@ logging:
   level:
     ROOT: DEBUG
     tech.jhipster: DEBUG
-    org.hibernate.SQL: DEBUG
     com.mycompany.myapp: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
 
 spring:
   devtools:
     restart:
       enabled: true
-      additional-exclude: static/**,.h2.server.properties
+      additional-exclude: static/**
     livereload:
       enabled: false # we use Webpack dev server + BrowserSync for livereload
   docker:
     compose:
       enabled: false
-      profiles:
-        active: dev
+      skip:
+        in-tests: false
+      lifecycle-management: none
   jackson:
     serialization:
       indent-output: true
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:h2:file:./target/h2db/db/webDemo;DB_CLOSE_DELAY=-1;MODE=MYSQL
-    username: webDemo
-    password:
+    # Cấu hình cho SQL Server - Primary DB (jhipster_db)
+    url: jdbc:sqlserver://localhost:1433;databaseName=jhipster_db;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true
+    username: jhipster_user
+    password: Jhip@123
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     hikari:
       poolName: Hikari
       auto-commit: false
-  h2:
-    console:
-      # JHipster uses a custom h2-console initializer
-      enabled: true
+    # Analytics Database (analytics_db)
+    analytics:
+      url: jdbc:sqlserver://localhost:1433;databaseName=analytics_db;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true
+      username: jhipster_user
+      password: Jhip@123
+      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      hikari:
+        poolName: HikariAnalytics
+        auto-commit: false
+        maximum-pool-size: 5
   liquibase:
     # Remove 'faker' if you do not want the sample data to be loaded automatically
     contexts: dev, faker
-  mail:
+  # Redis Configuration
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000 # 10 minutes
+      cache-null-values: false
+  # RabbitMQ Configuration
+  rabbitmq:
     host: localhost
-    port: 25
-    username:
-    password:
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        acknowledge-mode: auto
+        retry:
+          enabled: true
+          max-attempts: 3
+  mail:
+    # Use environment variables in dev. Set SPRING_MAIL_HOST, SPRING_MAIL_PORT, SPRING_MAIL_USERNAME and SPRING_MAIL_PASSWORD in your environment.
+    # Example (PowerShell):
+    # $env:SPRING_MAIL_HOST = "smtp.gmail.com"; $env:SPRING_MAIL_PORT = "587"; $env:SPRING_MAIL_USERNAME = "your_email@gmail.com"; $env:SPRING_MAIL_PASSWORD = "your_app_password"
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: catbamaytongdai@gmail.com
+    password: ivte ulsr wcqw ydyu
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: '*'
   messages:
     cache-duration: PT1S # 1 second, see the ISO 8601 standard
   thymeleaf:
@@ -72,16 +122,17 @@ server:
 # ===================================================================
 
 jhipster:
-  cache: # Cache configuration
-    ehcache: # Ehcache configuration
-      time-to-live-seconds: 3600 # By default objects stay 1 hour in the cache
-      max-entries: 100 # Number of objects in each cache entry
+  # Đã xóa hoàn toàn khối cache để tránh lỗi ConverterNotFoundException
+  # cache: # Cache configuration
+  # ehcache: # Ehcache configuration
+  # time-to-live-seconds: 3600 # By default objects stay 1 hour in the cache
+  # max-entries: 100 # Number of objects in each cache entry
   # CORS is only enabled by default with the "dev" profile
   cors:
     # Allow Ionic for JHipster by default (* no longer allowed in Spring Boot 2.4+)
-    allowed-origins: 'http://localhost:8100,https://localhost:8100,http://localhost:9000,https://localhost:9000,http://localhost:4200,https://localhost:4200'
+    # allowed-origins: 'http://localhost:8100,https://localhost:8100,http://localhost:9000,https://localhost:9000,http://localhost:4200,https://localhost:4200'
     # Enable CORS when running in GitHub Codespaces
-    allowed-origin-patterns: 'https://*.githubpreview.dev'
+    allowed-origin-patterns: '*'
     allowed-methods: '*'
     allowed-headers: '*'
     exposed-headers: 'Authorization,Link,X-Total-Count,X-${jhipster.clientApp.name}-alert,X-${jhipster.clientApp.name}-error,X-${jhipster.clientApp.name}-params'

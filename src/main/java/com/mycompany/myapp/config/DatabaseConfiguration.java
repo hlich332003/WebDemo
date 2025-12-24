@@ -1,26 +1,37 @@
 package com.mycompany.myapp.config;
 
-import java.sql.SQLException;
+import com.zaxxer.hikari.HikariDataSource;
+import jakarta.persistence.EntityManagerFactory;
+import java.util.HashMap;
+import java.util.Map;
+import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.h2.H2ConsoleProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import tech.jhipster.config.JHipsterConstants;
-import tech.jhipster.config.h2.H2ConfigurationHelper;
 
 @Configuration
-@EnableJpaRepositories({ "com.mycompany.myapp.repository" })
+@EnableJpaRepositories(
+    basePackages = { "com.mycompany.myapp.repository" },
+    excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.mycompany\\.myapp\\.repository\\.analytics\\..*")
+)
 @EnableJpaAuditing(auditorAwareRef = "springSecurityAuditorAware")
 @EnableTransactionManagement
-@EnableConfigurationProperties(H2ConsoleProperties.class)
 public class DatabaseConfiguration {
 
     private static final Logger LOG = LoggerFactory.getLogger(DatabaseConfiguration.class);
@@ -31,32 +42,52 @@ public class DatabaseConfiguration {
         this.env = env;
     }
 
-    /**
-     * Open the TCP port for the H2 database, so it is available remotely.
-     *
-     * @return the H2 database TCP server.
-     * @throws SQLException if the server failed to start.
-     */
-    @Bean(initMethod = "start", destroyMethod = "stop")
-    @Profile(JHipsterConstants.SPRING_PROFILE_DEVELOPMENT)
-    @ConditionalOnProperty(prefix = "spring.h2.console", name = "enabled", havingValue = "true")
-    public Object h2TCPServer() throws SQLException {
-        String port = getValidPortForH2();
-        LOG.debug("H2 database is available on port {}", port);
-        return H2ConfigurationHelper.createServer(port);
+    @Bean
+    @Primary
+    @SuppressWarnings("deprecation")
+    public EntityManagerFactoryBuilder entityManagerFactoryBuilder() {
+        HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+        vendorAdapter.setGenerateDdl(false);
+
+        return new EntityManagerFactoryBuilder(vendorAdapter, new HashMap<>(), null);
     }
 
-    private String getValidPortForH2() {
-        int port = Integer.parseInt(env.getProperty("server.port"));
-        if (port < 10000) {
-            port = 10000 + port;
-        } else {
-            if (port < 63536) {
-                port = port + 2000;
-            } else {
-                port = port - 2000;
-            }
-        }
-        return String.valueOf(port);
+    @Bean
+    @Primary
+    @ConfigurationProperties("spring.datasource")
+    public DataSourceProperties dataSourceProperties() {
+        return new DataSourceProperties();
+    }
+
+    @Bean
+    @Primary
+    @ConfigurationProperties("spring.datasource.hikari")
+    public DataSource dataSource() {
+        return dataSourceProperties().initializeDataSourceBuilder().type(HikariDataSource.class).build();
+    }
+
+    @Bean(name = "entityManagerFactory")
+    @Primary
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory(
+        EntityManagerFactoryBuilder builder,
+        @Qualifier("dataSource") DataSource dataSource
+    ) {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("hibernate.hbm2ddl.auto", "none");
+        properties.put("hibernate.dialect", "org.hibernate.dialect.SQLServerDialect");
+        properties.put("hibernate.default_schema", "dbo");
+
+        return builder
+            .dataSource(dataSource)
+            .packages("com.mycompany.myapp.domain")
+            .persistenceUnit("primary")
+            .properties(properties)
+            .build();
+    }
+
+    @Bean(name = "transactionManager")
+    @Primary
+    public PlatformTransactionManager transactionManager(@Qualifier("entityManagerFactory") EntityManagerFactory entityManagerFactory) {
+        return new JpaTransactionManager(entityManagerFactory);
     }
 }

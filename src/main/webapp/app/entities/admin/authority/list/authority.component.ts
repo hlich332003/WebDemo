@@ -13,6 +13,7 @@ import { AuthorityDeleteDialogComponent } from '../delete/authority-delete-dialo
 
 @Component({
   selector: 'jhi-authority',
+  standalone: true,
   templateUrl: './authority.component.html',
   imports: [RouterModule, FormsModule, SharedModule, SortDirective, SortByDirective],
 })
@@ -48,7 +49,10 @@ export class AuthorityComponent implements OnInit {
   }
 
   delete(authority: IAuthority): void {
-    const modalRef = this.modalService.open(AuthorityDeleteDialogComponent, { size: 'lg', backdrop: 'static' });
+    const modalRef = this.modalService.open(AuthorityDeleteDialogComponent, {
+      size: 'lg',
+      backdrop: 'static',
+    });
     modalRef.componentInstance.authority = authority;
     // unsubscribe not needed because closed completes on modal close
     modalRef.closed

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -24,7 +24,7 @@ export interface DashboardStats {
   imports: [CommonModule, RouterModule, SharedModule],
   providers: [CurrencyPipe],
 })
-export default class AdminHomeComponent implements OnInit, OnDestroy {
+export default class AdminHomeComponent implements OnInit {
   account = signal<Account | null>(null);
   stats = signal<DashboardStats | null>(null);
   isCSKH = false;
@@ -35,23 +35,22 @@ export default class AdminHomeComponent implements OnInit, OnDestroy {
   private readonly currencyPipe = inject(CurrencyPipe);
 
   ngOnInit(): void {
-    this.accountService.getAuthenticationState().subscribe((account) => {
+    this.accountService.getAuthenticationState().subscribe(account => {
       this.account.set(account);
-      this.isCSKH = this.accountService.hasAnyAuthority([
-        'ROLE_ADMIN',
-        'ROLE_CSKH',
-      ]);
+      this.isCSKH = this.accountService.hasAnyAuthority(['ROLE_ADMIN', 'ROLE_CSKH']);
+
+      // If this is admin/CSKH, signal that admin layout is ready for WS connection
+      if (this.isCSKH) {
+        // small microtask to ensure view init
+        Promise.resolve().then(() => this.accountService.signalAdminReady());
+      }
     });
     this.loadStats();
   }
 
-  ngOnDestroy(): void {
-    // No-op
-  }
-
   loadStats(): void {
     this.getDashboardStats().subscribe({
-      next: (stats) => this.stats.set(stats),
+      next: stats => this.stats.set(stats),
       error: () => {
         this.stats.set({
           totalRevenue: 0,
@@ -64,15 +63,11 @@ export default class AdminHomeComponent implements OnInit, OnDestroy {
   }
 
   getDashboardStats(): Observable<DashboardStats> {
-    return this.http.get<DashboardStats>(
-      this.applicationConfigService.getEndpointFor('api/admin/dashboard-stats'),
-    );
+    return this.http.get<DashboardStats>(this.applicationConfigService.getEndpointFor('api/admin/dashboard-stats'));
   }
 
   formatRevenue(revenue: number | null | undefined): string {
     const value = revenue ?? 0;
-    return (
-      this.currencyPipe.transform(value, 'VND', 'symbol', '1.0-0') ?? '0 ₫'
-    );
+    return this.currencyPipe.transform(value, 'VND', 'symbol', '1.0-0') ?? '0 ₫';
   }
 }

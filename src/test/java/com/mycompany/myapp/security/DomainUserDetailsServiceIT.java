@@ -25,12 +25,12 @@ import org.springframework.transaction.annotation.Transactional;
 @IntegrationTest
 class DomainUserDetailsServiceIT {
 
-    private static final String USER_ONE_LOGIN = "test-user-one";
     private static final String USER_ONE_EMAIL = "test-user-one@localhost";
-    private static final String USER_TWO_LOGIN = "test-user-two";
+    private static final String USER_ONE_PHONE = "0123456789";
     private static final String USER_TWO_EMAIL = "test-user-two@localhost";
-    private static final String USER_THREE_LOGIN = "test-user-three";
+    private static final String USER_TWO_PHONE = "0987654321";
     private static final String USER_THREE_EMAIL = "test-user-three@localhost";
+    private static final String USER_THREE_PHONE = "0123123123";
 
     @Autowired
     private UserRepository userRepository;
@@ -44,10 +44,10 @@ class DomainUserDetailsServiceIT {
 
     public User getUserOne() {
         User userOne = new User();
-        userOne.setLogin(USER_ONE_LOGIN);
         userOne.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));
         userOne.setActivated(true);
         userOne.setEmail(USER_ONE_EMAIL);
+        userOne.setPhone(USER_ONE_PHONE);
         userOne.setFirstName("userOne");
         userOne.setLastName("doe");
         userOne.setLangKey("en");
@@ -56,10 +56,10 @@ class DomainUserDetailsServiceIT {
 
     public User getUserTwo() {
         User userTwo = new User();
-        userTwo.setLogin(USER_TWO_LOGIN);
         userTwo.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));
         userTwo.setActivated(true);
         userTwo.setEmail(USER_TWO_EMAIL);
+        userTwo.setPhone(USER_TWO_PHONE);
         userTwo.setFirstName("userTwo");
         userTwo.setLastName("doe");
         userTwo.setLangKey("en");
@@ -68,10 +68,10 @@ class DomainUserDetailsServiceIT {
 
     public User getUserThree() {
         User userThree = new User();
-        userThree.setLogin(USER_THREE_LOGIN);
         userThree.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));
         userThree.setActivated(false);
         userThree.setEmail(USER_THREE_EMAIL);
+        userThree.setPhone(USER_THREE_PHONE);
         userThree.setFirstName("userThree");
         userThree.setLastName("doe");
         userThree.setLangKey("en");
@@ -87,50 +87,45 @@ class DomainUserDetailsServiceIT {
 
     @AfterEach
     void cleanup() {
-        userService.deleteUser(USER_ONE_LOGIN);
-        userService.deleteUser(USER_TWO_LOGIN);
-        userService.deleteUser(USER_THREE_LOGIN);
-    }
-
-    @Test
-    void assertThatUserCanBeFoundByLogin() {
-        UserDetails userDetails = domainUserDetailsService.loadUserByUsername(USER_ONE_LOGIN);
-        assertThat(userDetails).isNotNull();
-        assertThat(userDetails.getUsername()).isEqualTo(USER_ONE_LOGIN);
-    }
-
-    @Test
-    void assertThatUserCanBeFoundByLoginIgnoreCase() {
-        UserDetails userDetails = domainUserDetailsService.loadUserByUsername(USER_ONE_LOGIN.toUpperCase(Locale.ENGLISH));
-        assertThat(userDetails).isNotNull();
-        assertThat(userDetails.getUsername()).isEqualTo(USER_ONE_LOGIN);
+        userService.deleteUser(USER_ONE_EMAIL);
+        userService.deleteUser(USER_TWO_EMAIL);
+        userService.deleteUser(USER_THREE_EMAIL);
     }
 
     @Test
     void assertThatUserCanBeFoundByEmail() {
-        UserDetails userDetails = domainUserDetailsService.loadUserByUsername(USER_TWO_EMAIL);
+        UserDetails userDetails = domainUserDetailsService.loadUserByUsername(USER_ONE_EMAIL);
         assertThat(userDetails).isNotNull();
-        assertThat(userDetails.getUsername()).isEqualTo(USER_TWO_LOGIN);
+        assertThat(userDetails.getUsername()).isEqualTo(USER_ONE_EMAIL);
     }
 
     @Test
     void assertThatUserCanBeFoundByEmailIgnoreCase() {
-        UserDetails userDetails = domainUserDetailsService.loadUserByUsername(USER_TWO_EMAIL.toUpperCase(Locale.ENGLISH));
+        UserDetails userDetails = domainUserDetailsService.loadUserByUsername(USER_ONE_EMAIL.toUpperCase(Locale.ENGLISH));
         assertThat(userDetails).isNotNull();
-        assertThat(userDetails.getUsername()).isEqualTo(USER_TWO_LOGIN);
+        assertThat(userDetails.getUsername()).isEqualTo(USER_ONE_EMAIL);
+    }
+
+    @Test
+    void assertThatUserCanBeFoundByPhone() {
+        UserDetails userDetails = domainUserDetailsService.loadUserByUsername(USER_TWO_PHONE);
+        assertThat(userDetails).isNotNull();
+        assertThat(userDetails.getUsername()).isEqualTo(USER_TWO_EMAIL); // Should return email as username
     }
 
     @Test
     void assertThatEmailIsPrioritizedOverLogin() {
+        // This test case is no longer relevant as login is removed.
+        // We now prioritize email, then phone.
         UserDetails userDetails = domainUserDetailsService.loadUserByUsername(USER_ONE_EMAIL);
         assertThat(userDetails).isNotNull();
-        assertThat(userDetails.getUsername()).isEqualTo(USER_ONE_LOGIN);
+        assertThat(userDetails.getUsername()).isEqualTo(USER_ONE_EMAIL);
     }
 
     @Test
     void assertThatUserNotActivatedExceptionIsThrownForNotActivatedUsers() {
         assertThatExceptionOfType(UserNotActivatedException.class).isThrownBy(() ->
-            domainUserDetailsService.loadUserByUsername(USER_THREE_LOGIN)
+            domainUserDetailsService.loadUserByUsername(USER_THREE_EMAIL)
         );
     }
 }

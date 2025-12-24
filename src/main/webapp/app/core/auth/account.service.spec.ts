@@ -20,7 +20,6 @@ function accountWithAuthorities(authorities: string[]): Account {
     firstName: '',
     langKey: '',
     lastName: '',
-    login: '',
     imageUrl: '',
   };
 }
@@ -58,7 +57,10 @@ describe('Account Service', () => {
 
       // WHEN
       service.save(account).subscribe();
-      const testRequest = httpMock.expectOne({ method: 'POST', url: applicationConfigService.getEndpointFor('api/account') });
+      const testRequest = httpMock.expectOne({
+        method: 'POST',
+        url: applicationConfigService.getEndpointFor('api/account'),
+      });
       testRequest.flush({});
 
       // THEN

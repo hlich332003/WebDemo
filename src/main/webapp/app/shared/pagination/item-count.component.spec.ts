@@ -30,7 +30,11 @@ describe('ItemCountComponent test', () => {
 
     it('should set calculated numbers to undefined if the page value is not yet defined', () => {
       // GIVEN
-      compRef.setInput(inputParams, { page: undefined, totalItems: 0, itemsPerPage: 10 });
+      compRef.setInput(inputParams, {
+        page: undefined,
+        totalItems: 0,
+        itemsPerPage: 10,
+      });
 
       // THEN
       expect(comp.first()).toBeUndefined();
@@ -39,7 +43,11 @@ describe('ItemCountComponent test', () => {
 
     it('should change the content on page change', () => {
       // GIVEN
-      compRef.setInput(inputParams, { page: 1, totalItems: 100, itemsPerPage: 10 });
+      compRef.setInput(inputParams, {
+        page: 1,
+        totalItems: 100,
+        itemsPerPage: 10,
+      });
 
       // THEN
       expect(comp.first()).toBe(1);
@@ -47,7 +55,11 @@ describe('ItemCountComponent test', () => {
       expect(comp.total()).toBe(100);
 
       // GIVEN
-      compRef.setInput(inputParams, { page: 2, totalItems: 100, itemsPerPage: 10 });
+      compRef.setInput(inputParams, {
+        page: 2,
+        totalItems: 100,
+        itemsPerPage: 10,
+      });
 
       // THEN
       expect(comp.first()).toBe(11);
@@ -57,7 +69,11 @@ describe('ItemCountComponent test', () => {
 
     it('should set the second number to totalItems if this is the last page which contains less than itemsPerPage items', () => {
       // GIVEN
-      compRef.setInput(inputParams, { page: 2, totalItems: 16, itemsPerPage: 10 });
+      compRef.setInput(inputParams, {
+        page: 2,
+        totalItems: 16,
+        itemsPerPage: 10,
+      });
 
       // THEN
       expect(comp.first()).toBe(11);

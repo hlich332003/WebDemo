@@ -1,11 +1,11 @@
 USE [analytics_db]
 GO
-/****** Object:  User [jhipster_user]    Script Date: 12/19/2025 2:42:04 PM ******/
+/****** Object:  User [jhipster_user]    Script Date: 12/23/2025 3:08:52 PM ******/
 CREATE USER [jhipster_user] FOR LOGIN [jhipster_user] WITH DEFAULT_SCHEMA=[dbo]
 GO
 ALTER ROLE [db_owner] ADD MEMBER [jhipster_user]
 GO
-/****** Object:  Table [dbo].[analytics_log]    Script Date: 12/19/2025 2:42:04 PM ******/
+/****** Object:  Table [dbo].[analytics_log]    Script Date: 12/23/2025 3:08:52 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -26,7 +26,83 @@ CREATE TABLE [dbo].[analytics_log](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[notification]    Script Date: 12/19/2025 2:42:04 PM ******/
+/****** Object:  Table [dbo].[chat_conversation]    Script Date: 12/23/2025 3:08:52 PM ******/
+  SET ANSI_NULLS ON
+  GO
+  SET QUOTED_IDENTIFIER ON
+  GO
+CREATE TABLE [dbo].[chat_conversation](
+  [id] [bigint] IDENTITY(1,1) NOT NULL,
+  [status] [nvarchar](20) NOT NULL,
+  [assigned_admin_id] [bigint] NULL,
+  [ticket_id] [bigint] NULL,
+  [created_at] [datetime2](7) NOT NULL,
+  [last_message_at] [datetime2](7) NULL,
+  [user_identifier] [nvarchar](255) NOT NULL,
+  PRIMARY KEY CLUSTERED
+(
+[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+  ) ON [PRIMARY]
+  GO
+/****** Object:  Table [dbo].[chat_message]    Script Date: 12/23/2025 3:08:52 PM ******/
+  SET ANSI_NULLS ON
+  GO
+  SET QUOTED_IDENTIFIER ON
+  GO
+CREATE TABLE [dbo].[chat_message](
+  [id] [bigint] IDENTITY(1,1) NOT NULL,
+  [conversation_id] [bigint] NOT NULL,
+  [sender_type] [nvarchar](20) NOT NULL,
+  [sender_identifier] [nvarchar](255) NOT NULL,
+  [content] [nvarchar](max) NOT NULL,
+  [created_at] [datetime2](7) NOT NULL,
+  [is_read] [bit] NOT NULL,
+  PRIMARY KEY CLUSTERED
+(
+[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+  ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+  GO
+/****** Object:  Table [dbo].[DATABASECHANGELOG]    Script Date: 12/23/2025 3:08:52 PM ******/
+  SET ANSI_NULLS ON
+  GO
+  SET QUOTED_IDENTIFIER ON
+  GO
+CREATE TABLE [dbo].[DATABASECHANGELOG](
+  [ID] [nvarchar](255) NOT NULL,
+  [AUTHOR] [nvarchar](255) NOT NULL,
+  [FILENAME] [nvarchar](255) NOT NULL,
+  [DATEEXECUTED] [datetime2](3) NOT NULL,
+  [ORDEREXECUTED] [int] NOT NULL,
+  [EXECTYPE] [nvarchar](10) NOT NULL,
+  [MD5SUM] [nvarchar](35) NULL,
+  [DESCRIPTION] [nvarchar](255) NULL,
+  [COMMENTS] [nvarchar](255) NULL,
+  [TAG] [nvarchar](255) NULL,
+  [LIQUIBASE] [nvarchar](20) NULL,
+  [CONTEXTS] [nvarchar](255) NULL,
+  [LABELS] [nvarchar](255) NULL,
+  [DEPLOYMENT_ID] [nvarchar](10) NULL
+  ) ON [PRIMARY]
+  GO
+/****** Object:  Table [dbo].[DATABASECHANGELOGLOCK]    Script Date: 12/23/2025 3:08:52 PM ******/
+  SET ANSI_NULLS ON
+  GO
+  SET QUOTED_IDENTIFIER ON
+  GO
+CREATE TABLE [dbo].[DATABASECHANGELOGLOCK](
+  [ID] [int] NOT NULL,
+  [LOCKED] [bit] NOT NULL,
+  [LOCKGRANTED] [datetime2](3) NULL,
+  [LOCKEDBY] [nvarchar](255) NULL,
+  CONSTRAINT [PK_DATABASECHANGELOGLOCK] PRIMARY KEY CLUSTERED
+(
+[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+  ) ON [PRIMARY]
+  GO
+/****** Object:  Table [dbo].[notification]    Script Date: 12/23/2025 3:08:52 PM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -36,17 +112,20 @@ CREATE TABLE [dbo].[notification](
   [message] [nvarchar](500) NOT NULL,
   [type] [nvarchar](20) NOT NULL,
   [created_at] [datetime2](7) NOT NULL,
-  [user_id] [nvarchar](255) NOT NULL,
   [is_read] [bit] NOT NULL,
   [link] [nvarchar](500) NULL,
-  [target_role] [nvarchar](50) NULL,
+  [title] [nvarchar](255) NULL,
+  [receiver_type] [nvarchar](20) NOT NULL,
+  [receiver_id] [bigint] NULL,
+  [related_entity_type] [nvarchar](50) NULL,
+  [related_entity_id] [bigint] NULL,
   PRIMARY KEY CLUSTERED
 (
 [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[support_message]    Script Date: 12/19/2025 2:42:04 PM ******/
+/****** Object:  Table [dbo].[support_message]    Script Date: 12/23/2025 3:08:52 PM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -65,7 +144,7 @@ CREATE TABLE [dbo].[support_message](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[support_ticket]    Script Date: 12/19/2025 2:42:04 PM ******/
+/****** Object:  Table [dbo].[support_ticket]    Script Date: 12/23/2025 3:08:52 PM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -73,7 +152,7 @@ CREATE TABLE [dbo].[support_message](
 CREATE TABLE [dbo].[support_ticket](
   [id] [bigint] IDENTITY(1,1) NOT NULL,
   [user_email] [nvarchar](255) NOT NULL,
-  [title] [nvarchar](500) NULL,
+  [title] [varchar](255) NULL,
   [status] [nvarchar](50) NOT NULL,
   [assigned_to] [nvarchar](255) NULL,
   [created_date] [datetimeoffset](6) NOT NULL,
@@ -87,9 +166,19 @@ CREATE TABLE [dbo].[support_ticket](
   GO
 ALTER TABLE [dbo].[analytics_log] ADD  DEFAULT (getdate()) FOR [timestamp]
   GO
+ALTER TABLE [dbo].[chat_conversation] ADD  DEFAULT ('OPEN') FOR [status]
+  GO
+ALTER TABLE [dbo].[chat_conversation] ADD  DEFAULT (sysdatetime()) FOR [created_at]
+  GO
+ALTER TABLE [dbo].[chat_message] ADD  DEFAULT (sysdatetime()) FOR [created_at]
+  GO
+ALTER TABLE [dbo].[chat_message] ADD  DEFAULT ((0)) FOR [is_read]
+  GO
 ALTER TABLE [dbo].[notification] ADD  CONSTRAINT [DF_notification_created_at]  DEFAULT (getdate()) FOR [created_at]
   GO
 ALTER TABLE [dbo].[notification] ADD  CONSTRAINT [DF_notification_is_read]  DEFAULT ((0)) FOR [is_read]
+  GO
+ALTER TABLE [dbo].[notification] ADD  DEFAULT ('USER') FOR [receiver_type]
   GO
 ALTER TABLE [dbo].[support_message] ADD  DEFAULT ((0)) FOR [is_from_admin]
   GO
@@ -103,13 +192,24 @@ ALTER TABLE [dbo].[support_ticket] ADD  DEFAULT (sysdatetimeoffset()) FOR [creat
   GO
 ALTER TABLE [dbo].[support_ticket] ADD  DEFAULT (sysdatetimeoffset()) FOR [last_modified_date]
   GO
+ALTER TABLE [dbo].[chat_conversation]  WITH CHECK ADD  CONSTRAINT [FK_chat_conversation_ticket] FOREIGN KEY([ticket_id])
+  REFERENCES [dbo].[support_ticket] ([id])
+  GO
+ALTER TABLE [dbo].[chat_conversation] CHECK CONSTRAINT [FK_chat_conversation_ticket]
+  GO
+ALTER TABLE [dbo].[chat_message]  WITH CHECK ADD  CONSTRAINT [FK_chat_message_conversation] FOREIGN KEY([conversation_id])
+  REFERENCES [dbo].[chat_conversation] ([id])
+  ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[chat_message] CHECK CONSTRAINT [FK_chat_message_conversation]
+  GO
 ALTER TABLE [dbo].[support_message]  WITH CHECK ADD  CONSTRAINT [FK_support_message_ticket] FOREIGN KEY([ticket_id])
   REFERENCES [dbo].[support_ticket] ([id])
   ON DELETE CASCADE
 GO
 ALTER TABLE [dbo].[support_message] CHECK CONSTRAINT [FK_support_message_ticket]
   GO
-/****** Object:  StoredProcedure [dbo].[sp_CleanupOldClosedTickets]    Script Date: 12/19/2025 2:42:04 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_CleanupOldClosedTickets]    Script Date: 12/23/2025 3:08:52 PM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -129,7 +229,7 @@ WHERE status = 'CLOSED' AND closed_at < @CutoffDate;
 PRINT 'Old closed tickets cleaned up successfully';
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_CleanupOldNotifications]    Script Date: 12/19/2025 2:42:04 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_CleanupOldNotifications]    Script Date: 12/23/2025 3:08:52 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -150,10 +250,10 @@ WHERE created_at < @CutoffDate;
 PRINT 'Old notifications cleaned up successfully';
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetActiveTickets]    Script Date: 12/19/2025 2:42:04 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetActiveTickets]    Script Date: 12/23/2025 3:08:52 PM ******/
 SET ANSI_NULLS ON
 GO
-SET QUOTED_IDENTIFIER OFF
+SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE PROCEDURE [dbo].[sp_GetActiveTickets]
@@ -169,16 +269,17 @@ SELECT
   t.assigned_to,
   t.created_date,
   t.last_modified_date,
-  COUNT(CASE WHEN m.is_read = 0 AND m.is_from_admin = 0 THEN 1 END) as unread_count
+  COUNT(CASE WHEN m.is_read = 0 AND m.is_from_admin = 0 THEN 1 END) AS unread_count
 FROM support_ticket t
        LEFT JOIN support_message m ON t.id = m.ticket_id
 WHERE t.status IN ('OPEN', 'IN_PROGRESS', 'WAITING_FOR_CUSTOMER')
-GROUP BY t.id, t.user_email, t.title, t.status, t.assigned_to, t.created_date, t.last_modified_date
+GROUP BY
+  t.id, t.user_email, t.title, t.status,
+  t.assigned_to, t.created_date, t.last_modified_date
 ORDER BY t.created_date DESC;
 END
-
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetAnalyticsSummary]    Script Date: 12/19/2025 2:42:04 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetAnalyticsSummary]    Script Date: 12/23/2025 3:08:52 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -211,7 +312,7 @@ GROUP BY action
 ORDER BY total_count DESC;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetPopularProducts]    Script Date: 12/19/2025 2:42:04 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetPopularProducts]    Script Date: 12/23/2025 3:08:52 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -237,7 +338,7 @@ GROUP BY entity_id
 ORDER BY view_count DESC;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetTicketMessages]    Script Date: 12/19/2025 2:42:04 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetTicketMessages]    Script Date: 12/23/2025 3:08:52 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -261,7 +362,7 @@ WHERE ticket_id = @TicketId
 ORDER BY created_at ASC;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetUserActivityReport]    Script Date: 12/19/2025 2:42:04 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetUserActivityReport]    Script Date: 12/23/2025 3:08:52 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -285,39 +386,30 @@ WHERE user_id = @UserId
 ORDER BY timestamp DESC;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetUserNotifications]    Script Date: 12/19/2025 2:42:04 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetUserNotifications]    Script Date: 12/23/2025 3:08:52 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
-CREATE PROCEDURE [dbo].[sp_GetUserNotifications]
-    @UserId NVARCHAR(255),
+CREATE   PROCEDURE [dbo].[sp_GetUserNotifications]
+    @ReceiverType NVARCHAR(20),
+    @ReceiverId BIGINT,
     @OnlyUnread BIT = 0,
     @MaxCount INT = 50
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF @OnlyUnread = 1
-BEGIN
 SELECT TOP (@MaxCount)
-         id, message, type, created_at, user_id, is_read, link
+         id, title, message, type, created_at, is_read, link
 FROM notification
-WHERE user_id = @UserId AND is_read = 0
+WHERE receiver_type = @ReceiverType
+  AND receiver_id = @ReceiverId
+  AND (@OnlyUnread = 0 OR is_read = 0)
 ORDER BY created_at DESC;
-END
-ELSE
-BEGIN
-SELECT TOP (@MaxCount)
-         id, message, type, created_at, user_id, is_read, link
-FROM notification
-WHERE user_id = @UserId
-ORDER BY created_at DESC;
-END
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetUserTickets]    Script Date: 12/19/2025 2:42:04 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetUserTickets]    Script Date: 12/23/2025 3:08:52 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON

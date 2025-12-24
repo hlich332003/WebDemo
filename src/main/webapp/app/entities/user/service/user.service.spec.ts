@@ -60,12 +60,7 @@ describe('User Service', () => {
 
       it('should not add a User to an array that contains it', () => {
         const user: IUser = sampleWithRequiredData;
-        const userCollection: IUser[] = [
-          {
-            ...user,
-          },
-          sampleWithPartialData,
-        ];
+        const userCollection: IUser[] = [{ ...user }, sampleWithPartialData];
         expectedResult = service.addUserToCollectionIfMissing(userCollection, user);
         expect(expectedResult).toHaveLength(2);
       });
@@ -140,7 +135,7 @@ describe('User Service', () => {
         expect(compareResult2).toEqual(false);
       });
 
-      it('should return false if primaryKey matches', () => {
+      it('should return true if primaryKey matches', () => {
         const entity1 = { id: 3944 };
         const entity2 = { id: 3944 };
 

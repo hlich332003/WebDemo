@@ -118,7 +118,10 @@ describe('FilterModel Tests', () => {
         expect(result).toBe(true);
         expect(filters.filterChanges.next).toHaveBeenCalledTimes(1);
         expect(filters.filterOptions).toMatchObject([
-          { name: 'foo', values: ['existingFoo1', 'existingFoo2', 'addedValue1', 'addedValue2'] },
+          {
+            name: 'foo',
+            values: ['existingFoo1', 'existingFoo2', 'addedValue1', 'addedValue2'],
+          },
         ]);
       });
       it("doesn't add FilterOption values already added, returns false and doesn't emit next element", () => {

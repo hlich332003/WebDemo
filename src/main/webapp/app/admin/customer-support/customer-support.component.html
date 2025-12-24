@@ -1,108 +1,86 @@
 <div class="customer-support-container">
-  <div class="header">
-    <h2><fa-icon icon="headset"></fa-icon> Chăm Sóc Khách Hàng</h2>
-    <div class="connection-status" [class.connected]="isConnected">
-      <fa-icon [icon]="isConnected ? 'circle' : 'circle-xmark'"></fa-icon>
-      {{ isConnected ? 'Đã kết nối' : 'Mất kết nối' }}
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h3 class="sidebar-title">Cuộc trò chuyện</h3>
+      <div class="connection-status" [class.connected]="isConnected">
+        <fa-icon [icon]="isConnected ? 'circle' : 'circle-xmark'"></fa-icon>
+        {{ isConnected ? 'Đã kết nối' : 'Mất kết nối' }}
+      </div>
+      <span class="conversation-count">{{ conversations.length }}</span>
+    </div>
+    <div class="conversation-list">
+      @if (conversations.length === 0) {
+        <div class="no-conversations">Chưa có cuộc trò chuyện nào.</div>
+      } @else {
+        @for (convo of conversations; track convo.id) {
+          <div class="conversation-item" [class.active]="selectedConversation?.id === convo.id" (click)="selectConversation(convo)">
+            <div class="conversation-info">
+              <div class="user-identifier">{{ convo.userIdentifier }}</div>
+              <div class="last-message-time">{{ convo.lastMessageAt | date: 'shortTime' }}</div>
+            </div>
+            @if (convo.unreadCount > 0) {
+              <span class="unread-badge">{{ convo.unreadCount }}</span>
+            }
+          </div>
+        }
+      }
     </div>
   </div>
 
-  <div class="support-layout">
-    <!-- Sidebar: Danh sách tickets -->
-    <div class="conversations-sidebar">
-      <div class="sidebar-header">
-        <h3>Phiếu hỗ trợ</h3>
-        <span class="conversation-count">{{ tickets.length }}</span>
+  <div class="chat-window">
+    @if (selectedConversation) {
+      <div class="chat-header">
+        <div class="chat-user-info">
+          <div class="chat-user-name">{{ selectedConversation.userIdentifier }}</div>
+          <div class="chat-ticket-info">
+            <fa-icon icon="comments"></fa-icon> Cuộc trò chuyện #{{ selectedConversation.id }} - {{ selectedConversation.status }}
+          </div>
+        </div>
+        <div class="chat-actions">
+          <button class="btn btn-sm btn-danger" (click)="closeConversation(selectedConversation.id)">
+            <fa-icon icon="times-circle"></fa-icon> Đóng
+          </button>
+        </div>
       </div>
 
-      <div class="conversations-list">
-        @if (tickets.length === 0) {
-          <div class="empty-state">
-            <fa-icon icon="inbox" size="2x"></fa-icon>
-            <p>Chưa có phiếu hỗ trợ</p>
-          </div>
-        } @else {
-          @for (ticket of tickets; track ticket.id) {
-            <div
-              class="conversation-item"
-              [class.active]="selectedTicket?.id === ticket.id"
-              (click)="selectTicket(ticket)">
-              <div class="conversation-avatar">
-                <fa-icon icon="user-circle" size="2x"></fa-icon>
-              </div>
-              <div class="conversation-info">
-                <div class="conversation-name">{{ ticket.userEmail }}</div>
-                <div class="conversation-preview">{{ ticket.title }}</div>
-              </div>
-              <div class="conversation-meta">
-                @if (ticket.unreadCount && ticket.unreadCount > 0) {
-                  <div class="unread-badge">{{ ticket.unreadCount }}</div>
-                }
-              </div>
+      <div class="chat-messages" #chatMessagesContainer>
+        @for (message of messages; track message.id) {
+          <div
+            class="message"
+            [class.from-admin]="message.senderType === 'CSKH' || message.senderType === 'ADMIN'"
+            [class.from-user]="message.senderType === 'USER'"
+          >
+            <div class="message-avatar">
+              <fa-icon [icon]="message.senderType === 'CSKH' || message.senderType === 'ADMIN' ? 'user-tie' : 'user'"></fa-icon>
             </div>
-          }
+            <div class="message-content">
+              <div class="message-sender">
+                {{ message.senderType !== 'USER' ? (message.senderIdentifier | slice: 0 : 10) + '...' : 'Khách hàng' }}
+              </div>
+              <div class="message-text">{{ message.content }}</div>
+              <div class="message-timestamp">{{ message.createdAt | date: 'short' }}</div>
+            </div>
+          </div>
+        }
+        @if (isLoadingMessages) {
+          <div class="loading-spinner">Đang tải tin nhắn...</div>
         }
       </div>
-    </div>
 
-    <!-- Main chat area -->
-    <div class="chat-area">
-      @if (selectedTicket) {
-        <div class="chat-header">
-          <div class="chat-user-info">
-            <fa-icon icon="user-circle" size="lg"></fa-icon>
-            <div>
-              <div class="chat-user-name">{{ selectedTicket.userEmail }}</div>
-              <div class="chat-user-status">
-                <fa-icon icon="ticket-alt"></fa-icon> Phiếu #{{ selectedTicket.id }} - {{ selectedTicket.status }}
-              </div>
-            </div>
-          </div>
-          <button class="btn btn-sm btn-danger" (click)="closeTicket(selectedTicket.id)">
-            <fa-icon icon="times-circle"></fa-icon> Đóng phiếu
-          </button>
-        </div>
-
-        <div #chatMessagesContainer class="chat-messages">
-          @if(isLoadingMessages) {
-            <div class="loading-indicator">Đang tải tin nhắn...</div>
-          }
-          @for (message of messages; track $index) {
-            <div class="message" [class.from-admin]="message.isFromAdmin" [class.from-user]="!message.isFromAdmin">
-              <div class="message-avatar">
-                <fa-icon [icon]="message.isFromAdmin ? 'user-tie' : 'user'"></fa-icon>
-              </div>
-              <div class="message-content">
-                <div class="message-sender">{{ message.isFromAdmin ? (message.senderEmail | slice:0:10) + '...' : 'Khách hàng' }}</div>
-                <div class="message-text">{{ message.message }}</div>
-                <div class="message-time">{{ message.createdAt | date: 'HH:mm' }}</div>
-              </div>
-            </div>
-          }
-        </div>
-
-        <div class="chat-input">
-          <input
-            type="text"
-            [(ngModel)]="newMessage"
-            (keyup.enter)="sendMessage()"
-            [disabled]="!isConnected"
-            placeholder="Nhập tin nhắn..."
-            class="form-control" />
-          <button
-            class="btn btn-primary"
-            (click)="sendMessage()"
-            [disabled]="!isConnected || newMessage.trim() === ''">
-            <fa-icon icon="paper-plane"></fa-icon>
-          </button>
-        </div>
-      } @else {
-        <div class="no-chat-selected">
-          <fa-icon icon="comments" size="3x"></fa-icon>
-          <h3>Chọn một phiếu hỗ trợ</h3>
-          <p>Chọn một phiếu từ danh sách bên trái để bắt đầu trò chuyện.</p>
-        </div>
-      }
-    </div>
+      <div class="chat-input">
+        <textarea
+          [(ngModel)]="newMessage"
+          (keydown.enter)="sendMessage(); $event.preventDefault()"
+          placeholder="Nhập tin nhắn..."
+          class="form-control"
+          [disabled]="!isConnected"
+        ></textarea>
+        <button class="btn btn-primary" (click)="sendMessage()" [disabled]="!isConnected || newMessage.trim() === ''">Gửi</button>
+      </div>
+    } @else {
+      <div class="no-chat-selected">
+        <p>Chọn một cuộc trò chuyện để bắt đầu.</p>
+      </div>
+    }
   </div>
 </div>

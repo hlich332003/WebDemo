@@ -99,7 +99,10 @@ describe('Authority Management Component', () => {
 
   it('should calculate the sort attribute for a non-id attribute', () => {
     // WHEN
-    comp.navigateToWithComponentValues({ predicate: 'non-existing-column', order: 'asc' });
+    comp.navigateToWithComponentValues({
+      predicate: 'non-existing-column',
+      order: 'asc',
+    });
 
     // THEN
     expect(routerNavigateSpy).toHaveBeenLastCalledWith(

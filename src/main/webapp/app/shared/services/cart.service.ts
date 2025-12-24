@@ -1,14 +1,7 @@
 import { Injectable, inject, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, Subject, forkJoin } from 'rxjs';
-import {
-  map,
-  shareReplay,
-  catchError,
-  takeUntil,
-  switchMap,
-  tap,
-} from 'rxjs/operators';
+import { map, shareReplay, catchError, takeUntil, switchMap, tap } from 'rxjs/operators';
 import { IProduct } from 'app/entities/product/product.model';
 import { AccountService } from 'app/core/auth/account.service';
 import { Router } from '@angular/router';
@@ -38,33 +31,23 @@ export class CartService implements OnDestroy {
 
   // Observable for selected items
   public selectedItems$ = this.cartItems$.pipe(
-    map((items) => items.filter((item) => item.selected)),
+    map(items => items.filter(item => item.selected)),
     shareReplay(1),
   );
 
   public totalQuantity$ = this.cartItems$.pipe(
-    map((items) => items.reduce((total, item) => total + item.quantity, 0)),
+    map(items => items.reduce((total, item) => total + item.quantity, 0)),
     shareReplay(1),
   );
 
   public totalPrice$ = this.cartItems$.pipe(
-    map((items) =>
-      items.reduce(
-        (total, item) => total + (item.product.price ?? 0) * item.quantity,
-        0,
-      ),
-    ),
+    map(items => items.reduce((total, item) => total + (item.product.price ?? 0) * item.quantity, 0)),
     shareReplay(1),
   );
 
   // Total price for selected items
   public selectedTotalPrice$ = this.selectedItems$.pipe(
-    map((items) =>
-      items.reduce(
-        (total, item) => total + (item.product.price ?? 0) * item.quantity,
-        0,
-      ),
-    ),
+    map(items => items.reduce((total, item) => total + (item.product.price ?? 0) * item.quantity, 0)),
     shareReplay(1),
   );
 
@@ -74,8 +57,9 @@ export class CartService implements OnDestroy {
     this.accountService
       .getAuthenticationState()
       .pipe(takeUntil(this.destroy$))
-      .subscribe((account) => {
-        if (account) {
+      .subscribe(account => {
+        // Chỉ load cart nếu user đã đăng nhập và KHÔNG phải là admin
+        if (account && !account.authorities.includes('ROLE_ADMIN')) {
           this.loadCart();
         } else {
           this.cartItemsSubject.next([]);
@@ -100,13 +84,11 @@ export class CartService implements OnDestroy {
           if (cartDtos.length === 0) {
             return of([]);
           }
-          const productRequests = cartDtos.map((dto) =>
-            this.http
-              .get<IProduct>(`${this.PRODUCT_API_URL}/${dto.productId}`)
-              .pipe(catchError(() => of(null))),
+          const productRequests = cartDtos.map(dto =>
+            this.http.get<IProduct>(`${this.PRODUCT_API_URL}/${dto.productId}`).pipe(catchError(() => of(null))),
           );
           return forkJoin(productRequests).pipe(
-            map((products) =>
+            map(products =>
               cartDtos
                 .map((dto, index) => {
                   const product = products[index];
@@ -124,7 +106,7 @@ export class CartService implements OnDestroy {
         }),
         catchError(() => of([])),
       )
-      .subscribe((cartItems) => {
+      .subscribe(cartItems => {
         this.cartItemsSubject.next(cartItems);
         this.isLoading = false;
       });
@@ -157,7 +139,7 @@ export class CartService implements OnDestroy {
   // New methods for item selection
   toggleItemSelected(productId: number): void {
     const items = this.getCartItems();
-    const item = items.find((i) => i.product.id === productId);
+    const item = items.find(i => i.product.id === productId);
     if (item) {
       item.selected = !item.selected;
       this.cartItemsSubject.next([...items]);
@@ -165,7 +147,7 @@ export class CartService implements OnDestroy {
   }
 
   selectAllItems(selected: boolean): void {
-    const items = this.getCartItems().map((item) => ({ ...item, selected }));
+    const items = this.getCartItems().map(item => ({ ...item, selected }));
     this.cartItemsSubject.next(items);
   }
 
@@ -175,7 +157,7 @@ export class CartService implements OnDestroy {
   proceedToCheckout(): void {
     // Clear any previous buy now item
     this.clearBuyNowItem();
-    this.itemsForCheckout = this.getCartItems().filter((item) => item.selected);
+    this.itemsForCheckout = this.getCartItems().filter(item => item.selected);
     this.router.navigate(['/checkout']);
   }
 
@@ -196,7 +178,7 @@ export class CartService implements OnDestroy {
     const item: ICartItem = {
       product,
       quantity,
-      selected: true
+      selected: true,
     };
     sessionStorage.setItem(this.BUY_NOW_KEY, JSON.stringify(item));
     this.router.navigate(['/checkout']);
@@ -205,12 +187,12 @@ export class CartService implements OnDestroy {
   getBuyNowItem(): ICartItem | null {
     const itemStr = sessionStorage.getItem(this.BUY_NOW_KEY);
     if (itemStr) {
-        try {
-            return JSON.parse(itemStr);
-        } catch (e) {
-            console.error('Error parsing buy now item', e);
-            return null;
-        }
+      try {
+        return JSON.parse(itemStr);
+      } catch (e) {
+        console.error('Error parsing buy now item', e);
+        return null;
+      }
     }
     return null;
   }

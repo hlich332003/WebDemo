@@ -1,20 +1,18 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}" lang="en">
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}" lang="vi">
   <head>
-    <title th:text="#{email.activation.title}">JHipster activation</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <link rel="icon" th:href="@{|${baseUrl}/favicon.ico|}" />
+    <title>Thông báo tạo tài khoản WebDemo</title>
   </head>
   <body>
-    <p th:text="#{email.activation.greeting(${user.login})}">Dear</p>
-    <p th:text="#{email.activation.text1}">Your JHipster account has been created, please click on the URL below to activate it:</p>
+    <p>Xin chào <span th:text="${user.login}">User</span>,</p>
+    <p>Tài khoản của bạn trên WebDemo đã được tạo và kích hoạt tự động.</p>
+    <p>Bạn có thể đăng nhập tại: <a th:href="@{|${baseUrl}/login|}">Đăng nhập</a></p>
+    <p>Chúc bạn mua sắm vui vẻ!</p>
     <p>
-      <a th:with="url=(@{|${baseUrl}/account/activate?key=${user.activationKey}|})" th:href="${url}" th:text="${url}">Activation link</a>
-    </p>
-    <p>
-      <span th:text="#{email.activation.text2}">Regards, </span>
+      <span>Trân trọng,</span>
       <br />
-      <em th:text="#{email.signature}">JHipster.</em>
+      <em>Đội ngũ WebDemo</em>
     </p>
   </body>
 </html>

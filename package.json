@@ -86,11 +86,19 @@
     "@fortawesome/fontawesome-svg-core": "6.7.2",
     "@fortawesome/free-solid-svg-icons": "6.7.2",
     "@ng-bootstrap/ng-bootstrap": "18.0.0",
+    "@ngrx/effects": "^19.2.1",
+    "@ngrx/store": "^19.2.1",
+    "@ngrx/store-devtools": "^19.2.1",
+    "@ngx-translate/core": "^15.0.0",
+    "@ngx-translate/http-loader": "^8.0.0",
     "@popperjs/core": "2.11.8",
+    "@stomp/stompjs": "^7.2.1",
+    "@types/sockjs-client": "^1.5.4",
     "bootstrap": "5.3.6",
     "dayjs": "1.11.13",
     "ngx-infinite-scroll": "19.0.0",
     "rxjs": "7.8.2",
+    "sockjs-client": "^1.6.1",
     "tslib": "2.8.1",
     "zone.js": "0.15.0"
   },
@@ -137,7 +145,7 @@
     "webpack-notifier": "1.15.0"
   },
   "engines": {
-    "node": ">=22.15.0"
+    "node": ">=20.0.0"
   },
   "cacheDirectories": [
     "node_modules"

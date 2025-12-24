@@ -37,7 +37,10 @@ describe('Alert Error Component', () => {
   describe('Error Handling', () => {
     it('should display an alert on status 0', () => {
       // GIVEN
-      eventManager.broadcast({ name: 'webDemoApp.httpError', content: { status: 0 } });
+      eventManager.broadcast({
+        name: 'webDemoApp.httpError',
+        content: { status: 0 },
+      });
       // THEN
       expect(comp.alerts().length).toBe(1);
       expect(comp.alerts()[0].message).toBe('Server not reachable');
@@ -45,7 +48,10 @@ describe('Alert Error Component', () => {
 
     it('should display an alert on status 404', () => {
       // GIVEN
-      eventManager.broadcast({ name: 'webDemoApp.httpError', content: { status: 404 } });
+      eventManager.broadcast({
+        name: 'webDemoApp.httpError',
+        content: { status: 404 },
+      });
       // THEN
       expect(comp.alerts().length).toBe(1);
       expect(comp.alerts()[0].message).toBe('Not found');
@@ -53,8 +59,14 @@ describe('Alert Error Component', () => {
 
     it('should display an alert on generic error', () => {
       // GIVEN
-      eventManager.broadcast({ name: 'webDemoApp.httpError', content: { error: { message: 'Error Message' } } });
-      eventManager.broadcast({ name: 'webDemoApp.httpError', content: { error: 'Second Error Message' } });
+      eventManager.broadcast({
+        name: 'webDemoApp.httpError',
+        content: { error: { message: 'Error Message' } },
+      });
+      eventManager.broadcast({
+        name: 'webDemoApp.httpError',
+        content: { error: 'Second Error Message' },
+      });
       // THEN
       expect(comp.alerts().length).toBe(2);
       expect(comp.alerts()[0].message).toBe('Error Message');
@@ -76,7 +88,10 @@ describe('Alert Error Component', () => {
           message: 'error.validation',
         },
       });
-      eventManager.broadcast({ name: 'webDemoApp.httpError', content: response });
+      eventManager.broadcast({
+        name: 'webDemoApp.httpError',
+        content: response,
+      });
       // THEN
       expect(comp.alerts().length).toBe(1);
       expect(comp.alerts()[0].message).toBe('error.validation');
@@ -90,7 +105,10 @@ describe('Alert Error Component', () => {
         status: 400,
         error: 'Bad Request',
       });
-      eventManager.broadcast({ name: 'webDemoApp.httpError', content: response });
+      eventManager.broadcast({
+        name: 'webDemoApp.httpError',
+        content: response,
+      });
       // THEN
       expect(comp.alerts().length).toBe(1);
       expect(comp.alerts()[0].message).toBe('Bad Request');
@@ -112,7 +130,10 @@ describe('Alert Error Component', () => {
           fieldErrors: [{ objectName: 'foo', field: 'minField', message: 'Min' }],
         },
       });
-      eventManager.broadcast({ name: 'webDemoApp.httpError', content: response });
+      eventManager.broadcast({
+        name: 'webDemoApp.httpError',
+        content: response,
+      });
       // THEN
       expect(comp.alerts().length).toBe(1);
       expect(comp.alerts()[0].message).toBe('Error on field "MinField"');
@@ -130,7 +151,10 @@ describe('Alert Error Component', () => {
           message: 'error.validation',
         },
       });
-      eventManager.broadcast({ name: 'webDemoApp.httpError', content: response });
+      eventManager.broadcast({
+        name: 'webDemoApp.httpError',
+        content: response,
+      });
       // THEN
       expect(comp.alerts().length).toBe(1);
       expect(comp.alerts()[0].message).toBe('Error Message');
@@ -149,7 +173,10 @@ describe('Alert Error Component', () => {
           detail: 'Detailed error message',
         },
       });
-      eventManager.broadcast({ name: 'webDemoApp.httpError', content: response });
+      eventManager.broadcast({
+        name: 'webDemoApp.httpError',
+        content: response,
+      });
       // THEN
       expect(comp.alerts().length).toBe(1);
       expect(comp.alerts()[0].message).toBe('Detailed error message');

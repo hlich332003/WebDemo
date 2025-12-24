@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, ElementRef, OnInit, inject, signal, viewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import PasswordStrengthBarComponent from 'app/account/password/password-strength-bar/password-strength-bar.component';
 import SharedModule from 'app/shared/shared.module';
 
@@ -8,7 +9,8 @@ import { PasswordResetFinishService } from './password-reset-finish.service';
 
 @Component({
   selector: 'jhi-password-reset-finish',
-  imports: [SharedModule, RouterModule, FormsModule, ReactiveFormsModule, PasswordStrengthBarComponent],
+  standalone: true,
+  imports: [SharedModule, RouterModule, FormsModule, ReactiveFormsModule, PasswordStrengthBarComponent, TranslateModule],
   templateUrl: './password-reset-finish.component.html',
 })
 export default class PasswordResetFinishComponent implements OnInit, AfterViewInit {

@@ -4,6 +4,8 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { AlertComponent } from './alert/alert.component';
 import { AlertErrorComponent } from './alert/alert-error.component';
+import { RecentlyViewedService } from './services/recently-viewed.service';
+import { ProductComparisonService } from './services/product-comparison.service';
 
 /**
  * Application wide Module
@@ -11,5 +13,6 @@ import { AlertErrorComponent } from './alert/alert-error.component';
 @NgModule({
   imports: [AlertComponent, AlertErrorComponent],
   exports: [CommonModule, NgbModule, FontAwesomeModule, AlertComponent, AlertErrorComponent],
+  providers: [RecentlyViewedService, ProductComparisonService],
 })
 export default class SharedModule {}

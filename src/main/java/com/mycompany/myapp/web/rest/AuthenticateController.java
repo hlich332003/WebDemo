@@ -40,10 +40,10 @@ public class AuthenticateController {
 
     private final JwtEncoder jwtEncoder;
 
-    @Value("${jhipster.security.authentication.jwt.token-validity-in-seconds:0}")
+    @Value("${jhipster.security.authentication.jwt.token-validity-in-seconds:86400}")
     private long tokenValidityInSeconds;
 
-    @Value("${jhipster.security.authentication.jwt.token-validity-in-seconds-for-remember-me:0}")
+    @Value("${jhipster.security.authentication.jwt.token-validity-in-seconds-for-remember-me:2592000}")
     private long tokenValidityInSecondsForRememberMe;
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
@@ -55,6 +55,7 @@ public class AuthenticateController {
 
     @PostMapping("/authenticate")
     public ResponseEntity<JWTToken> authorize(@Valid @RequestBody LoginVM loginVM) {
+        LOG.info("REST request to authenticate user: {}", loginVM.getUsername());
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
             loginVM.getUsername(),
             loginVM.getPassword()

@@ -24,7 +24,21 @@ describe('User Management Update Component', () => {
         {
           provide: ActivatedRoute,
           useValue: {
-            data: of({ user: new User(123, 'user', 'first', 'last', 'first@last.com', true, 'en', [Authority.USER], 'admin') }),
+            data: of({
+              user: new User(
+                123,
+                'user', // login
+                'first',
+                'last',
+                'first@last.com',
+                '123456789', // phone
+                '', // imageUrl
+                true,
+                'en',
+                [Authority.USER],
+                'admin',
+              ),
+            }),
           },
         },
       ],
@@ -78,7 +92,7 @@ describe('User Management Update Component', () => {
       [],
       fakeAsync(() => {
         // GIVEN
-        const entity = { login: 'foo' } as User;
+        const entity = { email: 'foo@bar.com' } as User; // Dùng email thay vì login
         jest.spyOn(service, 'create').mockReturnValue(of(entity));
         comp.editForm.patchValue(entity);
         // WHEN

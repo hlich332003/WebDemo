@@ -1,26 +1,31 @@
-import {
-  Component,
-  inject,
-  OnInit,
-  OnDestroy,
-  ChangeDetectorRef,
-  ViewChild,
-  ElementRef,
-  AfterViewChecked,
-} from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import {
-  WebSocketService,
-  ChatMessage,
-} from 'app/shared/services/websocket.service';
+import { WebSocketService, ChatMessage } from 'app/shared/services/websocket.service';
 import { AccountService } from 'app/core/auth/account.service';
 import { HttpClient } from '@angular/common/http';
-import { SupportTicketDTO, SupportMessageDTO } from './support.model';
 import { Account } from 'app/core/auth/account.model';
+
+// Simplified models for this component
+interface Conversation {
+  id: number;
+  userIdentifier: string;
+  status: string;
+  lastMessageAt: string;
+  unreadCount: number;
+}
+
+interface Message {
+  id?: number;
+  conversationId: number;
+  senderType: 'USER' | 'ADMIN' | 'SYSTEM' | 'CSKH';
+  senderIdentifier: string;
+  content: string;
+  createdAt: string;
+}
 
 @Component({
   selector: 'jhi-customer-support',
@@ -29,9 +34,7 @@ import { Account } from 'app/core/auth/account.model';
   templateUrl: './customer-support.component.html',
   styleUrls: ['./customer-support.component.scss'],
 })
-export class CustomerSupportComponent
-  implements OnInit, OnDestroy, AfterViewChecked
-{
+export class CustomerSupportComponent implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('chatMessagesContainer')
   private chatMessagesContainer!: ElementRef;
 
@@ -42,15 +45,15 @@ export class CustomerSupportComponent
   private destroy$ = new Subject<void>();
 
   isConnected = false;
-  newMessage = '';
-  tickets: SupportTicketDTO[] = [];
-  selectedTicket: SupportTicketDTO | null = null;
-  messages: SupportMessageDTO[] = [];
-  isLoadingMessages = false;
   adminUser: Account | null = null;
+  conversations: Conversation[] = [];
+  selectedConversation: Conversation | null = null;
+  messages: Message[] = [];
+  newMessage = '';
+  isLoadingMessages = false;
 
   ngOnInit(): void {
-    this.accountService.getAuthenticationState().subscribe((account) => {
+    this.accountService.getAuthenticationState().subscribe(account => {
       this.adminUser = account;
     });
 
@@ -58,33 +61,29 @@ export class CustomerSupportComponent
       return;
     }
 
-    this.loadTickets();
+    this.loadConversations();
 
-    this.webSocketService.connectionState$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((isConnected) => {
-        this.isConnected = isConnected;
-      });
+    this.webSocketService.connectionState$.pipe(takeUntil(this.destroy$)).subscribe(isConnected => {
+      this.isConnected = isConnected;
+    });
 
-    this.webSocketService.chatMessage$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((msg) => {
-        if (msg && !msg.isFromAdmin) {
-          const ticket = this.tickets.find((t) => t.userEmail === msg.user);
-          if (ticket) {
-            if (this.selectedTicket?.id === ticket.id) {
-              this.messages.push(this.mapChatMessageToDTO(msg));
-              this.markMessagesAsRead(ticket.id);
-              this.scrollToBottom();
-            } else {
-              ticket.unreadCount = (ticket.unreadCount ?? 0) + 1;
-            }
+    this.webSocketService.cskhChatStream_.pipe(takeUntil(this.destroy$)).subscribe((msg: ChatMessage) => {
+      if (msg && msg.senderType === 'USER') {
+        const conversation = this.conversations.find(c => c.id === msg.conversationId);
+        if (conversation) {
+          conversation.lastMessageAt = msg.timestamp.toISOString();
+          if (this.selectedConversation?.id === msg.conversationId) {
+            this.messages.push(this.mapChatMessageToDisplayMessage(msg));
           } else {
-            this.loadTickets();
+            conversation.unreadCount = (conversation.unreadCount ?? 0) + 1;
           }
-          this.cdr.detectChanges();
+          this.sortConversations();
+        } else {
+          this.loadConversations();
         }
-      });
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -96,110 +95,92 @@ export class CustomerSupportComponent
     this.scrollToBottom();
   }
 
-  loadTickets(): void {
-    this.http.get<SupportTicketDTO[]>('/api/support/tickets').subscribe({
-      next: (tickets) => {
-        this.tickets = tickets.sort(
-          (a, b) =>
-            new Date(b.lastModifiedDate).getTime() -
-            new Date(a.lastModifiedDate).getTime(),
-        );
-        if (this.selectedTicket) {
-          this.selectedTicket =
-            this.tickets.find((t) => t.id === this.selectedTicket!.id) ?? null;
-        }
-      },
+  loadConversations(): void {
+    this.http.get<Conversation[]>('/api/chat/conversations').subscribe(convos => {
+      this.conversations = convos;
+      this.sortConversations();
     });
   }
 
-  selectTicket(ticket: SupportTicketDTO): void {
-    this.selectedTicket = ticket;
+  selectConversation(conversation: Conversation): void {
+    this.selectedConversation = conversation;
     this.messages = [];
     this.isLoadingMessages = true;
-    this.http
-      .get<SupportMessageDTO[]>(`/api/support/tickets/${ticket.id}/messages`)
-      .subscribe({
-        next: (messages) => {
-          this.messages = messages;
-          this.markMessagesAsRead(ticket.id);
-          this.isLoadingMessages = false;
-          this.scrollToBottom();
-        },
-        error: () => (this.isLoadingMessages = false),
-      });
+
+    // Stub: Notify service we are opening this chat
+    this.webSocketService.openChat(conversation.id);
+
+    this.http.get<Message[]>(`/api/chat/conversations/${conversation.id}/messages`).subscribe({
+      next: messages => {
+        this.messages = messages;
+        if (conversation.unreadCount > 0) {
+          conversation.unreadCount = 0;
+        }
+        this.isLoadingMessages = false;
+        this.scrollToBottom();
+      },
+      error: () => (this.isLoadingMessages = false),
+    });
   }
 
   sendMessage(): void {
-    if (
-      this.newMessage.trim() === '' ||
-      !this.isConnected ||
-      !this.selectedTicket
-    ) {
+    if (this.newMessage.trim() === '' || !this.selectedConversation) {
       return;
     }
 
-    const messagePayload = { message: this.newMessage };
-    this.webSocketService.sendMessageToUser(
-      this.selectedTicket.userEmail,
-      JSON.stringify(messagePayload),
-    );
+    const conversationId = this.selectedConversation.id;
+    const content = this.newMessage;
 
-    const tempMessage: SupportMessageDTO = {
-      ticketId: this.selectedTicket.id,
-      senderEmail: this.adminUser?.email,
-      message: this.newMessage,
-      isFromAdmin: true,
+    this.webSocketService.sendReplyAsCskh(conversationId, content);
+
+    const tempMessage: Message = {
+      conversationId: conversationId,
+      senderIdentifier: this.adminUser?.email ?? 'CSKH',
+      senderType: 'CSKH',
+      content: content,
       createdAt: new Date().toISOString(),
-      isRead: true,
     };
     this.messages.push(tempMessage);
     this.newMessage = '';
     this.scrollToBottom();
   }
 
-  closeTicket(ticketId: number): void {
-    if (confirm('Bạn có chắc muốn đóng phiếu hỗ trợ này không?')) {
-      this.http.post(`/api/support/tickets/${ticketId}/close`, {}).subscribe({
+  closeConversation(conversationId: number): void {
+    if (confirm('Bạn có chắc muốn đóng cuộc trò chuyện này không?')) {
+      // Stub: Notify service we are closing this chat
+      this.webSocketService.closeChat(conversationId);
+
+      this.http.post(`/api/chat/conversations/${conversationId}/close`, {}).subscribe({
         next: () => {
-          this.loadTickets();
-          if (this.selectedTicket?.id === ticketId) {
-            this.selectedTicket = null;
+          this.loadConversations();
+          if (this.selectedConversation?.id === conversationId) {
+            this.selectedConversation = null;
           }
         },
       });
     }
   }
 
-  private markMessagesAsRead(ticketId: number): void {
-    this.http
-      .put(`/api/support/tickets/${ticketId}/messages/mark-as-read`, {})
-      .subscribe({
-        next: () => {
-          const ticket = this.tickets.find((t) => t.id === ticketId);
-          if (ticket) {
-            ticket.unreadCount = 0;
-          }
-        },
-      });
+  private sortConversations(): void {
+    this.conversations.sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
   }
 
   private scrollToBottom(): void {
     this.cdr.detectChanges();
     setTimeout(() => {
       if (this.chatMessagesContainer) {
-        this.chatMessagesContainer.nativeElement.scrollTop =
-          this.chatMessagesContainer.nativeElement.scrollHeight;
+        this.chatMessagesContainer.nativeElement.scrollTop = this.chatMessagesContainer.nativeElement.scrollHeight;
       }
     }, 50);
   }
 
-  private mapChatMessageToDTO(msg: ChatMessage): SupportMessageDTO {
+  private mapChatMessageToDisplayMessage(msg: ChatMessage): Message {
     return {
-      senderEmail: msg.user,
-      message: msg.message,
-      isFromAdmin: msg.isFromAdmin,
+      conversationId: msg.conversationId!,
+      senderIdentifier: msg.senderIdentifier!,
+      senderType: msg.senderType,
+      content: msg.content,
       createdAt: msg.timestamp.toISOString(),
-      isRead: false,
     };
   }
 }

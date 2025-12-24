@@ -1,265 +1,819 @@
-# webDemo
+# WebDemo - Hệ thống Quản lý Bán hàng E-commerce
 
-This application was generated using JHipster 8.11.0, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v8.11.0](https://www.jhipster.tech/documentation-archive/v8.11.0).
+## 📋 Giới thiệu Dự án
 
-## Project Structure
+Dự án WebDemo là một hệ thống E-commerce toàn diện được xây dựng bằng **Angular** (Frontend) và **Spring Boot** (Backend), tích hợp đầy đủ các tính năng hiện đại như:
 
-Node is required for generation and recommended for development. `package.json` is always generated for a better development experience with prettier, commit hooks, scripts and so on.
+- 🔐 Xác thực & phân quyền với JWT
+- 🔔 Thông báo real-time với WebSocket
+- 🛒 Quản lý giỏ hàng & đơn hàng
+- 📦 Xử lý bất đồng bộ với RabbitMQ
+- ⚡ Cache với Redis
+- 📊 Multi-database (jhipster_db + analytics_db)
+- 🎨 Giao diện responsive Bootstrap
 
-In the project root, JHipster generates configuration files for tools like git, prettier, eslint, husky, and others that are well known and you can find references in the web.
+---
 
-`/src/*` structure follows default Java structure.
+## 🏗️ Kiến trúc Hệ thống
 
-- `.yo-rc.json` - Yeoman configuration file
-  JHipster configuration is stored in this file at `generator-jhipster` key. You may find `generator-jhipster-*` for specific blueprints configuration.
-- `.yo-resolve` (optional) - Yeoman conflict resolver
-  Allows to use a specific action when conflicts are found skipping prompts for files that matches a pattern. Each line should match `[pattern] [action]` with pattern been a [Minimatch](https://github.com/isaacs/minimatch#minimatch) pattern and action been one of skip (default if omitted) or force. Lines starting with `#` are considered comments and are ignored.
-- `.jhipster/*.json` - JHipster entity configuration files
+### Frontend
 
-- `npmw` - wrapper to use locally installed npm.
-  JHipster installs Node and npm locally using the build tool by default. This wrapper makes sure npm is installed locally and uses it avoiding some differences different versions can cause. By using `./npmw` instead of the traditional `npm` you can configure a Node-less environment to develop or test your application.
-- `/src/main/docker` - Docker configurations for the application and services that the application depends on
+- **Framework**: Angular 19.2.x
+- **UI Library**: Bootstrap 5, Font Awesome
+- **State Management**: RxJS
+- **Real-time**: WebSocket (SockJS + STOMP)
+- **HTTP Client**: Angular HttpClient với Interceptor
 
-## Development
+### Backend
 
-The build system will install automatically the recommended version of Node and npm.
+- **Framework**: Spring Boot 3.x
+- **Security**: Spring Security + JWT
+- **Database**: SQL Server (2 databases)
+  - `jhipster_db`: Dữ liệu nghiệp vụ chính
+  - `analytics_db`: Logs, Analytics, Notifications
+- **ORM**: JPA/Hibernate với Custom Queries & Stored Procedures
+- **Messaging**: RabbitMQ (async processing)
+- **Cache**: Redis
+- **WebSocket**: STOMP over SockJS
+- **Monitoring**: Actuator, Prometheus, Grafana
 
-We provide a wrapper to launch npm.
-You will only need to run this command when dependencies change in [package.json](package.json).
+---
 
+## 🗄️ Cấu trúc Database
+
+### Database 1: `jhipster_db` (Dữ liệu nghiệp vụ chính)
+
+#### 1. **jhi_user** - Bảng người dùng
+
+```sql
+- id (bigint, PK, Identity)
+- login (nvarchar(50), Unique, Not Null)
+- password_hash (nvarchar(60), Not Null)
+- first_name (nvarchar(50))
+- last_name (nvarchar(50))
+- email (nvarchar(191), Unique)
+- image_url (nvarchar(256))
+- activated (bit, Not Null)
+- lang_key (nvarchar(10))
+- activation_key (nvarchar(20))
+- reset_key (nvarchar(20))
+- created_by (nvarchar(50), Not Null)
+- created_date (datetime)
+- reset_date (datetime)
+- last_modified_by (nvarchar(50))
+- last_modified_date (datetime)
 ```
-./npmw install
+
+#### 2. **jhi_authority** - Bảng quyền
+
+```sql
+- name (nvarchar(50), PK)
 ```
 
-We use npm scripts and [Angular CLI][] with [Webpack][] as our build system.
+#### 3. **jhi_user_authority** - Bảng quan hệ User-Authority
 
-Run the following commands in two separate terminals to create a blissful development experience where your browser
-auto-refreshes when files change on your hard drive.
-
-```
-./mvnw
-./npmw start
+```sql
+- user_id (bigint, FK -> jhi_user)
+- authority_name (nvarchar(50), FK -> jhi_authority)
+- PK: (user_id, authority_name)
 ```
 
-Npm is also used to manage CSS and JavaScript dependencies used in this application. You can upgrade dependencies by
-specifying a newer version in [package.json](package.json). You can also run `./npmw update` and `./npmw install` to manage dependencies.
-Add the `help` flag on any command to see how you can use it. For example, `./npmw help update`.
+#### 4. **category** - Danh mục sản phẩm
 
-The `./npmw run` command will list all the scripts available to run for this project.
+```sql
+- id (bigint, PK, Identity)
+- name (nvarchar(100), Not Null)
+- description (nvarchar(500))
+- image_url (nvarchar(500))
+- parent_id (bigint, FK -> category)
+- created_at (datetime2, Not Null)
+- updated_at (datetime2)
+- is_active (bit, Default: 1)
+```
 
-### PWA Support
+#### 5. **product** - Sản phẩm
 
-JHipster ships with PWA (Progressive Web App) support, and it's turned off by default. One of the main components of a PWA is a service worker.
+```sql
+- id (bigint, PK, Identity)
+- name (nvarchar(255), Not Null)
+- description (nvarchar(max))
+- price (decimal(10,2), Not Null)
+- stock_quantity (int, Not Null)
+- image_url (nvarchar(500))
+- category_id (bigint, FK -> category)
+- created_at (datetime2, Not Null)
+- updated_at (datetime2)
+- is_active (bit, Default: 1)
+- sku (nvarchar(100))
+- discount_price (decimal(10,2))
+```
 
-The service worker initialization code is disabled by default. To enable it, uncomment the following code in `src/main/webapp/app/app.config.ts`:
+#### 6. **cart** - Giỏ hàng
+
+```sql
+- id (bigint, PK, Identity)
+- user_id (nvarchar(255), Not Null, Unique)
+- created_at (datetime2, Not Null)
+- updated_at (datetime2)
+```
+
+#### 7. **cart_item** - Chi tiết giỏ hàng
+
+```sql
+- id (bigint, PK, Identity)
+- cart_id (bigint, FK -> cart)
+- product_id (bigint, FK -> product)
+- quantity (int, Not Null)
+- price (decimal(10,2), Not Null)
+- created_at (datetime2, Not Null)
+```
+
+#### 8. **order** - Đơn hàng
+
+```sql
+- id (bigint, PK, Identity)
+- user_id (nvarchar(255), Not Null)
+- status (nvarchar(50), Not Null)
+- total_amount (decimal(10,2), Not Null)
+- shipping_address (nvarchar(500), Not Null)
+- payment_method (nvarchar(50))
+- created_at (datetime2, Not Null)
+- updated_at (datetime2)
+- notes (nvarchar(max))
+- tracking_number (nvarchar(100))
+```
+
+#### 9. **order_item** - Chi tiết đơn hàng
+
+```sql
+- id (bigint, PK, Identity)
+- order_id (bigint, FK -> order)
+- product_id (bigint, FK -> product)
+- quantity (int, Not Null)
+- price (decimal(10,2), Not Null)
+- product_name (nvarchar(255))
+```
+
+#### 10. **payment** - Thanh toán
+
+```sql
+- id (bigint, PK, Identity)
+- order_id (bigint, FK -> order)
+- amount (decimal(10,2), Not Null)
+- payment_method (nvarchar(50), Not Null)
+- status (nvarchar(50), Not Null)
+- transaction_id (nvarchar(255))
+- created_at (datetime2, Not Null)
+```
+
+#### 11. **review** - Đánh giá sản phẩm
+
+```sql
+- id (bigint, PK, Identity)
+- product_id (bigint, FK -> product)
+- user_id (nvarchar(255), Not Null)
+- rating (int, Not Null)
+- comment (nvarchar(max))
+- created_at (datetime2, Not Null)
+```
+
+#### 12. **wishlist_item** - Sản phẩm yêu thích
+
+```sql
+- id (bigint, PK, Identity)
+- user_id (nvarchar(255), Not Null)
+- product_id (bigint, FK -> product)
+- created_at (datetime2, Not Null)
+```
+
+#### 13. **refresh_token** - Token làm mới
+
+```sql
+- id (bigint, PK, Identity)
+- user_id (nvarchar(255), Not Null)
+- token (nvarchar(500), Not Null, Unique)
+- expiry_date (datetime2, Not Null)
+- created_at (datetime2, Not Null)
+```
+
+---
+
+### Database 2: `analytics_db` (Logs & Analytics)
+
+#### 1. **notification** - Thông báo (Real-time WebSocket)
+
+```sql
+- id (bigint, PK, Identity)
+- message (nvarchar(500), Not Null)
+- type (nvarchar(20), Not Null)
+  * ORDER_CREATED: Đơn hàng mới (→ admin)
+  * ORDER_CONFIRMED: Đơn hàng xác nhận (→ user)
+  * ORDER_SHIPPED: Đơn hàng đang giao (→ user)
+  * ORDER_DELIVERED: Đơn hàng đã giao (→ user)
+  * PROMOTION: Khuyến mãi (→ all users)
+  * SYSTEM: Thông báo hệ thống
+- created_at (datetime2, Not Null)
+- user_id (nvarchar(255), Not Null)
+- is_read (bit, Not Null, Default: 0)
+- link (nvarchar(500))
+- action_type (nvarchar(50))
+- related_id (bigint)
+```
+
+#### 2. **analytics_log** - Log phân tích hành vi
+
+```sql
+- id (bigint, PK, Identity)
+- user_id (nvarchar(255))
+- action (nvarchar(100), Not Null)
+- entity_type (nvarchar(50))
+- entity_id (bigint)
+- ip_address (nvarchar(50))
+- user_agent (nvarchar(500))
+- created_at (datetime2, Not Null)
+- metadata (nvarchar(max))
+```
+
+---
+
+## 🔔 Hệ thống Thông báo Real-time (WebSocket)
+
+### Luồng hoạt động
+
+#### 1. **Kết nối WebSocket**
 
 ```typescript
-ServiceWorkerModule.register('ngsw-worker.js', { enabled: false }),
+// Angular: websocket.service.ts
+connect() {
+  const token = localStorage.getItem('authenticationToken');
+  const socket = new SockJS('/ws');
+  this.stompClient = Stomp.over(socket);
+
+  this.stompClient.connect(
+    { 'X-Authorization': `Bearer ${token}` },
+    () => {
+      // Subscribe notifications
+      this.stompClient.subscribe('/user/queue/notifications', (message) => {
+        this.handleNotification(JSON.parse(message.body));
+      });
+    }
+  );
+}
 ```
 
-### Managing dependencies
+#### 2. **Backend gửi thông báo**
 
-For example, to add [Leaflet][] library as a runtime dependency of your application, you would run following command:
+```java
+// NotificationService.java
+public void sendToUser(String userId, NotificationDTO notification) {
+  notification.setCreatedAt(Instant.now());
 
-```
-./npmw install --save --save-exact leaflet
-```
+  // Lưu vào DB
+  Notification entity = notificationMapper.toEntity(notification);
+  notificationRepository.save(entity);
 
-To benefit from TypeScript type definitions from [DefinitelyTyped][] repository in development, you would run following command:
-
-```
-./npmw install --save-dev --save-exact @types/leaflet
-```
-
-Then you would import the JS and CSS files specified in library's installation instructions so that [Webpack][] knows about them:
-Edit [src/main/webapp/app/app.config.ts](src/main/webapp/app/app.config.ts) file:
-
-```
-import 'leaflet/dist/leaflet.js';
-```
-
-Edit [src/main/webapp/content/scss/vendor.scss](src/main/webapp/content/scss/vendor.scss) file:
+  // Gửi qua WebSocket
+  Map<String, Object> payload = createWebSocketPayload(notification);
+  messagingTemplate.convertAndSendToUser(userId, "/queue/notifications", payload);
+}
 
 ```
-@import 'leaflet/dist/leaflet.css';
-```
 
-Note: There are still a few other things remaining to do for Leaflet that we won't detail here.
+#### 3. **Các loại thông báo**
 
-For further instructions on how to develop with JHipster, have a look at [Using JHipster in development][].
+**Admin nhận:**
 
-### Using Angular CLI
+- `ORDER_CREATED`: Khi có đơn hàng mới được tạo
+- `ORDER_CANCELLED`: Khi khách hàng hủy đơn
+- `LOW_STOCK`: Cảnh báo sản phẩm sắp hết hàng
+- `NEW_REVIEW`: Đánh giá sản phẩm mới
 
-You can also use [Angular CLI][] to generate some custom client code.
+**User nhận:**
 
-For example, the following command:
+- `ORDER_CONFIRMED`: Đơn hàng được xác nhận
+- `ORDER_SHIPPED`: Đơn hàng đang vận chuyển
+- `ORDER_DELIVERED`: Đơn hàng đã giao thành công
+- `PROMOTION`: Khuyến mãi, giảm giá
+- `WISHLIST_PRICE_DROP`: Sản phẩm yêu thích giảm giá
 
-```
-ng generate component my-component
-```
-
-will generate few files:
-
-```
-create src/main/webapp/app/my-component/my-component.component.html
-create src/main/webapp/app/my-component/my-component.component.ts
-update src/main/webapp/app/app.config.ts
-```
-
-## Building for production
-
-### Packaging as jar
-
-To build the final jar and optimize the webDemo application for production, run:
+### Component hiển thị (notification-bell)
 
 ```
-./mvnw -Pprod clean verify
+src/main/webapp/app/layouts/navbar/navbar.component.html
+- Badge hiển thị số thông báo chưa đọc
+- Dropdown list thông báo
+- Click để đánh dấu đã đọc
+- Link đến trang chi tiết
 ```
 
-This will concatenate and minify the client CSS and JavaScript files. It will also modify `index.html` so it references these new files.
-To ensure everything worked, run:
+---
 
-```
-java -jar target/*.jar
-```
+## 🚀 Cài đặt & Chạy Dự án
 
-Then navigate to [http://localhost:8080](http://localhost:8080) in your browser.
+### Yêu cầu hệ thống
 
-Refer to [Using JHipster in production][] for more details.
+- Java 21+
+- Node.js 20+
+- SQL Server 2019+
+- Maven 3.9+
+- Redis (optional)
+- RabbitMQ (optional)
 
-### Packaging as war
+### Bước 1: Clone & Cấu hình Database
 
-To package your application as a war in order to deploy it to an application server, run:
+```bash
+# Clone project
+git clone <repository-url>
+cd WebDemo
 
-```
-./mvnw -Pprod,war clean verify
-```
+# Tạo 2 databases trong SQL Server
+CREATE DATABASE jhipster_db;
+CREATE DATABASE analytics_db;
 
-### JHipster Control Center
-
-JHipster Control Center can help you manage and control your application(s). You can start a local control center server (accessible on http://localhost:7419) with:
-
-```
-docker compose -f src/main/docker/jhipster-control-center.yml up
-```
-
-## Testing
-
-### Spring Boot tests
-
-To launch your application's tests, run:
-
-```
-./mvnw verify
+# Cập nhật connection string trong:
+src/main/resources/config/application-dev.yml
 ```
 
-### Client tests
+### Bước 2: Cài đặt Dependencies
 
-Unit tests are run by [Jest][]. They're located near components and can be run with:
+```powershell
+# Backend
+mvn clean install -DskipTests
 
-```
-./npmw test
-```
-
-## Others
-
-### Code quality using Sonar
-
-Sonar is used to analyse code quality. You can start a local Sonar server (accessible on http://localhost:9001) with:
-
-```
-docker compose -f src/main/docker/sonar.yml up -d
+# Frontend
+npm install
 ```
 
-Note: we have turned off forced authentication redirect for UI in [src/main/docker/sonar.yml](src/main/docker/sonar.yml) for out of the box experience while trying out SonarQube, for real use cases turn it back on.
+### Bước 3: Chạy Backend
 
-You can run a Sonar analysis with using the [sonar-scanner](https://docs.sonarqube.org/display/SCAN/Analyzing+with+SonarQube+Scanner) or by using the maven plugin.
+```powershell
+# Development mode
+mvn spring-boot:run
 
-Then, run a Sonar analysis:
-
-```
-./mvnw -Pprod clean verify sonar:sonar -Dsonar.login=admin -Dsonar.password=admin
-```
-
-If you need to re-run the Sonar phase, please be sure to specify at least the `initialize` phase since Sonar properties are loaded from the sonar-project.properties file.
-
-```
-./mvnw initialize sonar:sonar -Dsonar.login=admin -Dsonar.password=admin
+# Hoặc
+./mvnw spring-boot:run
 ```
 
-Additionally, Instead of passing `sonar.password` and `sonar.login` as CLI arguments, these parameters can be configured from [sonar-project.properties](sonar-project.properties) as shown below:
+### Bước 4: Chạy Frontend
 
-```
-sonar.login=admin
-sonar.password=admin
-```
-
-For more information, refer to the [Code quality page][].
-
-### Docker Compose support
-
-JHipster generates a number of Docker Compose configuration files in the [src/main/docker/](src/main/docker/) folder to launch required third party services.
-
-For example, to start required services in Docker containers, run:
-
-```
-docker compose -f src/main/docker/services.yml up -d
+```powershell
+npm start
+# Application: http://localhost:9000
 ```
 
-To stop and remove the containers, run:
+### Bước 5: Test WebSocket
+
+1. Đăng nhập với user có quyền ADMIN
+2. Kiểm tra chuông thông báo trên navbar
+3. Tạo đơn hàng mới → Admin sẽ nhận thông báo real-time
+4. Đăng nhập user khác → Nhận thông báo đơn hàng thành công
+
+---
+
+## 📁 Cấu trúc File Quan trọng
+
+### Backend (Spring Boot)
+
+#### Configuration
 
 ```
-docker compose -f src/main/docker/services.yml down
+src/main/java/com/mycompany/myapp/config/
+├── WebSocketConfig.java              # Cấu hình WebSocket STOMP
+├── WebSocketSecurityConfig.java      # Security cho WebSocket
+├── SecurityConfiguration.java         # JWT Security
+├── DatabaseConfiguration.java         # Multi-database config
+├── CacheConfiguration.java            # Redis cache
+└── RabbitMQConfig.java               # RabbitMQ message queue
 ```
 
-[Spring Docker Compose Integration](https://docs.spring.io/spring-boot/reference/features/dev-services.html) is enabled by default. It's possible to disable it in application.yml:
+#### Domain (Entity)
+
+```
+src/main/java/com/mycompany/myapp/domain/
+├── User.java                          # Entity người dùng
+├── Authority.java                     # Entity quyền
+├── Product.java                       # Entity sản phẩm
+├── Category.java                      # Entity danh mục
+├── Order.java                         # Entity đơn hàng
+├── OrderItem.java                     # Chi tiết đơn hàng
+├── Cart.java                          # Giỏ hàng
+├── CartItem.java                      # Chi tiết giỏ hàng
+├── Notification.java                  # Thông báo (analytics_db)
+├── AnalyticsLog.java                  # Log phân tích (analytics_db)
+├── Payment.java                       # Thanh toán
+├── Review.java                        # Đánh giá
+└── WishlistItem.java                  # Sản phẩm yêu thích
+```
+
+#### Service
+
+```
+src/main/java/com/mycompany/myapp/service/
+├── NotificationService.java           # Quản lý thông báo WebSocket
+├── OrderService.java                  # Logic đơn hàng
+├── ProductService.java                # Logic sản phẩm
+├── CartService.java                   # Logic giỏ hàng
+├── UserService.java                   # Logic người dùng
+└── messaging/
+    ├── MessageProducerService.java    # Gửi message RabbitMQ
+    └── MessageConsumerService.java    # Nhận message RabbitMQ
+```
+
+#### Controller (REST API)
+
+```
+src/main/java/com/mycompany/myapp/web/rest/
+├── AccountResource.java               # API user profile
+├── UserJWTController.java             # API đăng nhập JWT
+├── ProductResource.java               # API sản phẩm
+├── OrderResource.java                 # API đơn hàng
+├── CartResource.java                  # API giỏ hàng
+├── NotificationResource.java          # API thông báo
+└── CategoryResource.java              # API danh mục
+```
+
+#### Repository
+
+```
+src/main/java/com/mycompany/myapp/repository/
+├── UserRepository.java                # JPA Repository User
+├── ProductRepository.java             # JPA + Custom Query
+├── OrderRepository.java               # JPA + Stored Procedure
+├── NotificationRepository.java        # Analytics DB
+└── AnalyticsLogRepository.java        # Analytics DB
+```
+
+### Frontend (Angular)
+
+#### Core Modules
+
+```
+src/main/webapp/app/
+├── core/
+│   ├── auth/                         # Authentication services
+│   ├── interceptor/                  # HTTP Interceptors
+│   │   ├── auth.interceptor.ts       # Thêm JWT token vào header
+│   │   └── error-handler.interceptor.ts
+│   └── util/                         # Utilities
+│
+├── shared/
+│   ├── websocket/
+│   │   └── websocket.service.ts      # WebSocket service
+│   ├── notification/
+│   │   └── notification.service.ts   # Notification service
+│   └── language/                     # i18n
+│
+├── entities/
+│   ├── product/                      # Module sản phẩm
+│   ├── order/                        # Module đơn hàng
+│   ├── cart/                         # Module giỏ hàng
+│   ├── category/                     # Module danh mục
+│   └── notification/                 # Module thông báo
+│
+├── layouts/
+│   ├── navbar/
+│   │   ├── navbar.component.ts       # Navbar với notification bell
+│   │   └── navbar.component.html
+│   ├── footer/
+│   └── main/
+│
+└── admin/
+    ├── user-management/              # Quản lý user
+    ├── metrics/                      # Monitoring
+    └── logs/                         # System logs
+```
+
+#### Routing
+
+```
+src/main/webapp/app/app.routes.ts     # Main routing
+```
+
+---
+
+## 🎯 Các Tính năng Chính
+
+### 1. Xác thực & Phân quyền
+
+- ✅ Đăng ký tài khoản mới
+- ✅ Đăng nhập với JWT
+- ✅ Refresh token tự động
+- ✅ Phân quyền ROLE_USER, ROLE_ADMIN
+- ✅ Quên mật khẩu & reset password
+- ✅ Kích hoạt tài khoản qua email
+
+### 2. Quản lý Sản phẩm
+
+- ✅ CRUD sản phẩm (Admin)
+- ✅ Phân trang, tìm kiếm, lọc
+- ✅ Upload ảnh sản phẩm
+- ✅ Quản lý danh mục cây (parent-child)
+- ✅ Quản lý tồn kho
+- ✅ Giá khuyến mãi
+
+### 3. Giỏ hàng & Đơn hàng
+
+- ✅ Thêm/xóa/sửa giỏ hàng
+- ✅ Đặt hàng với xác nhận
+- ✅ Xử lý đơn hàng bất đồng bộ (RabbitMQ)
+- ✅ Theo dõi trạng thái đơn hàng
+- ✅ Lịch sử đơn hàng
+- ✅ Hủy đơn hàng
+
+### 4. Thông báo Real-time (WebSocket)
+
+- ✅ Thông báo đơn hàng mới cho Admin
+- ✅ Thông báo xác nhận đơn cho User
+- ✅ Thông báo khuyến mãi
+- ✅ Badge đếm số thông báo chưa đọc
+- ✅ Dropdown hiển thị danh sách thông báo
+- ✅ Đánh dấu đã đọc/chưa đọc
+
+### 5. Đánh giá & Yêu thích
+
+- ✅ Đánh giá sản phẩm (rating + comment)
+- ✅ Danh sách sản phẩm yêu thích
+- ✅ Thông báo khi giá giảm
+
+### 6. Analytics & Logs
+
+- ✅ Ghi log hành vi người dùng
+- ✅ Theo dõi sản phẩm xem nhiều
+- ✅ Dashboard thống kê (Admin)
+- ✅ Export báo cáo
+
+### 7. Performance Optimization
+
+- ✅ Redis caching
+- ✅ Lazy loading modules
+- ✅ Image optimization
+- ✅ Database indexing
+- ✅ Connection pooling
+
+---
+
+## 🧪 Testing
+
+### Backend Testing
+
+```powershell
+# Unit tests
+mvn test
+
+# Integration tests
+mvn verify
+
+# Test coverage
+mvn clean test jacoco:report
+```
+
+### Frontend Testing
+
+```powershell
+# Unit tests (Jest)
+npm test
+
+# E2E tests
+npm run e2e
+
+# Test coverage
+npm run test:coverage
+```
+
+---
+
+## 📚 Lộ trình Đào tạo Người mới
+
+### **1. Giới thiệu Dự án (1 ngày)**
+
+- ✅ Mục tiêu: Hệ thống E-commerce với Angular + Spring Boot
+- ✅ Đối tượng: Admin quản lý, User mua hàng
+- ✅ Kiến trúc: Frontend (Angular) ↔ REST API ↔ Backend (Spring Boot) ↔ Database (SQL Server)
+- ✅ Công nghệ: JWT, WebSocket, RabbitMQ, Redis
+
+---
+
+### **2. Frontend - Angular (2 tuần)**
+
+#### **Tuần 1: Cơ bản**
+
+- Cài đặt môi trường: Node.js, Angular CLI, VS Code
+- TypeScript cơ bản: types, interfaces, classes
+- Angular architecture: Modules, Components, Services, Directives
+- Data binding: Property, Event, Two-way binding
+- Routing & Navigation
+- Forms: Reactive Forms, Template-driven Forms
+- HTTP Client: Gọi REST API, error handling
+
+#### **Tuần 2: Nâng cao**
+
+- State Management: RxJS Observables, BehaviorSubject
+- Lazy Loading: Tăng hiệu suất
+- Interceptors: Thêm JWT token, xử lý lỗi
+- WebSocket: SockJS + STOMP
+- Testing: Jasmine, Karma
+- Storage: LocalStorage, SessionStorage, IndexedDB, Cookies
+- Service Worker: PWA basics
+
+**Bài tập:** Xây dựng trang sản phẩm với giỏ hàng, kết nối API
+
+---
+
+### **3. Backend - Spring Boot (2 tuần)**
+
+#### **Tuần 1: Cơ bản**
+
+- Khởi tạo project: Spring Initializr, JHipster
+- RESTful API: Controller, Service, Repository
+- HTTP Methods: GET, POST, PUT, DELETE, PATCH
+- JPA/Hibernate: Entity, CRUD operations
+- Exception Handling: @ControllerAdvice, @ExceptionHandler
+- Response chung: ResponseEntity, DTO pattern
+- Database: Connection pooling, transactions
+
+#### **Tuần 2: Nâng cao**
+
+- Spring Security: JWT authentication, authorization
+- Multi-database: jhipster_db + analytics_db
+- Custom Queries: @Query, Native SQL
+- Stored Procedures: @Procedure
+- Validation: @Valid, custom validators
+- Testing: JUnit, Mockito, MockMvc
+- Swagger: API documentation
+- Logging: SLF4J, Logback
+- Cache: Redis integration
+- Async: @Async, RabbitMQ
+
+**Bài tập:** Tạo API đơn hàng với xác thực JWT, ghi log, cache
+
+---
+
+### **4. WebSocket & Real-time (3 ngày)**
+
+- Cấu hình STOMP over SockJS
+- Security cho WebSocket
+- Gửi thông báo từ Backend → Frontend
+- Hiển thị notification bell
+- Subscribe/Unsubscribe topics
+- Xử lý reconnection
+
+**Bài tập:** Implement hệ thống thông báo real-time
+
+---
+
+### **5. RabbitMQ - Message Queue (3 ngày)**
+
+- Khái niệm: Producer, Consumer, Queue, Exchange, Binding, Routing Key
+- Cài đặt RabbitMQ: Docker, Management UI
+- Tích hợp Spring Boot: RabbitTemplate, @RabbitListener
+- Xử lý bất đồng bộ: Gửi email, xử lý đơn hàng
+- Dead Letter Queue: Xử lý lỗi
+- Retry mechanism
+
+**Bài tập:** Xử lý đơn hàng bất đồng bộ qua RabbitMQ
+
+---
+
+### **6. Redis - Cache & Session (2 ngày)**
+
+- Redis là gì: Key-value store, use cases
+- Cài đặt Redis: Docker, Redis CLI
+- Tích hợp Spring Boot: RedisTemplate, @Cacheable
+- Cache strategy: Cache-Aside, Write-Through
+- Session management: Spring Session Redis
+- Pub/Sub: Real-time messaging
+
+**Bài tập:** Cache kết quả tìm kiếm sản phẩm
+
+---
+
+### **7. SQL Server Nâng cao (1 tuần)**
+
+- Window Functions: ROW_NUMBER, RANK, LAG/LEAD, SUM() OVER
+- CTE: Common Table Expressions, Recursive CTEs
+- Indexing: Clustered, Non-clustered, Composite
+- Query optimization: Execution plan, EXPLAIN
+- Partitioning: Range, List partitioning
+- Stored Procedures: Input/Output parameters
+- Triggers: AFTER, INSTEAD OF
+
+**Bài tập:** Viết stored procedure báo cáo doanh thu theo tháng
+
+---
+
+### **8. Kỹ năng Mềm (Liên tục)**
+
+- ✅ Giao tiếp: Standup meeting, code review
+- ✅ Làm việc nhóm: Git workflow, Pull Request
+- ✅ Giải quyết vấn đề: Debug, tìm root cause
+- ✅ Tiếp thu feedback: Cải thiện code quality
+- ✅ Quản lý thời gian: Kanban board, task estimation
+
+---
+
+### **9. Bài tập Tổng hợp (6 tuần)**
+
+#### **Yêu cầu: Xây dựng hệ thống E-commerce hoàn chỉnh**
+
+**Chức năng:**
+
+- ✅ Đăng ký / Đăng nhập (JWT)
+- ✅ Quản lý danh mục sản phẩm (CRUD)
+- ✅ Quản lý sản phẩm (CRUD, import Excel)
+- ✅ Quản lý khách hàng (CRUD)
+- ✅ Giỏ hàng (thêm/xóa/sửa)
+- ✅ Đặt hàng (bất đồng bộ với RabbitMQ)
+- ✅ Thông báo real-time (WebSocket)
+- ✅ Phân quyền (Admin/User)
+- ✅ Audit log (created_by, created_date, modified_by, modified_date)
+
+**Yêu cầu kỹ thuật:**
+
+- ✅ Backend: Spring Boot với Bean configuration
+- ✅ Exception Handling: Custom exceptions, global handler
+- ✅ Interceptor: Logging, JWT validation (Angular + Spring)
+- ✅ Database: JPA, Custom SQL, Stored Procedures
+- ✅ Multi-database: jhipster_db + analytics_db
+- ✅ WebSocket: Notification system
+- ✅ RabbitMQ: Async order processing
+- ✅ Redis: Cache product list
+- ✅ Logging: Request/Response logs
+- ✅ Custom Aspect: @Logging annotation
+- ✅ Testing: Unit tests, Integration tests
+
+**Điều kiện lên Thử việc:**
+
+- ✅ Hoàn thành dự án trong 6 tuần
+- ✅ Kanban: 50% công việc trên + 50% dự án thực tế
+- ✅ Code review pass
+- ✅ Done 40 task mức medium
+
+---
+
+## 🔧 Troubleshooting
+
+### WebSocket không kết nối
+
+```typescript
+// Kiểm tra token
+console.log(localStorage.getItem('authenticationToken'));
+
+// Kiểm tra STOMP connection
+stompClient.debug = str => console.log(str);
+```
+
+### Database connection failed
 
 ```yaml
+# Check application-dev.yml
 spring:
-  ...
-  docker:
-    compose:
-      enabled: false
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=jhipster_db;encrypt=false
+    username: sa
+    password: your_password
 ```
 
-You can also fully dockerize your application and all the services that it depends on.
-To achieve this, first build a Docker image of your app by running:
+### RabbitMQ connection refused
 
-```sh
-npm run java:docker
+```bash
+# Start RabbitMQ with Docker
+docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:management
+# Access: http://localhost:15672 (guest/guest)
 ```
 
-Or build a arm64 Docker image when using an arm64 processor os like MacOS with M1 processor family running:
+---
 
-```sh
-npm run java:docker:arm64
-```
+## 📖 Tài liệu Tham khảo
 
-Then run:
+- [Angular Documentation](https://angular.io/docs)
+- [Spring Boot Documentation](https://spring.io/projects/spring-boot)
+- [Spring Security JWT](https://spring.io/guides/tutorials/spring-boot-oauth2/)
+- [WebSocket with STOMP](https://spring.io/guides/gs/messaging-stomp-websocket/)
+- [RabbitMQ Tutorials](https://www.rabbitmq.com/getstarted.html)
+- [Redis Documentation](https://redis.io/documentation)
+- [JHipster](https://www.jhipster.tech/)
 
-```sh
-docker compose -f src/main/docker/app.yml up -d
-```
+---
 
-For more information refer to [Using Docker and Docker-Compose][], this page also contains information on the Docker Compose sub-generator (`jhipster docker-compose`), which is able to generate Docker configurations for one or several JHipster applications.
+## 👥 Team
 
-## Continuous Integration (optional)
+- **Backend Developer**: Spring Boot, SQL Server, WebSocket
+- **Frontend Developer**: Angular, TypeScript, Bootstrap
+- **DevOps**: Docker, CI/CD, Monitoring
 
-To configure CI for your project, run the ci-cd sub-generator (`jhipster ci-cd`), this will let you generate configuration files for a number of Continuous Integration systems. Consult the [Setting up Continuous Integration][] page for more information.
+---
 
-[JHipster Homepage and latest documentation]: https://www.jhipster.tech
-[JHipster 8.11.0 archive]: https://www.jhipster.tech/documentation-archive/v8.11.0
-[Using JHipster in development]: https://www.jhipster.tech/documentation-archive/v8.11.0/development/
-[Using Docker and Docker-Compose]: https://www.jhipster.tech/documentation-archive/v8.11.0/docker-compose
-[Using JHipster in production]: https://www.jhipster.tech/documentation-archive/v8.11.0/production/
-[Running tests page]: https://www.jhipster.tech/documentation-archive/v8.11.0/running-tests/
-[Code quality page]: https://www.jhipster.tech/documentation-archive/v8.11.0/code-quality/
-[Setting up Continuous Integration]: https://www.jhipster.tech/documentation-archive/v8.11.0/setting-up-ci/
-[Node.js]: https://nodejs.org/
-[NPM]: https://www.npmjs.com/
-[Webpack]: https://webpack.github.io/
-[BrowserSync]: https://www.browsersync.io/
-[Jest]: https://jestjs.io
-[Leaflet]: https://leafletjs.com/
-[DefinitelyTyped]: https://definitelytyped.org/
-[Angular CLI]: https://angular.dev/tools/cli
+## 📝 License
+
+This project is licensed under the MIT License.
+
+---
+
+## 📞 Contact
+
+- **Email**: support@webdemo.com
+- **Slack**: #webdemo-support
+
+---
+
+**Cập nhật lần cuối**: 22/12/2025

@@ -14,14 +14,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.h2.H2ConsoleAutoConfiguration;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.core.env.Environment;
+import org.springframework.scheduling.annotation.EnableAsync;
 import tech.jhipster.config.DefaultProfileUtil;
 import tech.jhipster.config.JHipsterConstants;
 
 @SpringBootApplication(exclude = { H2ConsoleAutoConfiguration.class })
-@EnableConfigurationProperties({ LiquibaseProperties.class, ApplicationProperties.class })
+@EnableConfigurationProperties({ ApplicationProperties.class })
+@EnableCaching
+@EnableAsync
 public class WebDemoApp {
 
     private static final Logger LOG = LoggerFactory.getLogger(WebDemoApp.class);

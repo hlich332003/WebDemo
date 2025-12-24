@@ -49,7 +49,10 @@
           try {
             const response = await axios.get('/management/jhiopenapigroups', axiosConfig);
             if (Array.isArray(response.data)) {
-              urls = response.data.map(({ group, description }) => ({ name: description, url: `${serverBaseUri}${baseUrl}/${group}` }));
+              urls = response.data.map(({ group, description }) => ({
+                name: description,
+                url: `${serverBaseUri}${baseUrl}/${group}`,
+              }));
             }
           } catch (error) {
             console.error('Failed to fetch default API docs', error);

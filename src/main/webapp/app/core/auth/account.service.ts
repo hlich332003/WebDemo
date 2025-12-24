@@ -14,6 +14,10 @@ export class AccountService {
   private readonly authenticationState = new ReplaySubject<Account | null>(1);
   private accountCache$?: Observable<Account> | null;
 
+  // Admin readiness subject: admin modules/components should call signalAdminReady()
+  // when the admin UI/layout is fully mounted and ready for WebSocket connections.
+  private readonly adminReadySubject = new ReplaySubject<boolean>(1);
+
   private readonly http = inject(HttpClient);
   private readonly stateStorageService = inject(StateStorageService);
   private readonly router = inject(Router);
@@ -28,6 +32,8 @@ export class AccountService {
     this.authenticationState.next(this.userIdentity());
     if (!identity) {
       this.accountCache$ = null;
+      // Reset admin readiness when user logs out
+      this.adminReadySubject.next(false);
     }
   }
 
@@ -46,13 +52,15 @@ export class AccountService {
     return userIdentity.authorities.some((authority: string) => authorities.includes(authority));
   }
 
-  identity(force?: boolean): Observable<Account | null> {
+  identity(force?: boolean, skipNavigation?: boolean): Observable<Account | null> {
     if (!this.accountCache$ || force) {
       this.accountCache$ = this.fetch().pipe(
         tap((account: Account) => {
           this.authenticate(account);
 
-          this.navigateToStoredUrl();
+          if (!skipNavigation) {
+            this.navigateToStoredUrl();
+          }
         }),
         shareReplay(),
       );
@@ -68,6 +76,15 @@ export class AccountService {
     return this.authenticationState.asObservable();
   }
 
+  // Expose admin readiness observable and a signal method
+  adminReady(): Observable<boolean> {
+    return this.adminReadySubject.asObservable();
+  }
+
+  signalAdminReady(): void {
+    this.adminReadySubject.next(true);
+  }
+
   private fetch(): Observable<Account> {
     return this.http.get<Account>(this.applicationConfigService.getEndpointFor('api/account'));
   }
@@ -76,7 +93,7 @@ export class AccountService {
     // previousState can be set in the authExpiredInterceptor and in the userRouteAccessService
     // if login is successful, go to stored previousState and clear previousState
     const previousUrl = this.stateStorageService.getUrl();
-    if (previousUrl) {
+    if (previousUrl && previousUrl !== '/login') {
       this.stateStorageService.clearUrl();
       this.router.navigateByUrl(previousUrl);
     }

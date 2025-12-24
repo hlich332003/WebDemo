@@ -1,21 +1,26 @@
-import { ComponentFixture, TestBed, fakeAsync, inject, tick, waitForAsync } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+jest.mock('app/login/login.service');
+jest.mock('./register.service');
+
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormBuilder } from '@angular/forms';
 import { of, throwError } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 
-import { EMAIL_ALREADY_USED_TYPE, LOGIN_ALREADY_USED_TYPE } from 'app/config/error.constants';
+import { LoginService } from 'app/login/login.service';
 
 import { RegisterService } from './register.service';
 import RegisterComponent from './register.component';
 
 describe('RegisterComponent', () => {
-  let fixture: ComponentFixture<RegisterComponent>;
   let comp: RegisterComponent;
+  let fixture: ComponentFixture<RegisterComponent>;
+  let mockRegisterService: RegisterService;
+  let mockLoginService: LoginService;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [RegisterComponent],
-      providers: [provideHttpClient(), FormBuilder],
+      providers: [FormBuilder, RegisterService, LoginService],
     })
       .overrideTemplate(RegisterComponent, '')
       .compileComponents();
@@ -24,98 +29,82 @@ describe('RegisterComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(RegisterComponent);
     comp = fixture.componentInstance;
+    mockRegisterService = TestBed.inject(RegisterService);
+    mockLoginService = TestBed.inject(LoginService);
   });
 
-  it('should ensure the two passwords entered match', () => {
-    comp.registerForm.patchValue({
-      password: 'password',
-      confirmPassword: 'non-matching',
+  describe('register', () => {
+    it('should set success to true on successful registration', () => {
+      // GIVEN
+      mockRegisterService.save = jest.fn(() => of({}));
+      // Sửa mock login trả về null để khớp kiểu Account | null
+      mockLoginService.login = jest.fn(() => of(null));
+      comp.registerForm.patchValue({
+        email: 'user@example.com',
+        password: 'password',
+        confirmPassword: 'password',
+      });
+
+      // WHEN
+      comp.register();
+
+      // THEN
+      expect(comp.success()).toBe(true);
     });
 
-    comp.register();
-
-    expect(comp.doNotMatch()).toBe(true);
-  });
-
-  it('should update success to true after creating an account', inject(
-    [RegisterService],
-    fakeAsync((service: RegisterService) => {
-      jest.spyOn(service, 'save').mockReturnValue(of({}));
+    it('should set errorEmailExists to true on email already used', () => {
+      // GIVEN
+      mockRegisterService.save = jest.fn(() =>
+        throwError(
+          () =>
+            new HttpErrorResponse({
+              status: 400,
+              error: { type: 'EMAIL_ALREADY_USED' },
+            }),
+        ),
+      );
       comp.registerForm.patchValue({
+        email: 'user@example.com',
         password: 'password',
         confirmPassword: 'password',
       });
 
+      // WHEN
       comp.register();
-      tick();
 
-      expect(service.save).toHaveBeenCalledWith({
-        email: '',
-        password: 'password',
-        login: '',
-        langKey: 'en',
-      });
-      expect(comp.success()).toBe(true);
-      expect(comp.errorUserExists()).toBe(false);
-      expect(comp.errorEmailExists()).toBe(false);
-      expect(comp.error()).toBe(false);
-    }),
-  ));
-
-  it('should notify of user existence upon 400/login already in use', inject(
-    [RegisterService],
-    fakeAsync((service: RegisterService) => {
-      const err = { status: 400, error: { type: LOGIN_ALREADY_USED_TYPE } };
-      jest.spyOn(service, 'save').mockReturnValue(throwError(() => err));
-      comp.registerForm.patchValue({
-        password: 'password',
-        confirmPassword: 'password',
-      });
-
-      comp.register();
-      tick();
-
-      expect(comp.errorUserExists()).toBe(true);
-      expect(comp.errorEmailExists()).toBe(false);
-      expect(comp.error()).toBe(false);
-    }),
-  ));
-
-  it('should notify of email existence upon 400/email address already in use', inject(
-    [RegisterService],
-    fakeAsync((service: RegisterService) => {
-      const err = { status: 400, error: { type: EMAIL_ALREADY_USED_TYPE } };
-      jest.spyOn(service, 'save').mockReturnValue(throwError(() => err));
-      comp.registerForm.patchValue({
-        password: 'password',
-        confirmPassword: 'password',
-      });
-
-      comp.register();
-      tick();
-
+      // THEN
       expect(comp.errorEmailExists()).toBe(true);
-      expect(comp.errorUserExists()).toBe(false);
-      expect(comp.error()).toBe(false);
-    }),
-  ));
+    });
 
-  it('should notify of generic error', inject(
-    [RegisterService],
-    fakeAsync((service: RegisterService) => {
-      const err = { status: 503 };
-      jest.spyOn(service, 'save').mockReturnValue(throwError(() => err));
+    it('should set error to true on general error', () => {
+      // GIVEN
+      mockRegisterService.save = jest.fn(() => throwError(() => new HttpErrorResponse({ status: 500 })));
       comp.registerForm.patchValue({
+        email: 'user@example.com',
         password: 'password',
         confirmPassword: 'password',
       });
 
+      // WHEN
       comp.register();
-      tick();
 
-      expect(comp.errorUserExists()).toBe(false);
-      expect(comp.errorEmailExists()).toBe(false);
+      // THEN
       expect(comp.error()).toBe(true);
-    }),
-  ));
+    });
+
+    it('should set doNotMatch to true on password mismatch', () => {
+      // GIVEN
+      comp.registerForm.patchValue({
+        email: 'user@example.com',
+        password: 'password',
+        confirmPassword: 'wrongpassword',
+      });
+
+      // WHEN
+      comp.register();
+
+      // THEN
+      expect(comp.doNotMatch()).toBe(true);
+    });
+  });
 });

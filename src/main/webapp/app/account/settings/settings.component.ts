@@ -1,39 +1,33 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 
 import SharedModule from 'app/shared/shared.module';
 import { AccountService } from 'app/core/auth/account.service';
 import { Account } from 'app/core/auth/account.model';
 
-const initialAccount: Account = {} as Account;
-
 @Component({
   selector: 'jhi-settings',
-  imports: [SharedModule, FormsModule, ReactiveFormsModule],
+  standalone: true,
+  imports: [SharedModule, FormsModule, ReactiveFormsModule, TranslateModule],
   templateUrl: './settings.component.html',
 })
 export default class SettingsComponent implements OnInit {
   success = signal(false);
+  currentAccount: Account | null = null;
 
   settingsForm = new FormGroup({
-    firstName: new FormControl(initialAccount.firstName, {
-      nonNullable: true,
+    firstName: new FormControl('', {
       validators: [Validators.required, Validators.minLength(1), Validators.maxLength(50)],
     }),
-    lastName: new FormControl(initialAccount.lastName, {
-      nonNullable: true,
+    lastName: new FormControl('', {
       validators: [Validators.required, Validators.minLength(1), Validators.maxLength(50)],
     }),
-    email: new FormControl(initialAccount.email, {
+    email: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.minLength(5), Validators.maxLength(254), Validators.email],
     }),
-    langKey: new FormControl(initialAccount.langKey, { nonNullable: true }),
-
-    activated: new FormControl(initialAccount.activated, { nonNullable: true }),
-    authorities: new FormControl(initialAccount.authorities, { nonNullable: true }),
-    imageUrl: new FormControl(initialAccount.imageUrl, { nonNullable: true }),
-    login: new FormControl(initialAccount.login, { nonNullable: true }),
+    phone: new FormControl(''),
   });
 
   private readonly accountService = inject(AccountService);
@@ -41,7 +35,13 @@ export default class SettingsComponent implements OnInit {
   ngOnInit(): void {
     this.accountService.identity().subscribe(account => {
       if (account) {
-        this.settingsForm.patchValue(account);
+        this.settingsForm.patchValue({
+          firstName: account.firstName,
+          lastName: account.lastName,
+          email: account.email,
+          phone: account.phone,
+        });
+        this.currentAccount = account;
       }
     });
   }
@@ -49,10 +49,17 @@ export default class SettingsComponent implements OnInit {
   save(): void {
     this.success.set(false);
 
-    const account = this.settingsForm.getRawValue();
+    const formValues = this.settingsForm.getRawValue();
+    const account: Account = {
+      ...this.currentAccount!,
+      firstName: formValues.firstName,
+      lastName: formValues.lastName,
+      email: formValues.email, // email is non-nullable in the form
+      phone: formValues.phone,
+    };
+
     this.accountService.save(account).subscribe(() => {
       this.success.set(true);
-
       this.accountService.authenticate(account);
     });
   }

@@ -1,10 +1,10 @@
 # This configuration is intended for development purpose, it's **your** responsibility to harden it for production
 name: webdemo
 services:
-  mysql:
+  mssql:
     extends:
-      file: ./mysql.yml
-      service: mysql
+      file: ./mssql.yml
+      service: mssql
     profiles:
       - ''
       - prod

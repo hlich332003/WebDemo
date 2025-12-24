@@ -5,7 +5,7 @@ import RegisterComponent from './register.component';
 const registerRoute: Route = {
   path: 'register',
   component: RegisterComponent,
-  title: 'Registration',
+  title: 'Đăng ký',
 };
 
 export default registerRoute;
