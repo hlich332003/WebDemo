@@ -1,12 +1,10 @@
 package com.mycompany.myapp.service;
 
-import com.mycompany.myapp.domain.User;
 import com.mycompany.myapp.domain.analytics.ChatConversation;
 import com.mycompany.myapp.domain.analytics.ChatMessage;
 import com.mycompany.myapp.repository.UserRepository;
 import com.mycompany.myapp.repository.analytics.ChatConversationRepository;
 import com.mycompany.myapp.repository.analytics.ChatMessageRepository;
-import com.mycompany.myapp.security.SecurityUtils;
 import com.mycompany.myapp.service.dto.ChatResponseDTO;
 import java.time.Instant;
 import java.util.List;
@@ -58,6 +56,19 @@ public class ChatService {
         return conversationRepository.findByUserIdentifierAndStatus(userIdentifier, "OPEN");
     }
 
+    /**
+     * Create a new conversation for the given userIdentifier regardless of existing OPEN ones.
+     * This is used when the frontend user explicitly requests a new session ("Tạo phiên chat mới").
+     */
+    public ChatConversation createNewConversation(String userIdentifier) {
+        ChatConversation conversation = new ChatConversation();
+        conversation.setUserIdentifier(userIdentifier);
+        conversation.setStatus("OPEN");
+        conversation.setCreatedAt(Instant.now());
+        conversation.setLastMessageAt(Instant.now());
+        return conversationRepository.save(conversation);
+    }
+
     public void handleUserMessage(String content, String userIdentifier) {
         ChatConversation conversation = startConversation(userIdentifier);
         conversation.setLastMessageAt(Instant.now());
@@ -67,10 +78,12 @@ public class ChatService {
 
         ChatResponseDTO response = toResponseDTO(message);
 
-        // Echo back to user
-        messagingTemplate.convertAndSendToUser(userIdentifier, "/queue/chat", response);
-        // Send to CSKH - publish to a topic only CSKH subscribe to
-        messagingTemplate.convertAndSend("/topic/cskh/chat", response);
+        // Broadcast to standardized topic so both user and admin can subscribe to same topic
+        String topic = "/topic/chat/conversations/" + conversation.getId();
+        messagingTemplate.convertAndSend(topic, response);
+
+        // Also send to user's personal queue for direct delivery if using convertAndSendToUser on some clients
+        messagingTemplate.convertAndSendToUser(conversation.getUserIdentifier(), "/queue/chat", response);
     }
 
     public void handleCskhReply(Long conversationId, String content, String cskhIdentifier) {
@@ -89,17 +102,21 @@ public class ChatService {
 
         ChatResponseDTO response = toResponseDTO(message);
 
-        // Send to user
-        messagingTemplate.convertAndSendToUser(conversation.getUserIdentifier(), "/queue/chat", response);
-        // Send to other CSKHs for sync
+        // Broadcast to standardized topic
+        String topic = "/topic/chat/conversations/" + conversation.getId();
+        messagingTemplate.convertAndSend(topic, response);
+
+        // Also notify all CSKH for sync (optional)
         messagingTemplate.convertAndSend("/topic/cskh/chat", response);
     }
 
-    public void closeConversation(Long conversationId) {
+    public void closeConversation(Long conversationId, String closedBy) {
         conversationRepository
             .findById(conversationId)
             .ifPresent(conversation -> {
                 conversation.setStatus("CLOSED");
+                conversation.setClosedAt(Instant.now());
+                // closedBy field not present in entity; could be stored elsewhere or logged
                 conversationRepository.save(conversation);
 
                 ChatResponseDTO response = new ChatResponseDTO(
@@ -110,11 +127,37 @@ public class ChatService {
                     Instant.now(),
                     "SESSION_ENDED"
                 );
+                // Notify via standardized topic and per-user queue
+                String topic = "/topic/chat/conversations/" + conversationId;
+                messagingTemplate.convertAndSend(topic, response);
                 messagingTemplate.convertAndSendToUser(conversation.getUserIdentifier(), "/queue/chat", response);
             });
     }
 
+    /**
+     * Mark messages sent by admin/CSKH in a conversation as read (used when user opens a conversation)
+     */
+    @Transactional
+    public void markAdminMessagesAsRead(Long conversationId) {
+        List<ChatMessage> msgs = messageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId);
+        boolean changed = false;
+        for (ChatMessage m : msgs) {
+            if (m != null && "CSKH".equalsIgnoreCase(m.getSenderType()) && !m.isRead()) {
+                m.setRead(true);
+                messageRepository.save(m);
+                changed = true;
+            }
+        }
+        if (changed) {
+            log.debug("Marked admin messages as read for conversationId={}", conversationId);
+        }
+    }
+
     private ChatMessage saveMessage(ChatConversation conversation, String senderType, String senderIdentifier, String content) {
+        // ensure conversation has updated lastMessageAt
+        conversation.setLastMessageAt(Instant.now());
+        conversationRepository.save(conversation);
+
         ChatMessage message = new ChatMessage();
         message.setConversation(conversation);
         message.setSenderType(senderType);

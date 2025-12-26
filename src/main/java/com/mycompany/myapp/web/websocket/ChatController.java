@@ -1,57 +1,62 @@
 package com.mycompany.myapp.web.websocket;
 
+import com.mycompany.myapp.service.ChatService;
 import com.mycompany.myapp.web.websocket.dto.ChatMessageDTO;
 import java.security.Principal;
-import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
 
 @Controller("websocketChatController") // Đặt tên bean rõ ràng để tránh xung đột
 public class ChatController {
 
     private final Logger log = LoggerFactory.getLogger(ChatController.class);
-    private final SimpMessageSendingOperations messagingTemplate;
 
-    public ChatController(SimpMessageSendingOperations messagingTemplate) {
-        this.messagingTemplate = messagingTemplate;
+    private final ChatService chatService;
+
+    public ChatController(ChatService chatService) {
+        this.chatService = chatService;
     }
 
     @MessageMapping("/chat.send")
     public void send(@Payload ChatMessageDTO chatMessage, Principal principal) {
         if (principal == null) {
-            log.warn("Anonymous user attempted to send message");
+            log.warn("❌ ChatController.send() - Principal is NULL! Message NOT sent");
             return;
         }
 
-        String userEmail = principal.getName();
-        log.debug("Received message from {}: {}", userEmail, chatMessage.getContent());
+        String userIdentifier = principal.getName();
+        log.info("✅ ChatController.send() - Received message from USER: {} | Content: {}", userIdentifier, chatMessage.getContent());
 
-        // 1. Ở đây bạn nên gọi Service để lưu tin nhắn vào DB
-        // chatService.saveMessage(userEmail, chatMessage.getContent());
-
-        // 2. Phản hồi lại cho chính User đó (để UI cập nhật, hoặc xác nhận đã gửi)
-        // Lưu ý: UI hiện tại đang tự push vào mảng messages nên có thể không cần bước này ngay
-        // Nhưng đúng chuẩn là Server confirm rồi UI mới hiện.
-
-        ChatMessageDTO response = new ChatMessageDTO();
-        response.setContent(chatMessage.getContent());
-        response.setSenderType("USER");
-        response.setTimestamp(Instant.now());
-
-        // Gửi lại vào queue riêng của user
-        messagingTemplate.convertAndSendToUser(userEmail, "/queue/chat", response);
-        // 3. Gửi cho Admin/CSKH (nếu cần)
-        // messagingTemplate.convertAndSend("/topic/cskh/chat", response);
+        // Delegate to service which will persist and broadcast to standardized topic
+        try {
+            chatService.handleUserMessage(chatMessage.getContent(), userIdentifier);
+        } catch (Exception e) {
+            log.error("[CHAT_SEND_FAILED] Error while handling user message: {}", e.getMessage(), e);
+        }
     }
 
     @MessageMapping("/chat.reply")
     public void reply(@Payload ChatMessageDTO chatMessage, Principal principal) {
-        // Logic cho Admin reply user
-        // Cần có conversationId để biết reply cho ai
-        log.debug("Admin {} reply: {}", principal.getName(), chatMessage.getContent());
+        if (principal == null) {
+            log.warn("❌ ChatController.reply() - Principal is NULL! Reply NOT processed");
+            return;
+        }
+        // Admin reply must include conversationId
+        if (chatMessage.getConversationId() == null) {
+            log.warn("❌ ChatController.reply() - Missing conversationId");
+            return;
+        }
+
+        String cskhIdentifier = principal.getName();
+        log.debug("Admin {} reply to conversation {}: {}", cskhIdentifier, chatMessage.getConversationId(), chatMessage.getContent());
+
+        try {
+            chatService.handleCskhReply(chatMessage.getConversationId(), chatMessage.getContent(), cskhIdentifier);
+        } catch (Exception e) {
+            log.error("[CHAT_REPLY_FAILED] Error while handling cskh reply: {}", e.getMessage(), e);
+        }
     }
 }

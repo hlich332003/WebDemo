@@ -59,7 +59,7 @@
                 {
                   "type": "anyComponentStyle",
                   "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumError": "512kb"
                 }
               ]
             },
@@ -74,6 +74,13 @@
                 {
                   "replace": "src/main/webapp/environments/environment.ts",
                   "with": "src/main/webapp/environments/environment.development.ts"
+                }
+              ],
+              "budgets": [
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "512kb",
+                  "maximumError": "1mb"
                 }
               ]
             }

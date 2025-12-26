@@ -1,266 +1,244 @@
-import { Injectable, OnDestroy, inject } from '@angular/core';
-import { Client, IMessage } from '@stomp/stompjs';
+import { Injectable } from '@angular/core';
 import SockJS from 'sockjs-client';
-import { BehaviorSubject, Subject } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { ApplicationConfigService } from 'app/core/config/application-config.service';
-import { INotification } from '../model/notification.model';
+import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
+import { BehaviorSubject, Subject, Observable } from 'rxjs';
+import { WS_CONFIG } from 'app/core/websocket/websocket.config';
+import { Dayjs } from 'dayjs';
 
+// Minimal shared types expected by the codebase
 export interface ChatMessage {
-  content: string;
-  senderType: 'USER' | 'ADMIN' | 'SYSTEM' | 'CSKH';
-  timestamp: Date;
-  type?: 'MESSAGE' | 'SESSION_ENDED' | 'system';
   conversationId?: number;
+  senderType?: 'USER' | 'ADMIN' | 'CSKH' | 'SYSTEM';
   senderIdentifier?: string;
-  message?: string;
+  content?: string;
+  message?: string; // alias used in UI
   isFromAdmin?: boolean;
+  timestamp?: string | Date | undefined;
+  type?: 'MESSAGE' | 'SESSION_ENDED' | 'system';
+}
+
+export interface INotification {
+  id?: number | string;
+  type?: string; // optional to remain compatible with model INotification
+  title?: string;
+  content?: string;
+  message?: string;
+  link?: string;
+  timestamp?: string | Date | Dayjs;
+  read?: boolean;
+  orderId?: number | string;
 }
 
 @Injectable({ providedIn: 'root' })
-export class WebSocketService implements OnDestroy {
-  // Public streams (Declared first)
-  public connectionState$;
-  public chatMessage$;
-  public notifications$;
-  public unreadCount$;
-  public cskhChatStream_;
+export class WebSocketService {
+  // Public observables (declared before private fields to satisfy ESLint member-ordering)
+  public connectionState$: Observable<boolean>;
+  public notifications$: Observable<INotification[]>;
+  public unreadCount$: Observable<number>;
+  public chatMessage$: Subject<ChatMessage>;
+
+  // Public convenience boolean used directly in templates in the project
+  public isConnected = false;
 
   // Private fields
-  private client: Client | null = null;
-  private connected$ = new BehaviorSubject<boolean>(false);
-  private chatMessageSubject = new Subject<ChatMessage>();
+  private client?: Client;
+  private connectionStateSubject = new BehaviorSubject<boolean>(false);
+  private unreadCountSubject = new BehaviorSubject<number>(0);
   private notificationsSubject = new BehaviorSubject<INotification[]>([]);
-  private config = inject(ApplicationConfigService);
-
-  // Prevent multiple activate attempts
-  private activating = false;
+  private subscriptions: Map<string, StompSubscription> = new Map<string, StompSubscription>();
 
   constructor() {
-    // Initialize public streams from private subjects
-    this.connectionState$ = this.connected$.asObservable();
-    this.chatMessage$ = this.chatMessageSubject.asObservable();
+    this.connectionState$ = this.connectionStateSubject.asObservable();
     this.notifications$ = this.notificationsSubject.asObservable();
-    this.unreadCount$ = this.notifications$.pipe(map(list => list.filter(n => !n.read).length));
-    this.cskhChatStream_ = this.chatMessageSubject.asObservable();
+    this.chatMessage$ = new Subject<ChatMessage>();
+    this.unreadCount$ = this.unreadCountSubject.asObservable();
+
+    // keep boolean in sync with subject
+    this.connectionState$.subscribe(v => (this.isConnected = v));
   }
 
   /**
-   * Kết nối WebSocket với Token cụ thể
-   * subscribeUserQueue: nếu true thì subscribe vào /user/queue/chat (dành cho user)
-   * Nếu false: chỉ subscribe notifications (dành cho admin/cskh hoặc user không cần chat)
+   * Connect to backend STOMP endpoint.
+   * Flexible signature to accept either:
+   *  - connect(token)  // common usage in many components
+   *  - connect(endpoint, token)
    */
-  connect(token: string, subscribeUserQueue = false): void {
-    console.warn('🚀 WS connect called, token:', token, 'subscribeUserQueue:', subscribeUserQueue);
+  public connect(arg1: string = WS_CONFIG.BASE_URL, arg2?: string): void {
+    let endpoint = WS_CONFIG.BASE_URL;
+    let token: string | undefined;
 
-    // Use connected$ value as source of truth
-    if (this.connected$.value) {
-      console.warn('WebSocket already active, skipping connect');
-      return; // Already connected
+    // Detect if arg1 looks like a JWT (has at least two dots) -> treat as token
+    const looksLikeToken = (s?: string): boolean => (s?.match(/\./g) ?? []).length >= 2;
+
+    if (!arg1) {
+      endpoint = WS_CONFIG.BASE_URL;
+      token = arg2;
+    } else if (looksLikeToken(arg1) && !arg1.startsWith('/')) {
+      // called as connect(token)
+      token = arg1;
+    } else if (arg1.startsWith('/') || arg1.startsWith('http') || arg1.includes('?')) {
+      // called as connect(endpoint) or connect(endpoint, token)
+      endpoint = arg1;
+      token = arg2;
+    } else if (arg2 && looksLikeToken(arg2)) {
+      // called as connect(endpoint, token)
+      endpoint = arg1;
+      token = arg2;
+    } else {
+      // Ambiguous: treat arg1 as token fallback
+      token = arg1;
     }
 
-    if (this.activating) {
-      console.warn('WebSocket activation already in progress');
+    // If already connected, skip
+    if (this.client && (this.client.active || (this.client as any).connected)) {
       return;
     }
 
-    if (!token) {
-      console.warn('Cannot connect to WebSocket: Token is empty');
-      return;
-    }
-
-    const endpoint = this.config.getEndpointFor('/websocket');
-    let wsUrl: string;
-    try {
-      const isAbsolute = endpoint.startsWith('http://') || endpoint.startsWith('https://');
-      if (isAbsolute) {
-        // If the endpoint from config is absolute (includes host), use it but ensure it's HTTP/HTTPS
-        const asUrl = new URL(endpoint);
-        const httpScheme = asUrl.protocol === 'https:' ? 'https:' : 'http:';
-        // SockJS expects an HTTP(S) URL (not ws://). Keep query param for token below.
-        wsUrl = `${httpScheme}//${asUrl.host}${asUrl.pathname}?access_token=${token}`;
-      } else if (endpoint.startsWith('/')) {
-        // If endpoint is relative, always point to backend host: default to port 8080
-        // Use HTTP/HTTPS scheme here (SockJS requires http/https) to avoid the browser
-        // attempting to connect back to BrowserSync (running on 9001) which would
-        // intercept/kill the socket. This forces SockJS to connect to backend:8080.
-        const httpProtocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
-        const hostname = window.location.hostname || 'localhost';
-        const backendPort = '8080';
-        wsUrl = `${httpProtocol}//${hostname}:${backendPort}${endpoint}?access_token=${token}`;
-      } else {
-        // Fallback: construct using same host but explicit port 8080 and HTTP scheme
-        const httpProtocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
-        const hostname = window.location.hostname || 'localhost';
-        const backendPort = '8080';
-        // remove any leading slash from endpoint when concatenating
-        wsUrl = `${httpProtocol}//${hostname}:${backendPort}/${endpoint.replace(/^\//, '')}?access_token=${token}`;
-      }
-    } catch (e) {
-      // On any error, fallback to explicit backend host (HTTP) to avoid using BrowserSync proxy
+    // build wsUrl from endpoint (if endpoint starts with / use host/port)
+    let wsUrl = endpoint;
+    if (endpoint.startsWith('/')) {
       const httpProtocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
       const hostname = window.location.hostname || 'localhost';
       const backendPort = '8080';
-      wsUrl = `${httpProtocol}//${hostname}:${backendPort}/websocket?access_token=${token}`;
+      wsUrl = `${httpProtocol}//${hostname}:${backendPort}${endpoint}`;
     }
-    console.warn('🌐 WS URL:', wsUrl);
 
-    try {
-      this.client = new Client({
-        // SockJS expects an HTTP(S) endpoint, not ws://. Use the HTTP URL built above.
-        webSocketFactory: () => new SockJS(wsUrl),
-        debug: (str: string) => console.warn('[STOMP]', str),
-        reconnectDelay: 0,
-        heartbeatIncoming: 25000,
-        heartbeatOutgoing: 25000,
-        connectHeaders: {
-          Authorization: `Bearer ${token}`,
-          access_token: token,
-        } as any,
-      });
+    // If endpoint already contains query params (e.g., ?guest=...), do not append token param
+    const fullUrl = token ? `${wsUrl}${wsUrl.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}` : wsUrl;
+    console.warn('[WebSocketService] Connecting to:', fullUrl.replace(/token=([^&]+)/, 'token=***'));
 
-      this.activating = true;
+    this.client = new Client({
+      webSocketFactory: () => new SockJS(fullUrl),
+      reconnectDelay: WS_CONFIG.RECONNECT_DELAY,
+      heartbeatIncoming: WS_CONFIG.HEARTBEAT_INCOMING,
+      heartbeatOutgoing: WS_CONFIG.HEARTBEAT_OUTGOING,
+      connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
+    });
 
-      this.client.onConnect = () => {
-        console.warn('✅ WebSocket Connected!');
-        this.activating = false;
-        this.connected$.next(true);
+    const client = this.client;
 
-        // Notifications always subscribed
-        try {
-          this.subscribeNotifications();
-        } catch (e) {
-          console.error('Failed to subscribe notifications', e);
-        }
-
-        if (subscribeUserQueue) {
-          try {
-            this.subscribeUserChat();
-          } catch (e) {
-            console.error('Failed to subscribe user chat', e);
-          }
-        }
-      };
-
-      this.client.onStompError = frame => {
-        console.error('❌ Broker reported error:', frame);
-        // mark disconnected but do not throw
-        this.connected$.next(false);
-        this.activating = false;
-      };
-
-      this.client.onWebSocketClose = (evt?: any) => {
-        console.warn('❌ WebSocket Closed', evt?.reason ?? evt);
-        this.connected$.next(false);
-        this.activating = false;
-        // keep client object so we know there was a connection attempt
-      };
-
-      this.client.activate();
-    } catch (e) {
-      console.error('WebSocket activate failed', e);
-      this.activating = false;
-      // Ensure we don't leave inconsistent state
-      this.client = null;
-      this.connected$.next(false);
-    }
-  }
-
-  disconnect(): void {
-    if (this.client) {
-      try {
-        this.client.deactivate();
-      } catch (e) {
-        console.warn('Error during WebSocket deactivate', e);
-      }
-      this.client = null;
-    }
-    this.activating = false;
-    this.connected$.next(false);
-  }
-
-  sendMessage(content: string): void {
-    if (!this.connected$.value || !this.client) return;
-
-    const payload = {
-      content,
-      timestamp: new Date().toISOString(),
+    client.onConnect = (): void => {
+      console.warn('[WebSocketService] STOMP CONNECTED');
+      this.connectionStateSubject.next(true);
     };
 
-    this.client.publish({
-      destination: '/app/chat.send',
-      body: JSON.stringify(payload),
-    });
+    client.onWebSocketClose = (): void => {
+      console.warn('[WebSocketService] WebSocket closed');
+      this.connectionStateSubject.next(false);
+    };
+
+    client.onStompError = (frame?: any): void => {
+      console.error('[WebSocketService] STOMP error', frame?.headers?.message ?? frame);
+      this.connectionStateSubject.next(false);
+    };
+
+    client.activate();
   }
 
-  sendReplyAsCskh(conversationId: number, content: string): void {
-    if (!this.connected$.value || !this.client) return;
-
-    this.client.publish({
-      destination: '/app/chat.reply',
-      body: JSON.stringify({ conversationId, content }),
-    });
-  }
-
-  // Stubs
-  openChat(_conversationId?: number): void {
-    // Stub
-  }
-
-  closeChat(_conversationId?: number): void {
-    // Stub
-  }
-
-  get isConnected(): boolean {
-    return this.connected$.value;
-  }
-
-  ngOnDestroy(): void {
-    this.disconnect();
-  }
-
-  // ===== PRIVATE HELPERS =====
-
-  private subscribeUserChat(): void {
+  public disconnect(): void {
     try {
-      this.client?.subscribe('/user/queue/chat', (message: IMessage) => {
+      this.subscriptions.forEach(sub => {
         try {
-          if (message.body) {
-            const payload = JSON.parse(message.body);
-            const chatMsg: ChatMessage = {
-              content: payload.content,
-              message: payload.content,
-              senderType: payload.senderType,
-              timestamp: new Date(payload.timestamp ?? payload.createdAt),
-              type: payload.type ?? 'MESSAGE',
-              isFromAdmin: payload.senderType !== 'USER',
-            };
-            this.chatMessageSubject.next(chatMsg);
-          }
-        } catch (err) {
-          console.error('Failed parsing user chat message', err, message.body);
+          sub.unsubscribe();
+        } catch (e) {
+          /* noop */
         }
       });
-    } catch (err) {
-      console.error('subscribeUserChat error', err);
+      this.subscriptions.clear();
+      if (this.client) {
+        try {
+          this.client.deactivate();
+        } catch (e) {
+          /* noop */
+        }
+      }
+    } finally {
+      this.connectionStateSubject.next(false);
     }
   }
 
-  private subscribeNotifications(): void {
+  public subscribe(destination: string, callback: (msg: any) => void): void {
+    if (!this.client) {
+      console.warn('[WebSocketService] subscribe called before connect', destination);
+      return;
+    }
+
+    // avoid double subscription
+    if (this.subscriptions.has(destination)) {
+      return;
+    }
+
+    const sub = this.client.subscribe(destination, (message: IMessage) => {
+      try {
+        const body = message.body ? JSON.parse(message.body) : null;
+        callback(body);
+      } catch (e) {
+        console.warn('[WebSocketService] failed parse message', e);
+      }
+    });
+
+    this.subscriptions.set(destination, sub);
+  }
+
+  public unsubscribe(destination: string): void {
+    const sub = this.subscriptions.get(destination);
+    if (sub) {
+      try {
+        sub.unsubscribe();
+      } catch (e) {
+        /* noop */
+      }
+      this.subscriptions.delete(destination);
+    }
+  }
+
+  public publish(destination: string, body: any): void {
+    if (!this.client) {
+      console.warn('[WebSocketService] publish called before connect', destination);
+      return;
+    }
     try {
-      this.client?.subscribe('/user/queue/notifications', (message: IMessage) => {
-        try {
-          if (message.body) {
-            const notification: INotification = JSON.parse(message.body);
-            const current = this.notificationsSubject.value;
-            this.notificationsSubject.next([notification, ...current]);
-          }
-        } catch (err) {
-          console.error('Failed parsing notification message', err, message.body);
-        }
-      });
-    } catch (err) {
-      console.error('subscribeNotifications error', err);
+      this.client.publish({ destination, body: JSON.stringify(body) });
+    } catch (e) {
+      console.warn('[WebSocketService] publish error', e);
+    }
+  }
+
+  // Convenience methods used across the codebase
+  public sendMessage(payload: any): void {
+    this.publish(WS_CONFIG.BROKER.CHAT_SEND, payload);
+  }
+
+  public sendReplyAsCskh(conversationId: number, content: string): void {
+    this.publish(WS_CONFIG.BROKER.CHAT_REPLY, { conversationId, content });
+  }
+
+  public openChat(conversationId: number): void {
+    // Subscribe to the standardized conversation topic: /topic/chat/conversations/{id}
+    const dest = `${WS_CONFIG.BROKER.CHAT_CONVERSATIONS_PREFIX}/${conversationId}`;
+    this.subscribe(dest, (msg: ChatMessage) => {
+      this.chatMessage$.next(msg);
+    });
+
+    // Also notify server that we opened (optional)
+    this.publish('/app/chat.open', { conversationId });
+  }
+
+  public closeChat(conversationId: number): void {
+    this.publish('/app/chat.close', { conversationId });
+    this.unsubscribe(`${WS_CONFIG.BROKER.CHAT_CONVERSATIONS_PREFIX}/${conversationId}`);
+  }
+
+  // push notification into subject
+  public pushNotification(notification: INotification): void {
+    try {
+      // prepend to notifications list
+      const curr = this.notificationsSubject.getValue();
+      this.notificationsSubject.next([notification, ...curr]);
+      // increment unread counter
+      this.unreadCountSubject.next(this.unreadCountSubject.getValue() + 1);
+    } catch (e) {
+      console.warn('[WebSocketService] pushNotification failed', e);
     }
   }
 }

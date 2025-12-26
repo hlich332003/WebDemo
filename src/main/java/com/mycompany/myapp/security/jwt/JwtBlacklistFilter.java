@@ -6,7 +6,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,12 @@ public class JwtBlacklistFilter extends OncePerRequestFilter {
         "/api/activate",
         "/api/public/**",
         "/api/account/reset-password/init",
-        "/api/account/reset-password/finish"
+        "/api/account/reset-password/finish",
+        // Exclude SockJS transport endpoints from blacklist checking so SockJS can probe/connect
+        "/websocket/**",
+        "/websocket",
+        "/websocket/info",
+        "/websocket/iframe.html"
     );
 
     public JwtBlacklistFilter(TokenBlacklistService tokenBlacklistService) {

@@ -20,9 +20,6 @@ spring:
           authority-prefix: ''
           authorities-claim-name: auth
 
-  cache: # Thêm cấu hình cache
-    type: redis # Bật Redis cache
-
 # JHipster specific properties
 
 jhipster:
@@ -46,9 +43,19 @@ server:
       charset: UTF-8
       force: true
       enabled: true
+    # WebSocket async timeout configuration
+    # WebSocket is a long-lived connection, so we need a long timeout
+    # -1 means no timeout (unlimited)
+    async:
+      request-timeout: -1
+  tomcat:
+    # WebSocket keep-alive settings
+    # Prevents Tomcat from closing idle WebSocket connections
+    keep-alive-timeout: 60000
+    max-keep-alive-requests: -1
 logging:
   level:
-    com.mycompany.myapp.config.WebSocketConfig: DEBUG
+    com.mycompany.myapp.config.WebSocketConfig: INFO
 ---
 # Profile-specific configuration: dev
 
@@ -67,7 +74,6 @@ spring:
   # JPA & HIBERNATE CONFIGURATION (dev)
   jpa:
     properties:
-      hibernate.dialect: org.hibernate.dialect.SQLServerDialect
       hibernate.jdbc.time_zone: UTC
       hibernate.timezone.default_storage: NORMALIZE
     hibernate:

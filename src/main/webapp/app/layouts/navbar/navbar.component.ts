@@ -62,7 +62,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   wishlistItemCount = 0;
 
   // Subscribe trực tiếp từ Service
-  notifications$: Observable<INotification[]> = this.webSocketService.notifications$;
+  // notifications$ emits an array of notifications (most recent first)
+  notifications$: Observable<INotification[]> = this.webSocketService.notifications$ as Observable<INotification[]>;
   unreadCount$: Observable<number> = this.webSocketService.unreadCount$;
 
   showCart = computed(() => {

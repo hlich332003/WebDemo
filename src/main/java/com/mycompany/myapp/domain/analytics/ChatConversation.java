@@ -32,6 +32,9 @@ public class ChatConversation implements Serializable {
     @Column(name = "last_message_at")
     private Instant lastMessageAt;
 
+    @Column(name = "closed_at")
+    private Instant closedAt;
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -87,5 +90,13 @@ public class ChatConversation implements Serializable {
 
     public void setLastMessageAt(Instant lastMessageAt) {
         this.lastMessageAt = lastMessageAt;
+    }
+
+    public Instant getClosedAt() {
+        return closedAt;
+    }
+
+    public void setClosedAt(Instant closedAt) {
+        this.closedAt = closedAt;
     }
 }

@@ -15,9 +15,13 @@
 
 logging:
   level:
-    ROOT: DEBUG
+    root: DEBUG
     tech.jhipster: DEBUG
     com.mycompany.myapp: DEBUG
+    com.mycompany.myapp.config: DEBUG
+    com.mycompany.myapp.web.websocket: DEBUG
+    org.springframework.web.socket: DEBUG
+    org.springframework.messaging: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql: TRACE
 
@@ -111,9 +115,12 @@ spring:
     cache: false
 
 server:
-  port: 8080
   # make sure requests the proxy uri instead of the server one
   forward-headers-strategy: native
+  servlet:
+    async:
+      request-timeout: 600000 # 10 minutes (600,000 ms) for WebSocket connections
+      # WebSocket connections need long timeout to stay alive during long polling
 
 # ===================================================================
 # JHipster specific properties

@@ -1,8 +1,8 @@
 <nav data-cy="navbar" class="navbar navbar-dark navbar-expand-lg">
   <div class="container-fluid">
     <!-- Brand -->
-    @let currentAccount = account();
-    <a class="navbar-brand" [routerLink]="currentAccount?.authorities?.includes('ROLE_ADMIN') ? '/admin' : '/'" (click)="collapseNavbar()">
+    <!-- account() signal accessible in template -->
+    <a class="navbar-brand" [routerLink]="account()?.authorities?.includes('ROLE_ADMIN') ? '/admin' : '/'" (click)="collapseNavbar()">
       <fa-icon icon="shopping-cart" class="brand-icon"></fa-icon>
       <span class="navbar-title">PC No.1</span>
       <span class="navbar-version">{{ version }}</span>
@@ -48,18 +48,14 @@
       <ul class="navbar-nav ms-auto">
         <!-- Home -->
         <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-          <a
-            class="nav-link"
-            [routerLink]="currentAccount?.authorities?.includes('ROLE_ADMIN') ? '/admin' : '/'"
-            (click)="collapseNavbar()"
-          >
+          <a class="nav-link" [routerLink]="account()?.authorities?.includes('ROLE_ADMIN') ? '/admin' : '/'" (click)="collapseNavbar()">
             <fa-icon icon="home" class="nav-icon"></fa-icon>
             <span class="nav-text">Trang chủ</span>
           </a>
         </li>
 
         <!-- Wishlist (hidden for admin and guest) -->
-        <li *ngIf="showCart() && currentAccount" class="nav-item wishlist-item" routerLinkActive="active">
+        <li *ngIf="showCart() && account()" class="nav-item wishlist-item" routerLinkActive="active">
           <a class="nav-link" routerLink="/wishlist" (click)="collapseNavbar()">
             <fa-icon icon="heart" class="nav-icon"></fa-icon>
             <span class="nav-text">Yêu thích</span>
@@ -68,7 +64,7 @@
         </li>
 
         <!-- Cart (hidden for admin and guest) -->
-        <li *ngIf="showCart() && currentAccount" class="nav-item cart-item" routerLinkActive="active">
+        <li *ngIf="showCart() && account()" class="nav-item cart-item" routerLinkActive="active">
           <a class="nav-link" routerLink="/cart" (click)="collapseNavbar()">
             <fa-icon icon="shopping-cart" class="nav-icon"></fa-icon>
             <span class="nav-text">Giỏ hàng</span>
@@ -153,23 +149,23 @@
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: true }"
         >
-          @let accountRef = account();
           <a class="nav-link dropdown-toggle" ngbDropdownToggle href="javascript:void(0);" id="account-menu" data-cy="accountMenu">
-            @if (!accountRef?.imageUrl) {
+            <ng-container *ngIf="!account()?.imageUrl; else avatar">
               <span>
                 <fa-icon icon="user"></fa-icon>
                 <span>Tài khoản</span>
               </span>
-            } @else {
+            </ng-container>
+            <ng-template #avatar>
               <span>
-                <img [ngSrc]="accountRef!.imageUrl || ''" class="profile-image rounded-circle" alt="Avatar" width="28" height="28" />
+                <img [ngSrc]="account()!.imageUrl || ''" class="profile-image rounded-circle" alt="Avatar" width="28" height="28" />
               </span>
-            }
+            </ng-template>
           </a>
           <ul class="dropdown-menu" ngbDropdownMenu aria-labelledby="account-menu">
-            @if (accountRef !== null) {
+            <ng-container *ngIf="account() as acc; else guestMenu">
               <li *jhiHasAnyAuthority="'ROLE_USER'">
-                @if (!accountRef.authorities.includes('ROLE_ADMIN')) {
+                <ng-container *ngIf="!acc.authorities.includes('ROLE_ADMIN')">
                   <a
                     class="dropdown-item"
                     routerLink="/account/my-orders"
@@ -180,7 +176,7 @@
                     <fa-icon icon="receipt" [fixedWidth]="true"></fa-icon>
                     <span>Đơn hàng của tôi</span>
                   </a>
-                }
+                </ng-container>
               </li>
               <li>
                 <a
@@ -212,7 +208,8 @@
                   <span>Đăng xuất</span>
                 </a>
               </li>
-            } @else {
+            </ng-container>
+            <ng-template #guestMenu>
               <li>
                 <a class="dropdown-item" (click)="login()" id="login" data-cy="login">
                   <fa-icon icon="sign-in-alt" [fixedWidth]="true"></fa-icon>
@@ -231,7 +228,7 @@
                   <span>Đăng ký</span>
                 </a>
               </li>
-            }
+            </ng-template>
           </ul>
         </li>
       </ul>

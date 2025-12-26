@@ -18,9 +18,11 @@
     "useDefineForClassFields": false,
     "target": "es2022",
     "module": "es2020",
-    "types": [],
+    "types": ["node"],
     "lib": ["es2018", "es2020", "dom"]
   },
+  "exclude": ["node_modules", "target"],
+  "include": ["src/main/webapp/**/*", "src/test/**/*"],
   "references": [
     {
       "path": "tsconfig.spec.json"

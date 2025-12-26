@@ -5,6 +5,7 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 import com.mycompany.myapp.security.AuthoritiesConstants;
 import com.mycompany.myapp.security.jwt.JwtBlacklistFilter;
 import com.mycompany.myapp.web.filter.SpaWebFilter;
+import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -25,6 +26,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 import tech.jhipster.config.JHipsterConstants;
 import tech.jhipster.config.JHipsterProperties;
@@ -66,19 +70,37 @@ public class SecurityConfiguration {
     }
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true); // allow cookies/credentials for SockJS requests
+        config.setAllowedOriginPatterns(List.of("http://localhost:9001", "http://localhost:4200"));
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+        config.setMaxAge(1800L);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // Register for SockJS endpoints and API just in case
+        source.registerCorsConfiguration("/websocket/**", config);
+        source.registerCorsConfiguration("/websocket", config);
+        source.registerCorsConfiguration("/api/**", jHipsterProperties.getCors());
+        return source;
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(
         HttpSecurity http,
         MvcRequestMatcher.Builder mvc,
         com.mycompany.myapp.web.rest.AuthenticateController authenticateController
     ) throws Exception {
         http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // <-- enable CORS support for Spring Security
             .csrf(AbstractHttpConfigurer::disable)
             .addFilterAfter(new SpaWebFilter(), BasicAuthenticationFilter.class)
             .addFilterAfter(jwtBlacklistFilter, BasicAuthenticationFilter.class)
             .headers(headers ->
                 headers
                     .contentSecurityPolicy(csp -> csp.policyDirectives(jHipsterProperties.getSecurity().getContentSecurityPolicy()))
-                    .frameOptions(FrameOptionsConfig::sameOrigin)
+                    // Allow iframe from different origin for SockJS iframe transport (dev server on different port)
+                    .frameOptions(frame -> frame.disable())
                     .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
                     .permissionsPolicyHeader(permissions ->
                         permissions.policy(
@@ -112,8 +134,8 @@ public class SecurityConfiguration {
                     .permitAll() // Giả định có endpoint reviews
                     .requestMatchers(antMatcher("/api/public/**"))
                     .permitAll()
-                    // WebSocket endpoint - Sửa lại cho đúng với WebSocketConfig
-                    .requestMatchers(antMatcher("/websocket/**"))
+                    // WebSocket endpoints - permit ALL methods for SockJS xhr_streaming, websocket, etc
+                    .requestMatchers("/websocket", "/websocket/**")
                     .permitAll()
                     // Các tệp tĩnh
                     .requestMatchers(

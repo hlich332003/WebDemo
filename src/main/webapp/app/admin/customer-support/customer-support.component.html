@@ -1,54 +1,69 @@
 <div class="customer-support-container">
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <h3 class="sidebar-title">Cuộc trò chuyện</h3>
-      <div class="connection-status" [class.connected]="isConnected">
-        <fa-icon [icon]="isConnected ? 'circle' : 'circle-xmark'"></fa-icon>
-        {{ isConnected ? 'Đã kết nối' : 'Mất kết nối' }}
-      </div>
-      <span class="conversation-count">{{ conversations.length }}</span>
-    </div>
-    <div class="conversation-list">
-      @if (conversations.length === 0) {
-        <div class="no-conversations">Chưa có cuộc trò chuyện nào.</div>
-      } @else {
-        @for (convo of conversations; track convo.id) {
-          <div class="conversation-item" [class.active]="selectedConversation?.id === convo.id" (click)="selectConversation(convo)">
-            <div class="conversation-info">
-              <div class="user-identifier">{{ convo.userIdentifier }}</div>
-              <div class="last-message-time">{{ convo.lastMessageAt | date: 'shortTime' }}</div>
-            </div>
-            @if (convo.unreadCount > 0) {
-              <span class="unread-badge">{{ convo.unreadCount }}</span>
-            }
-          </div>
-        }
-      }
+  <div class="header">
+    <h2><fa-icon icon="comments"></fa-icon> Hỗ trợ khách hàng</h2>
+    <div class="connection-status" [class.connected]="isConnected">
+      <fa-icon [icon]="isConnected ? 'circle' : 'circle-xmark'"></fa-icon>
+      {{ isConnected ? 'Đã kết nối' : 'Mất kết nối' }}
     </div>
   </div>
 
-  <div class="chat-window">
-    @if (selectedConversation) {
-      <div class="chat-header">
-        <div class="chat-user-info">
-          <div class="chat-user-name">{{ selectedConversation.userIdentifier }}</div>
-          <div class="chat-ticket-info">
-            <fa-icon icon="comments"></fa-icon> Cuộc trò chuyện #{{ selectedConversation.id }} - {{ selectedConversation.status }}
-          </div>
-        </div>
-        <div class="chat-actions">
-          <button class="btn btn-sm btn-danger" (click)="closeConversation(selectedConversation.id)">
-            <fa-icon icon="times-circle"></fa-icon> Đóng
-          </button>
-        </div>
+  <div class="support-layout">
+    <div class="conversations-sidebar">
+      <div class="sidebar-header">
+        <h3 class="sidebar-title">Cuộc trò chuyện</h3>
+        <span class="conversation-count">{{ conversations.length }}</span>
       </div>
 
-      <div class="chat-messages" #chatMessagesContainer>
-        @for (message of messages; track message.id) {
+      <div class="conversations-list">
+        <div *ngIf="conversations.length === 0" class="empty-state">
+          <fa-icon icon="comments"></fa-icon>
+          <p>Chưa có cuộc trò chuyện nào.</p>
+          <small>Người dùng sẽ xuất hiện khi họ gửi yêu cầu hỗ trợ.</small>
+        </div>
+
+        <div
+          *ngFor="let convo of conversations; trackBy: trackByConversationId"
+          class="conversation-item"
+          [class.active]="selectedConversation?.id === convo.id"
+          (click)="selectConversation(convo)"
+        >
+          <div class="conversation-avatar"><fa-icon icon="user"></fa-icon></div>
+          <div class="conversation-info">
+            <div class="conversation-name">{{ convo.userIdentifier }}</div>
+            <div class="conversation-preview">{{ convo.lastMessageAt | date: 'short' }}</div>
+          </div>
+          <span *ngIf="convo.unreadCount > 0" class="unread-badge">{{ convo.unreadCount }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-area">
+      <div *ngIf="selectedConversation; else noSelection">
+        <div class="chat-header">
+          <div class="chat-user-info">
+            <fa-icon icon="user" />
+            <div>
+              <div class="chat-user-name">{{ selectedConversation.userIdentifier }}</div>
+              <div class="chat-ticket-info">
+                <fa-icon icon="comments"></fa-icon> Cuộc trò chuyện #{{ selectedConversation.id }} - {{ selectedConversation.status }}
+              </div>
+            </div>
+          </div>
+          <div class="chat-actions">
+            <button class="btn btn-sm btn-danger" (click)="closeConversation(selectedConversation!.id)">
+              <fa-icon icon="times-circle"></fa-icon> Đóng
+            </button>
+          </div>
+        </div>
+
+        <div class="chat-messages" #chatMessagesContainer>
           <div
+            *ngFor="let message of messages; trackBy: trackByMessageId"
             class="message"
-            [class.from-admin]="message.senderType === 'CSKH' || message.senderType === 'ADMIN'"
-            [class.from-user]="message.senderType === 'USER'"
+            [ngClass]="{
+              'from-admin': message.senderType === 'CSKH' || message.senderType === 'ADMIN',
+              'from-user': message.senderType === 'USER',
+            }"
           >
             <div class="message-avatar">
               <fa-icon [icon]="message.senderType === 'CSKH' || message.senderType === 'ADMIN' ? 'user-tie' : 'user'"></fa-icon>
@@ -61,26 +76,42 @@
               <div class="message-timestamp">{{ message.createdAt | date: 'short' }}</div>
             </div>
           </div>
-        }
-        @if (isLoadingMessages) {
-          <div class="loading-spinner">Đang tải tin nhắn...</div>
-        }
+
+          <div *ngIf="isLoadingMessages" class="loading-spinner">Đang tải tin nhắn...</div>
+        </div>
+
+        <div class="chat-input">
+          <!-- Disable input when disconnected or conversation closed -->
+          <input
+            type="text"
+            [(ngModel)]="newMessage"
+            (keydown.enter)="sendMessage(); $event.preventDefault()"
+            placeholder="Nhập tin nhắn..."
+            class="form-control"
+            [disabled]="!isConnected || !selectedConversation || selectedConversation.status === 'CLOSED'"
+          />
+          <button
+            class="btn btn-primary"
+            (click)="sendMessage()"
+            [disabled]="!isConnected || newMessage.trim() === '' || !selectedConversation || selectedConversation.status === 'CLOSED'"
+          >
+            Gửi
+          </button>
+        </div>
+
+        <!-- Read-only notice when closed -->
+        <div *ngIf="selectedConversation?.status === 'CLOSED'" class="chat-closed-notice">
+          <div class="text-muted">Phiên chat đã đóng. Bạn vẫn có thể xem lịch sử nhưng không thể gửi tin nhắn.</div>
+        </div>
       </div>
 
-      <div class="chat-input">
-        <textarea
-          [(ngModel)]="newMessage"
-          (keydown.enter)="sendMessage(); $event.preventDefault()"
-          placeholder="Nhập tin nhắn..."
-          class="form-control"
-          [disabled]="!isConnected"
-        ></textarea>
-        <button class="btn btn-primary" (click)="sendMessage()" [disabled]="!isConnected || newMessage.trim() === ''">Gửi</button>
-      </div>
-    } @else {
-      <div class="no-chat-selected">
-        <p>Chọn một cuộc trò chuyện để bắt đầu.</p>
-      </div>
-    }
+      <ng-template #noSelection>
+        <div class="no-chat-selected">
+          <fa-icon icon="comments"></fa-icon>
+          <h3>Chọn một cuộc trò chuyện để bắt đầu.</h3>
+          <p>Hoặc chờ khách hàng gửi yêu cầu hỗ trợ.</p>
+        </div>
+      </ng-template>
+    </div>
   </div>
 </div>
