@@ -16,16 +16,51 @@
       </div>
     </div>
 
-    <div *ngIf="error()">
-      <div class="alert alert-danger"><strong>Đăng ký thất bại!</strong> Vui lòng thử lại sau.</div>
+    <!-- Thông báo lỗi email đã tồn tại -->
+    <div *ngIf="errorEmailExists()" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="fa fa-exclamation-triangle"></i>
+      <strong>Email đã tồn tại!</strong><br />
+      Email này đã được sử dụng bởi tài khoản khác. Vui lòng:
+      <ul class="mb-0 mt-2">
+        <li>Chọn email khác, hoặc</li>
+        <li><a routerLink="/account/reset/request" class="alert-link">Khôi phục mật khẩu</a> nếu bạn quên mật khẩu</li>
+      </ul>
     </div>
 
-    <div *ngIf="errorEmailExists()">
-      <div class="alert alert-danger"><strong>Email này đã được sử dụng!</strong> Vui lòng chọn email khác.</div>
+    <!-- Thông báo lỗi số điện thoại đã tồn tại -->
+    <div *ngIf="errorPhoneExists()" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="fa fa-exclamation-triangle"></i>
+      <strong>Số điện thoại đã tồn tại!</strong><br />
+      Số điện thoại này đã được đăng ký. Vui lòng sử dụng số khác.
     </div>
 
-    <div *ngIf="doNotMatch()">
-      <div class="alert alert-danger">Mật khẩu và xác nhận mật khẩu không khớp!</div>
+    <!-- Thông báo lỗi mật khẩu không hợp lệ -->
+    <div *ngIf="errorInvalidPassword()" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="fa fa-exclamation-triangle"></i>
+      <strong>Mật khẩu không hợp lệ!</strong><br />
+      Mật khẩu phải có:
+      <ul class="mb-0 mt-2">
+        <li>Ít nhất 4 ký tự</li>
+        <li>Không quá 50 ký tự</li>
+      </ul>
+    </div>
+
+    <!-- Thông báo lỗi mật khẩu không khớp -->
+    <div *ngIf="doNotMatch()" class="alert alert-warning alert-dismissible fade show" role="alert">
+      <i class="fa fa-exclamation-circle"></i>
+      <strong>Mật khẩu không khớp!</strong><br />
+      Mật khẩu và xác nhận mật khẩu phải giống nhau.
+    </div>
+
+    <!-- Thông báo lỗi chung -->
+    <div *ngIf="error() && errorMessage()" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="fa fa-times-circle"></i>
+      <strong>Đăng ký thất bại!</strong><br />
+      {{ errorMessage() }}
+    </div>
+
+    <div *ngIf="error() && !errorMessage()" class="alert alert-danger" role="alert">
+      <strong>Đăng ký thất bại!</strong> Vui lòng thử lại sau hoặc liên hệ quản trị viên.
     </div>
 
     <div *ngIf="!success()">
@@ -42,23 +77,73 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="email">Email</label>
-          <input type="email" class="form-control" id="email" formControlName="email" data-cy="email" #email />
+          <label class="form-label" for="email">Email <span class="text-danger">*</span></label>
+          <input
+            type="email"
+            class="form-control"
+            id="email"
+            formControlName="email"
+            data-cy="email"
+            #email
+            [class.is-invalid]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
+          />
+          <div class="invalid-feedback" *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
+            <div *ngIf="registerForm.get('email')?.errors?.['required']">Email là bắt buộc.</div>
+            <div *ngIf="registerForm.get('email')?.errors?.['email']">Email không đúng định dạng.</div>
+            <div *ngIf="registerForm.get('email')?.errors?.['minlength']">Email phải có ít nhất 5 ký tự.</div>
+            <div *ngIf="registerForm.get('email')?.errors?.['maxlength']">Email không được quá 254 ký tự.</div>
+          </div>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="phone">Số điện thoại</label>
-          <input type="tel" class="form-control" id="phone" formControlName="phone" data-cy="phone" />
+          <input
+            type="tel"
+            class="form-control"
+            id="phone"
+            formControlName="phone"
+            data-cy="phone"
+            placeholder="Ví dụ: 0912345678"
+            [class.is-invalid]="registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched"
+          />
+          <small class="form-text text-muted">Số điện thoại dùng để đăng nhập và liên hệ</small>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="password">Mật khẩu</label>
-          <input type="password" class="form-control" id="password" formControlName="password" data-cy="firstPassword" />
+          <label class="form-label" for="password">Mật khẩu <span class="text-danger">*</span></label>
+          <input
+            type="password"
+            class="form-control"
+            id="password"
+            formControlName="password"
+            data-cy="firstPassword"
+            [class.is-invalid]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
+          />
+          <div class="invalid-feedback" *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
+            <div *ngIf="registerForm.get('password')?.errors?.['required']">Mật khẩu là bắt buộc.</div>
+            <div *ngIf="registerForm.get('password')?.errors?.['minlength']">Mật khẩu phải có ít nhất 4 ký tự.</div>
+            <div *ngIf="registerForm.get('password')?.errors?.['maxlength']">Mật khẩu không được quá 50 ký tự.</div>
+          </div>
+          <small class="form-text text-muted">Mật khẩu phải có từ 4-50 ký tự</small>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="confirmPassword">Xác nhận mật khẩu</label>
-          <input type="password" class="form-control" id="confirmPassword" formControlName="confirmPassword" data-cy="secondPassword" />
+          <label class="form-label" for="confirmPassword">Xác nhận mật khẩu <span class="text-danger">*</span></label>
+          <input
+            type="password"
+            class="form-control"
+            id="confirmPassword"
+            formControlName="confirmPassword"
+            data-cy="secondPassword"
+            [class.is-invalid]="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched"
+          />
+          <div
+            class="invalid-feedback"
+            *ngIf="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched"
+          >
+            <div *ngIf="registerForm.get('confirmPassword')?.errors?.['required']">Xác nhận mật khẩu là bắt buộc.</div>
+            <div *ngIf="registerForm.get('confirmPassword')?.errors?.['minlength']">Xác nhận mật khẩu phải có ít nhất 4 ký tự.</div>
+          </div>
         </div>
 
         <button type="submit" [disabled]="registerForm.invalid" class="btn btn-primary btn-register" data-cy="submit">Đăng ký</button>

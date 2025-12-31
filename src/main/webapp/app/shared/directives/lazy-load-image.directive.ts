@@ -1,13 +1,4 @@
-import {
-  Directive,
-  ElementRef,
-  Input,
-  OnInit,
-  OnDestroy,
-  Renderer2,
-  inject,
-  OnChanges,
-} from '@angular/core';
+import { Directive, ElementRef, Input, OnInit, OnDestroy, Renderer2, inject, OnChanges } from '@angular/core';
 
 @Directive({
   selector: '[jhiLazyLoad]',
@@ -24,8 +15,8 @@ export class LazyLoadImageDirective implements OnInit, OnDestroy, OnChanges {
 
   ngOnInit(): void {
     this.intersectionObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
             this.loadImage();
             this.intersectionObserver?.unobserve(this.el.nativeElement);
@@ -46,11 +37,7 @@ export class LazyLoadImageDirective implements OnInit, OnDestroy, OnChanges {
       this._imageSrc = this.imageSrc;
       // Set placeholder only if the image is not already loaded
       if (this.el.nativeElement.src !== this.imageSrc) {
-        this.renderer.setAttribute(
-          this.el.nativeElement,
-          'src',
-          this.placeholder,
-        );
+        this.renderer.setAttribute(this.el.nativeElement, 'src', this.placeholder);
         this.renderer.addClass(this.el.nativeElement, 'lazy-loading');
       }
     }
@@ -67,11 +54,7 @@ export class LazyLoadImageDirective implements OnInit, OnDestroy, OnChanges {
 
     img.onerror = () => {
       // In case of an error, fallback to a default product image
-      this.renderer.setAttribute(
-        this.el.nativeElement,
-        'src',
-        'content/images/default-product.svg',
-      );
+      this.renderer.setAttribute(this.el.nativeElement, 'src', 'content/images/default-product.svg');
       this.renderer.removeClass(this.el.nativeElement, 'lazy-loading');
       this.renderer.addClass(this.el.nativeElement, 'lazy-error');
     };

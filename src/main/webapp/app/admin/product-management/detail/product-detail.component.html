@@ -1,72 +1,83 @@
-<div class="row justify-content-center">
-  <div class="col-8">
-    @if (product) {
-      <div>
-        <h2 data-cy="productDetailsHeading"><span>Thông tin sản phẩm</span></h2>
+<div>
+  @if (product) {
+    <div class="admin-header">
+      <h2>
+        <span>
+          <fa-icon icon="box"></fa-icon>
+          Chi tiết sản phẩm
+        </span>
+      </h2>
+    </div>
 
-        <hr />
+    <div class="product-detail-card">
+      <jhi-alert-error></jhi-alert-error>
+      <jhi-alert></jhi-alert>
 
-        <jhi-alert-error></jhi-alert-error>
+      <div class="detail-section">
+        <h3>
+          <fa-icon icon="info-circle"></fa-icon>
+          Thông tin cơ bản
+        </h3>
 
-        <jhi-alert></jhi-alert>
+        <div class="detail-item">
+          <span class="detail-label">ID:</span>
+          <span class="detail-value">{{ product.id }}</span>
+        </div>
 
-        <dl class="row">
-          <dt>
-            <span>ID</span>
-          </dt>
-          <dd>
-            <span>{{ product.id }}</span>
-          </dd>
-          <dt>
-            <span>Tên sản phẩm</span>
-          </dt>
-          <dd>
-            <span>{{ product.name }}</span>
-          </dd>
-          <dt>
-            <span>Mô tả</span>
-          </dt>
-          <dd>
-            <span>{{ product.description }}</span>
-          </dd>
-          <dt>
-            <span>Giá</span>
-          </dt>
-          <dd>
-            <span>{{ product.price }}</span>
-          </dd>
-          <dt>
-            <span>Số lượng tồn kho</span>
-          </dt>
-          <dd>
-            <span>{{ product.quantity }}</span>
-          </dd>
-          <dt>
-            <span>Hình ảnh</span>
-          </dt>
-          <dd>
-            @if (product.imageUrl) {
-              <img
-                [src]="product.imageUrl"
-                alt="Product Image"
-                style="max-height: 200px"
-              />
+        <div class="detail-item">
+          <span class="detail-label">Tên sản phẩm:</span>
+          <span class="detail-value">{{ product.name }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Mô tả:</span>
+          <span class="detail-value">{{ product.description }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Giá:</span>
+          <span class="detail-value">{{ product.price | currency: 'VND' : 'symbol' : '1.0-0' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Số lượng tồn kho:</span>
+          <span class="detail-value">
+            {{ product.quantity }}
+            @if (product.quantity && product.quantity > 0) {
+              <span class="badge bg-success ms-2">Còn hàng</span>
+            } @else {
+              <span class="badge bg-danger ms-2">Hết hàng</span>
             }
-          </dd>
-        </dl>
+          </span>
+        </div>
 
+        <div class="detail-item">
+          <span class="detail-label">Danh mục:</span>
+          <span class="detail-value">{{ product.category?.name || 'Chưa phân loại' }}</span>
+        </div>
+      </div>
+
+      @if (product.imageUrl) {
+        <div class="detail-section">
+          <h3>
+            <fa-icon icon="image"></fa-icon>
+            Hình ảnh sản phẩm
+          </h3>
+          <img [src]="product.imageUrl" [alt]="product.name" class="product-image" />
+        </div>
+      }
+
+      <div class="btn-group">
         <button type="button" (click)="previousState()" class="btn btn-info">
-          <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span>Quay lại</span>
+          <fa-icon icon="arrow-left"></fa-icon>
+          <span>Quay lại</span>
         </button>
 
-        <button
-          type="button"
-          [routerLink]="['/admin/product-management', product.id, 'edit']"
-          class="btn btn-primary"
-        >
-          <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span>Sửa</span>
+        <button type="button" [routerLink]="['/admin/product-management', product.id, 'edit']" class="btn btn-primary">
+          <fa-icon icon="pencil-alt"></fa-icon>
+          <span>Chỉnh sửa</span>
         </button>
       </div>
-    }
-  </div>
+    </div>
+  }
 </div>

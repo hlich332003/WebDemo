@@ -73,4 +73,17 @@ public class FileImportResource {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @PostMapping("/customers")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    public ResponseEntity<?> importCustomers(@RequestParam("file") MultipartFile file) {
+        log.debug("REST request to import customers from file : {}", file.getOriginalFilename());
+        try {
+            fileImportService.importCustomers(file);
+            return ResponseEntity.ok().body(Map.of("message", "Import khách hàng thành công"));
+        } catch (Exception e) {
+            log.error("Error importing customers from file: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
 }

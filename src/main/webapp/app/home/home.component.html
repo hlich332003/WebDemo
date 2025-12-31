@@ -1,6 +1,9 @@
 <div class="home-container">
   <!-- Hero Section -->
-  <div class="hero-section text-center">
+  <div
+    class="hero-section text-center"
+    [style.background-image]="'url(https://tse3.mm.bing.net/th/id/OIP.iEcTS6m_gX-GjC8FrBCe2wHaEK?rs=1&pid=ImgDetMain&o=7&rm=3)'"
+  >
     <div class="hero-overlay"></div>
     <div class="hero-content">
       <h1 class="hero-title">Khám Phá Thế Giới Công Nghệ</h1>
@@ -33,9 +36,48 @@
       </div>
     </section>
 
-    <!-- Featured Products Section -->
-    <section class="product-showcase" *ngIf="bestSellerProducts.length > 0">
+    <!-- Featured Products Section (Pinned) -->
+    <section class="product-showcase" *ngIf="featuredProducts.length > 0">
       <h2 class="section-title">Sản Phẩm Nổi Bật</h2>
+      <div class="product-grid">
+        <div class="product-card" *ngFor="let product of featuredProducts">
+          <div class="product-image-wrapper" (click)="viewProductDetail(product.id)">
+            <img
+              *ngIf="product.imageUrl"
+              [jhiLazyLoad]="getProxiedImageUrl(product.imageUrl)"
+              [alt]="product.name"
+              (error)="onImageError($event)"
+              loading="lazy"
+            />
+            <div *ngIf="!product.imageUrl" class="image-placeholder">
+              <fa-icon icon="box-open"></fa-icon>
+            </div>
+          </div>
+          <div class="product-info">
+            <h5 class="product-name" (click)="viewProductDetail(product.id)">{{ product.name }}</h5>
+            <p class="product-price">{{ formatPrice(product.price) }}</p>
+          </div>
+          <div class="product-actions">
+            <button
+              class="btn btn-sm btn-wishlist"
+              (click)="toggleWishlist(product, $event)"
+              [class.in-wishlist]="isInWishlist(product.id)"
+              title="Thêm vào yêu thích"
+            >
+              <fa-icon [icon]="isInWishlist(product.id) ? 'heart-crack' : 'heart'"></fa-icon>
+            </button>
+            <button class="btn btn-sm btn-add-to-cart" (click)="addToCart(product)" title="Thêm vào giỏ hàng">
+              <fa-icon icon="shopping-cart"></fa-icon>
+            </button>
+            <button class="btn btn-sm btn-buy-now" (click)="buyNow(product)">Mua ngay</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Best Seller Products Section -->
+    <section class="product-showcase" *ngIf="bestSellerProducts.length > 0">
+      <h2 class="section-title">Sản Phẩm Bán Chạy</h2>
       <div class="product-grid">
         <div class="product-card" *ngFor="let product of bestSellerProducts">
           <div class="product-image-wrapper" (click)="viewProductDetail(product.id)">

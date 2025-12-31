@@ -17,14 +17,7 @@ import { NotificationDatePipe } from '../../../shared/date/notification-date.pip
 @Component({
   selector: 'jhi-review-management',
   standalone: true,
-  imports: [
-    RouterModule,
-    CommonModule,
-    FormsModule,
-    SharedModule,
-    FormatMediumDatetimePipe,
-    NotificationDatePipe,
-  ],
+  imports: [RouterModule, CommonModule, FormsModule, SharedModule, FormatMediumDatetimePipe, NotificationDatePipe],
   templateUrl: './review-management.component.html',
 })
 export class ReviewManagementComponent implements OnInit {
@@ -42,9 +35,7 @@ export class ReviewManagementComponent implements OnInit {
   }
 
   loadReviews(): void {
-    this.reviews$ = this.reviewService
-      .query()
-      .pipe(map((res) => res.body ?? []));
+    this.reviews$ = this.reviewService.query().pipe(map(res => res.body ?? []));
   }
 
   delete(review: IReview): void {
@@ -53,7 +44,7 @@ export class ReviewManagementComponent implements OnInit {
       backdrop: 'static',
     });
     modalRef.componentInstance.review = review;
-    modalRef.closed.subscribe((reason) => {
+    modalRef.closed.subscribe(reason => {
       if (reason === 'deleted') {
         this.loadReviews();
       }

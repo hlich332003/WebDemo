@@ -9,9 +9,8 @@
     </div>
   </main>
 
-  <jhi-footer />
+  <jhi-footer></jhi-footer>
 
-  @if (showChatWidget) {
-    <jhi-chat-widget />
-  }
+  <!-- Render chat widget using Angular template syntax when permitted -->
+  <jhi-chat-widget *ngIf="showChatWidget"></jhi-chat-widget>
 </div>

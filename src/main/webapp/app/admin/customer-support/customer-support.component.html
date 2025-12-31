@@ -7,18 +7,29 @@
     </div>
   </div>
 
+  <div *ngIf="!isConnected" class="alert alert-danger mt-2">
+    <fa-icon icon="exclamation-triangle"></fa-icon>
+    <strong>Mất kết nối máy chủ!</strong> Vui lòng kiểm tra mạng hoặc tải lại trang.
+  </div>
+
   <div class="support-layout">
     <div class="conversations-sidebar">
       <div class="sidebar-header">
-        <h3 class="sidebar-title">Cuộc trò chuyện</h3>
+        <div class="tabs">
+          <button class="tab-btn" [class.active]="activeTab === 'CHAT'" (click)="setActiveTab('CHAT')">
+            <fa-icon icon="comments"></fa-icon> Chat trực tiếp
+          </button>
+          <button class="tab-btn" [class.active]="activeTab === 'TICKET'" (click)="setActiveTab('TICKET')">
+            <fa-icon icon="envelope"></fa-icon> Tickets
+          </button>
+        </div>
         <span class="conversation-count">{{ conversations.length }}</span>
       </div>
 
       <div class="conversations-list">
         <div *ngIf="conversations.length === 0" class="empty-state">
-          <fa-icon icon="comments"></fa-icon>
-          <p>Chưa có cuộc trò chuyện nào.</p>
-          <small>Người dùng sẽ xuất hiện khi họ gửi yêu cầu hỗ trợ.</small>
+          <fa-icon [icon]="activeTab === 'CHAT' ? 'comments' : 'envelope'"></fa-icon>
+          <p>Chưa có {{ activeTab === 'CHAT' ? 'cuộc trò chuyện' : 'ticket' }} nào.</p>
         </div>
 
         <div
@@ -38,14 +49,15 @@
     </div>
 
     <div class="chat-area">
-      <div *ngIf="selectedConversation; else noSelection">
+      <div *ngIf="selectedConversation; else noSelection" class="chat-content-wrapper">
         <div class="chat-header">
           <div class="chat-user-info">
             <fa-icon icon="user" />
             <div>
               <div class="chat-user-name">{{ selectedConversation.userIdentifier }}</div>
               <div class="chat-ticket-info">
-                <fa-icon icon="comments"></fa-icon> Cuộc trò chuyện #{{ selectedConversation.id }} - {{ selectedConversation.status }}
+                <fa-icon [icon]="activeTab === 'CHAT' ? 'comments' : 'envelope'"></fa-icon>
+                {{ activeTab === 'CHAT' ? 'Cuộc trò chuyện' : 'Ticket' }} #{{ selectedConversation.id }} - {{ selectedConversation.status }}
               </div>
             </div>
           </div>
@@ -56,21 +68,21 @@
           </div>
         </div>
 
-        <div class="chat-messages" #chatMessagesContainer>
+        <div class="chat-messages" #chatMessagesContainer (scroll)="onUserScroll()">
           <div
             *ngFor="let message of messages; trackBy: trackByMessageId"
             class="message"
             [ngClass]="{
-              'from-admin': message.senderType === 'CSKH' || message.senderType === 'ADMIN',
-              'from-user': message.senderType === 'USER',
+              'from-admin': message.isFromAdmin,
+              'from-user': !message.isFromAdmin,
             }"
           >
             <div class="message-avatar">
-              <fa-icon [icon]="message.senderType === 'CSKH' || message.senderType === 'ADMIN' ? 'user-tie' : 'user'"></fa-icon>
+              <fa-icon [icon]="message.isFromAdmin ? 'user-tie' : 'user'"></fa-icon>
             </div>
             <div class="message-content">
               <div class="message-sender">
-                {{ message.senderType !== 'USER' ? (message.senderIdentifier | slice: 0 : 10) + '...' : 'Khách hàng' }}
+                {{ message.isFromAdmin ? (adminUser?.email | slice: 0 : 10) + '...' : 'Khách hàng' }}
               </div>
               <div class="message-text">{{ message.content }}</div>
               <div class="message-timestamp">{{ message.createdAt | date: 'short' }}</div>
@@ -80,36 +92,35 @@
           <div *ngIf="isLoadingMessages" class="loading-spinner">Đang tải tin nhắn...</div>
         </div>
 
-        <div class="chat-input">
-          <!-- Disable input when disconnected or conversation closed -->
-          <input
-            type="text"
-            [(ngModel)]="newMessage"
-            (keydown.enter)="sendMessage(); $event.preventDefault()"
-            placeholder="Nhập tin nhắn..."
-            class="form-control"
-            [disabled]="!isConnected || !selectedConversation || selectedConversation.status === 'CLOSED'"
-          />
-          <button
-            class="btn btn-primary"
-            (click)="sendMessage()"
-            [disabled]="!isConnected || newMessage.trim() === '' || !selectedConversation || selectedConversation.status === 'CLOSED'"
-          >
-            Gửi
-          </button>
-        </div>
-
-        <!-- Read-only notice when closed -->
-        <div *ngIf="selectedConversation?.status === 'CLOSED'" class="chat-closed-notice">
-          <div class="text-muted">Phiên chat đã đóng. Bạn vẫn có thể xem lịch sử nhưng không thể gửi tin nhắn.</div>
+        <!-- Input box - ĐƯA RA NGOÀI chat-messages để ghim ở cuối -->
+        <div class="chat-input-container">
+          <div *ngIf="selectedConversation?.status === 'CLOSED'" class="chat-closed-notice">
+            <div class="text-muted">Phiên chat đã đóng. Bạn vẫn có thể xem lịch sử nhưng không thể gửi tin nhắn.</div>
+          </div>
+          <div class="chat-input">
+            <input
+              type="text"
+              [(ngModel)]="newMessage"
+              (keydown.enter)="sendMessage(); $event.preventDefault()"
+              placeholder="Nhập tin nhắn..."
+              class="form-control"
+              [disabled]="!isConnected || !selectedConversation || selectedConversation.status === 'CLOSED'"
+            />
+            <button
+              class="btn btn-primary"
+              (click)="sendMessage()"
+              [disabled]="!isConnected || newMessage.trim() === '' || !selectedConversation || selectedConversation.status === 'CLOSED'"
+            >
+              Gửi
+            </button>
+          </div>
         </div>
       </div>
 
       <ng-template #noSelection>
         <div class="no-chat-selected">
-          <fa-icon icon="comments"></fa-icon>
-          <h3>Chọn một cuộc trò chuyện để bắt đầu.</h3>
-          <p>Hoặc chờ khách hàng gửi yêu cầu hỗ trợ.</p>
+          <fa-icon [icon]="activeTab === 'CHAT' ? 'comments' : 'envelope'"></fa-icon>
+          <h3>Chọn một {{ activeTab === 'CHAT' ? 'cuộc trò chuyện' : 'ticket' }} để bắt đầu.</h3>
         </div>
       </ng-template>
     </div>

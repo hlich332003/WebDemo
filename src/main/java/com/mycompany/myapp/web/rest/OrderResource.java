@@ -45,16 +45,9 @@ public class OrderResource {
     private final OrderService orderService;
     private final OrderRepository orderRepository;
 
-    private final com.mycompany.myapp.service.NotificationService notificationService;
-
-    public OrderResource(
-        OrderService orderService,
-        OrderRepository orderRepository,
-        com.mycompany.myapp.service.NotificationService notificationService
-    ) {
+    public OrderResource(OrderService orderService, OrderRepository orderRepository) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
-        this.notificationService = notificationService;
     }
 
     @PostMapping(value = "/orders", consumes = "application/json; charset=UTF-8", produces = "application/json; charset=UTF-8")
@@ -71,9 +64,7 @@ public class OrderResource {
 
         Order result = orderService.create(orderDTO);
 
-        // Gửi thông báo WebSocket cho admin
-        String customerName = orderDTO.getCustomerInfo() != null ? orderDTO.getCustomerInfo().getFullName() : "Khách hàng";
-        notificationService.notifyAdminNewOrder(result.getId(), customerName);
+        // Notification đã được gửi trong OrderService.create()
 
         return ResponseEntity.created(new URI("/api/orders/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
@@ -84,11 +75,7 @@ public class OrderResource {
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Order> updateOrderStatus(@PathVariable Long id, @RequestBody Map<String, String> payload) {
         log.debug("REST request to update status for Order : {} to {}", id, payload.get("status"));
-        Optional<Order> existingOrder = orderService.findOne(id);
-        if (existingOrder.isEmpty()) {
-            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
-        }
-        Order order = existingOrder.get();
+
         String statusString = payload.get("status");
         if (statusString == null || statusString.isEmpty()) {
             throw new BadRequestAlertException("Status cannot be empty", ENTITY_NAME, "statusEmpty");
@@ -131,17 +118,12 @@ public class OrderResource {
                     // Try direct enum name (English) as a fallback (case-sensitive names defined in enum)
                     newStatus = OrderStatus.valueOf(statusString.toUpperCase());
             }
-         } catch (IllegalArgumentException e) {
-             throw new BadRequestAlertException("Invalid status value: " + statusString, ENTITY_NAME, "invalidStatus");
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestAlertException("Invalid status value: " + statusString, ENTITY_NAME, "invalidStatus");
         }
-        order.setStatus(newStatus);
-        Order result = orderService.save(order);
 
-        // Gửi thông báo WebSocket cho khách hàng
-        String userEmail = result.getCustomer() != null ? result.getCustomer().getEmail() : result.getCustomerEmail();
-        if (userEmail != null) {
-            notificationService.notifyOrderStatusChange(userEmail, result.getId(), newStatus.name());
-        }
+        // Gọi updateOrderStatus() để có đầy đủ notification và email logic
+        Order result = orderService.updateOrderStatus(id, newStatus);
 
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))

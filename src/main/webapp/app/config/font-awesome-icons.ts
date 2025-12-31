@@ -66,6 +66,10 @@ import {
   faChevronRight,
   faBolt,
   faEnvelope, // added
+  faFileImport,
+  faFileExport,
+  faInfoCircle,
+  faImage,
   // jhipster-needle-add-icon-import
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -137,5 +141,9 @@ export const fontAwesomeIcons = [
   faChevronRight,
   faBolt,
   faEnvelope, // added
+  faFileImport,
+  faFileExport,
+  faInfoCircle,
+  faImage,
   // jhipster-needle-add-icon-import
 ];

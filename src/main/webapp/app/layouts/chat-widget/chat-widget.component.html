@@ -13,9 +13,14 @@
           {{ isConnected ? 'Đã kết nối' : 'Đang kết nối...' }}
         </div>
       </div>
-      <button class="close-button" (click)="toggleChat()">
-        <fa-icon icon="times"></fa-icon>
-      </button>
+      <div class="header-actions">
+        <button class="minimize-button" (click)="minimizeChat()" title="Thu nhỏ">
+          <fa-icon icon="minus"></fa-icon>
+        </button>
+        <button class="close-button" (click)="closeChat()" title="Đóng">
+          <fa-icon icon="times"></fa-icon>
+        </button>
+      </div>
     </div>
 
     <!-- Màn hình 1: Menu Lựa chọn -->
@@ -24,14 +29,14 @@
         <h6>Xin chào! 👋</h6>
         <p>Chúng tôi có thể giúp gì cho bạn hôm nay?</p>
       </div>
-
-      <div class="menu-options">
-        <button class="menu-btn" (click)="startDirectChat()">
+      <div *ngIf="isLoading" class="loading-indicator"><fa-icon icon="spinner" [class.fa-spin]="true"></fa-icon> Đang xử lý...</div>
+      <div class="menu-options" *ngIf="!isLoading">
+        <button class="menu-btn" (click)="initiateChat()">
           <div class="icon-wrapper chat-icon">
             <fa-icon icon="comments"></fa-icon>
           </div>
           <div class="text-wrapper">
-            <span class="title">Chat ngay</span>
+            <span class="title">Chat trực tiếp</span>
             <span class="desc">Trò chuyện trực tiếp với nhân viên</span>
           </div>
           <fa-icon icon="chevron-right" class="arrow"></fa-icon>
@@ -42,10 +47,48 @@
             <fa-icon icon="envelope"></fa-icon>
           </div>
           <div class="text-wrapper">
-            <span class="title">Tạo phiếu hỗ trợ</span>
-            <span class="desc">Gửi yêu cầu chi tiết qua email</span>
+            <span class="title">Gửi yêu cầu hỗ trợ</span>
+            <span class="desc">Tạo ticket để theo dõi vấn đề</span>
           </div>
           <fa-icon icon="chevron-right" class="arrow"></fa-icon>
+        </button>
+
+        <button class="menu-btn" (click)="showHistory()">
+          <div class="icon-wrapper history-icon">
+            <fa-icon icon="history"></fa-icon>
+          </div>
+          <div class="text-wrapper">
+            <span class="title">Lịch sử hỗ trợ</span>
+            <span class="desc">Xem lại các yêu cầu cũ</span>
+          </div>
+          <fa-icon icon="chevron-right" class="arrow"></fa-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Màn hình 1.5: Form nhập thông tin Guest -->
+    <div *ngIf="viewMode === 'GUEST_INFO'" class="create-ticket-view">
+      <div class="view-header">
+        <button class="back-btn" (click)="backToMenu()">
+          <fa-icon icon="arrow-left"></fa-icon>
+        </button>
+        <h6>Thông tin của bạn</h6>
+      </div>
+      <div class="form-body">
+        <p class="text-muted small">Vui lòng cung cấp email hoặc SĐT để chúng tôi có thể hỗ trợ bạn tốt hơn.</p>
+        <div class="form-group">
+          <label for="guestChatContact">Email hoặc SĐT <span class="required">*</span></label>
+          <input
+            id="guestChatContact"
+            type="text"
+            [(ngModel)]="guestChatContact"
+            class="form-control"
+            placeholder="Nhập email hoặc SĐT..."
+          />
+        </div>
+        <button class="btn-submit" (click)="startDirectChat()" [disabled]="isLoading || !guestChatContact.trim()">
+          <fa-icon *ngIf="isLoading" icon="spinner" [class.fa-spin]="true"></fa-icon>
+          <span *ngIf="!isLoading">Bắt đầu chat</span>
         </button>
       </div>
     </div>
@@ -60,11 +103,20 @@
       </div>
 
       <div class="form-body">
+        <div class="form-group" *ngIf="!currentUser">
+          <label for="ticketContact">Email hoặc SĐT của bạn <span class="required">*</span></label>
+          <input
+            id="ticketContact"
+            type="text"
+            [(ngModel)]="ticketContact"
+            class="form-control"
+            placeholder="Để chúng tôi liên hệ lại..."
+          />
+        </div>
         <div class="form-group">
           <label for="ticketTitle">Tiêu đề <span class="required">*</span></label>
           <input id="ticketTitle" type="text" [(ngModel)]="ticketTitle" class="form-control" placeholder="Tóm tắt vấn đề..." />
         </div>
-
         <div class="form-group">
           <label for="ticketDescription">Nội dung <span class="required">*</span></label>
           <textarea
@@ -75,39 +127,77 @@
             placeholder="Mô tả chi tiết..."
           ></textarea>
         </div>
-
-        <button class="btn-submit" (click)="createTicket()" [disabled]="isCreatingTicket || !ticketTitle || !ticketDescription">
-          <fa-icon *ngIf="isCreatingTicket" icon="spinner" spin></fa-icon>
+        <button
+          class="btn-submit"
+          (click)="createTicket()"
+          [disabled]="isCreatingTicket || !ticketTitle || !ticketDescription || (!currentUser && !ticketContact)"
+        >
+          <fa-icon *ngIf="isCreatingTicket" icon="spinner" [class.fa-spin]="true"></fa-icon>
           <span *ngIf="!isCreatingTicket">Gửi yêu cầu</span>
         </button>
       </div>
     </div>
 
+    <!-- Màn hình 2.5: Lịch sử -->
+    <div *ngIf="viewMode === 'HISTORY'" class="history-view">
+      <div class="view-header">
+        <button class="back-btn" (click)="backToMenu()">
+          <fa-icon icon="arrow-left"></fa-icon>
+        </button>
+        <h6>Lịch sử hỗ trợ</h6>
+      </div>
+      <div class="history-list">
+        <div *ngIf="isLoading" class="loading-indicator"><fa-icon icon="spinner" [class.fa-spin]="true"></fa-icon> Đang tải...</div>
+        <div *ngIf="!isLoading && myTickets.length === 0" class="empty-history">
+          <p>Bạn chưa có yêu cầu hỗ trợ nào.</p>
+        </div>
+        <div *ngFor="let ticket of myTickets" class="history-item" (click)="selectTicketFromHistory(ticket)">
+          <div class="history-icon">
+            <fa-icon [icon]="ticket.title === 'Hỗ trợ trực tuyến' ? 'comments' : 'envelope'"></fa-icon>
+          </div>
+          <div class="history-info">
+            <div class="history-title">{{ ticket.title || 'Hỗ trợ trực tuyến' }}</div>
+            <div class="history-meta">
+              <span class="history-id">#{{ ticket.id }}</span>
+              <span class="history-status" [ngClass]="ticket.status.toLowerCase()">{{ ticket.status }}</span>
+            </div>
+            <div class="history-date">{{ ticket.lastModifiedDate | date: 'short' }}</div>
+          </div>
+          <fa-icon icon="chevron-right" class="arrow"></fa-icon>
+        </div>
+      </div>
+    </div>
+
     <!-- Màn hình 3: Chat -->
     <div *ngIf="viewMode === 'CHAT'" class="chat-view">
-      <div #chatMessagesContainer class="chat-body" (scroll)="onScroll()">
+      <div class="view-header">
+        <button class="back-btn" (click)="backToMenu()">
+          <fa-icon icon="arrow-left"></fa-icon>
+        </button>
+        <h6>
+          {{ currentConversation?.id ? '#' + currentConversation?.id : '' }}
+          {{ sessionEnded ? '(Đã kết thúc)' : '' }}
+        </h6>
+      </div>
+      <div #chatMessagesContainer class="chat-body" (scroll)="onUserScroll()">
         <div *ngIf="isLoading" class="loading-indicator">
-          <fa-icon icon="spinner" spin></fa-icon>
+          <fa-icon icon="spinner" [class.fa-spin]="true"></fa-icon>
           <p>Đang tải cuộc trò chuyện...</p>
         </div>
-
-        <div *ngIf="messages.length === 0" class="empty-chat">
+        <div *ngIf="!isLoading && messages.length === 0" class="empty-chat">
           <p>👋 Xin chào! Hãy để lại lời nhắn, chúng tôi sẽ phản hồi sớm nhất.</p>
         </div>
-
         <div
           *ngFor="let msg of messages"
           class="message"
           [ngClass]="{ 'from-admin': msg.isFromAdmin, 'from-user': !msg.isFromAdmin, 'system-message': msg.type === 'system' }"
         >
-          <ng-container *ngIf="msg.type !== 'system'">
-            <div class="message-avatar">
-              <fa-icon [icon]="msg.isFromAdmin ? 'user-tie' : 'user'"></fa-icon>
-            </div>
-          </ng-container>
+          <div class="message-avatar">
+            <fa-icon [icon]="msg.isFromAdmin ? 'user-tie' : 'user'"></fa-icon>
+          </div>
           <div class="message-content">
-            <div class="message-text">{{ msg.message }}</div>
-            <div class="message-time">{{ msg.timestamp | date: 'HH:mm' }}</div>
+            <div class="message-text">{{ msg.content }}</div>
+            <div class="message-time">{{ msg.createdAt | date: 'HH:mm' }}</div>
           </div>
         </div>
       </div>
@@ -115,14 +205,13 @@
       <div class="chat-footer">
         <div *ngIf="sessionEnded" class="session-ended">
           <div class="session-ended-notice">Phiên hỗ trợ đã kết thúc.</div>
-          <button class="btn btn-link" (click)="startDirectChat()">Tạo phiên chat mới</button>
+          <button class="btn btn-link" (click)="initiateChat()">Tạo phiên chat mới</button>
         </div>
-
         <div *ngIf="!sessionEnded" class="chat-input-area">
           <input
             type="text"
             class="chat-input"
-            placeholder="Nhập tin nhắn..."
+            [placeholder]="isConnected ? 'Nhập tin nhắn...' : 'Đang kết nối...'"
             [(ngModel)]="newMessage"
             (keyup.enter)="sendMessage()"
             [disabled]="!isConnected || sessionEnded"

@@ -1,3 +1,4 @@
+﻿/* eslint-disable prettier/prettier */
 import { Injectable, inject } from '@angular/core';
 import { WebSocketService } from 'app/shared/services/websocket.service';
 import { StateStorageService } from 'app/core/auth/state-storage.service';
@@ -8,7 +9,7 @@ import { INotification } from 'app/shared/model/notification.model';
 @Injectable({ providedIn: 'root' })
 export class SupportSocket {
   // Public observable to let components react on connection state if needed
-  public readonly isConnected$: Observable<boolean>;
+  public readonly connectionState$: Observable<boolean>;
 
   // Internal subject backing the public observable
   private connected$ = new BehaviorSubject<boolean>(false);
@@ -24,7 +25,7 @@ export class SupportSocket {
   private storage = inject(StateStorageService);
 
   constructor() {
-    this.isConnected$ = this.connected$.asObservable();
+    this.connectionState$ = this.connected$.asObservable();
   }
 
   connect(endpoint?: string, token?: string): void {

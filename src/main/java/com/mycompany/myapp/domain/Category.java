@@ -32,7 +32,6 @@ public class Category extends AbstractAuditingEntity<Long> implements Serializab
     private Boolean isFeatured;
 
     @OneToMany(mappedBy = "category")
-    @JsonManagedReference
     @JsonIgnoreProperties(value = { "category", "hibernateLazyInitializer", "handler" }, allowSetters = true)
     private Set<Product> products = new HashSet<>();
 

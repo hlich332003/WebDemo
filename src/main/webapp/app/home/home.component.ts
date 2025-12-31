@@ -29,6 +29,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   account: Account | null = null;
   bestSellerProducts: IProduct[] = [];
   newProducts: IProduct[] = [];
+  featuredProducts: IProduct[] = []; // Sản phẩm đã ghim (isPinned)
   recentlyViewedProducts: IProduct[] = [];
   featuredCategories: ICategory[] = [];
   isLoading = false;
@@ -63,13 +64,23 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   loadAll(): void {
     this.isLoading = true;
+
+    // Load featured/pinned products
+    this.productService.query({ 'isPinned.equals': true, size: 8, sort: ['createdDate,desc'] }).subscribe(res => {
+      this.featuredProducts = res.body ?? [];
+    });
+
+    // Load best seller products
     this.productService.query({ sort: ['salesCount,desc'], size: 5 }).subscribe(res => {
       this.bestSellerProducts = res.body ?? [];
       this.isLoading = false;
     });
+
+    // Load new products
     this.productService.query({ sort: ['createdDate,desc'], size: 5 }).subscribe(res => {
       this.newProducts = res.body ?? [];
     });
+
     this.recentlyViewedProducts = this.recentlyViewedService.getProducts();
     this.loadFeaturedCategories();
   }
@@ -175,6 +186,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   getProxiedImageUrl(imageUrl: string | null | undefined): string {
     if (!imageUrl) {
       return 'content/images/no-product-image.png';
+    }
+    // If imageUrl is a data URL (base64), return it directly
+    if (imageUrl.startsWith('data:')) {
+      return imageUrl;
     }
     return `/api/public/image-proxy?url=${encodeURIComponent(imageUrl)}`;
   }

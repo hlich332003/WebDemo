@@ -111,4 +111,9 @@ export class ProductService {
       observe: 'response',
     });
   }
+
+  uploadImage(formData: FormData): Observable<any> {
+    const uploadUrl = this.applicationConfigService.getEndpointFor('api/upload/image');
+    return this.http.post<any>(uploadUrl, formData);
+  }
 }

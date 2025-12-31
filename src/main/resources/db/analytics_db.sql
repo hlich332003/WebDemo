@@ -1,11 +1,11 @@
 USE [analytics_db]
 GO
-/****** Object:  User [jhipster_user]    Script Date: 12/26/2025 1:09:49 PM ******/
+/****** Object:  User [jhipster_user]    Script Date: 12/31/2025 10:26:53 AM ******/
 CREATE USER [jhipster_user] FOR LOGIN [jhipster_user] WITH DEFAULT_SCHEMA=[dbo]
 GO
 ALTER ROLE [db_owner] ADD MEMBER [jhipster_user]
 GO
-/****** Object:  Table [dbo].[chat_conversation]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  Table [dbo].[chat_conversation]    Script Date: 12/31/2025 10:26:53 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -27,7 +27,7 @@ CREATE TABLE [dbo].[chat_conversation](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[chat_message]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  Table [dbo].[chat_message]    Script Date: 12/31/2025 10:26:54 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -46,7 +46,7 @@ CREATE TABLE [dbo].[chat_message](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
   GO
-/****** Object:  View [dbo].[vw_admin_chat_history]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  View [dbo].[vw_admin_chat_history]    Script Date: 12/31/2025 10:26:54 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -78,7 +78,7 @@ FROM chat_conversation c
        JOIN chat_message m
             ON c.id = m.conversation_id;
 GO
-/****** Object:  View [dbo].[vw_user_active_chat]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  View [dbo].[vw_user_active_chat]    Script Date: 12/31/2025 10:26:54 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -100,7 +100,7 @@ SELECT
 FROM chat_conversation
 WHERE is_archived = 0;
 GO
-/****** Object:  Table [dbo].[analytics_log]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  Table [dbo].[analytics_log]    Script Date: 12/31/2025 10:26:54 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -121,7 +121,7 @@ CREATE TABLE [dbo].[analytics_log](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[DATABASECHANGELOG]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  Table [dbo].[DATABASECHANGELOG]    Script Date: 12/31/2025 10:26:54 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -143,7 +143,7 @@ CREATE TABLE [dbo].[DATABASECHANGELOG](
   [DEPLOYMENT_ID] [nvarchar](10) NULL
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[DATABASECHANGELOGLOCK]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  Table [dbo].[DATABASECHANGELOGLOCK]    Script Date: 12/31/2025 10:26:54 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -159,7 +159,7 @@ CREATE TABLE [dbo].[DATABASECHANGELOGLOCK](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[notification]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  Table [dbo].[notification]    Script Date: 12/31/2025 10:26:54 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -182,7 +182,7 @@ CREATE TABLE [dbo].[notification](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[support_message]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  Table [dbo].[support_message]    Script Date: 12/31/2025 10:26:54 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -201,7 +201,7 @@ CREATE TABLE [dbo].[support_message](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[support_ticket]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  Table [dbo].[support_ticket]    Script Date: 12/31/2025 10:26:54 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -209,12 +209,13 @@ CREATE TABLE [dbo].[support_message](
 CREATE TABLE [dbo].[support_ticket](
   [id] [bigint] IDENTITY(1,1) NOT NULL,
   [user_email] [nvarchar](255) NOT NULL,
-  [title] [varchar](255) NULL,
+  [title] [nvarchar](500) NULL,
   [status] [nvarchar](50) NOT NULL,
   [assigned_to] [nvarchar](255) NULL,
   [created_date] [datetimeoffset](6) NOT NULL,
   [last_modified_date] [datetimeoffset](6) NULL,
   [closed_at] [datetimeoffset](6) NULL,
+  [type] [nvarchar](50) NOT NULL,
   PRIMARY KEY CLUSTERED
 (
 [id] ASC
@@ -251,6 +252,8 @@ ALTER TABLE [dbo].[support_ticket] ADD  DEFAULT (sysdatetimeoffset()) FOR [creat
   GO
 ALTER TABLE [dbo].[support_ticket] ADD  DEFAULT (sysdatetimeoffset()) FOR [last_modified_date]
   GO
+ALTER TABLE [dbo].[support_ticket] ADD  CONSTRAINT [DF_support_ticket_type]  DEFAULT ('TICKET') FOR [type]
+  GO
 ALTER TABLE [dbo].[chat_conversation]  WITH CHECK ADD  CONSTRAINT [FK_chat_conversation_ticket] FOREIGN KEY([ticket_id])
   REFERENCES [dbo].[support_ticket] ([id])
   GO
@@ -267,7 +270,7 @@ ALTER TABLE [dbo].[support_message]  WITH CHECK ADD  CONSTRAINT [FK_support_mess
 GO
 ALTER TABLE [dbo].[support_message] CHECK CONSTRAINT [FK_support_message_ticket]
   GO
-/****** Object:  StoredProcedure [dbo].[sp_CleanupOldClosedTickets]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_CleanupOldClosedTickets]    Script Date: 12/31/2025 10:26:54 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -287,7 +290,7 @@ WHERE status = 'CLOSED' AND closed_at < @CutoffDate;
 PRINT 'Old closed tickets cleaned up successfully';
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_CleanupOldNotifications]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_CleanupOldNotifications]    Script Date: 12/31/2025 10:26:54 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -308,7 +311,7 @@ WHERE created_at < @CutoffDate;
 PRINT 'Old notifications cleaned up successfully';
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_CloseConversation]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_CloseConversation]    Script Date: 12/31/2025 10:26:54 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -330,7 +333,7 @@ SET status = 'CLOSED',
 WHERE id = @ConversationId;
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetActiveTickets]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetActiveTickets]    Script Date: 12/31/2025 10:26:54 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -359,7 +362,7 @@ GROUP BY
 ORDER BY t.created_date DESC;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetAnalyticsSummary]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetAnalyticsSummary]    Script Date: 12/31/2025 10:26:54 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -392,7 +395,7 @@ GROUP BY action
 ORDER BY total_count DESC;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetPopularProducts]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetPopularProducts]    Script Date: 12/31/2025 10:26:54 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -418,7 +421,7 @@ GROUP BY entity_id
 ORDER BY view_count DESC;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetTicketMessages]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetTicketMessages]    Script Date: 12/31/2025 10:26:54 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -442,7 +445,7 @@ WHERE ticket_id = @TicketId
 ORDER BY created_at ASC;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetUserActivityReport]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetUserActivityReport]    Script Date: 12/31/2025 10:26:54 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -466,7 +469,7 @@ WHERE user_id = @UserId
 ORDER BY timestamp DESC;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetUserNotifications]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetUserNotifications]    Script Date: 12/31/2025 10:26:54 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -489,7 +492,7 @@ WHERE receiver_type = @ReceiverType
 ORDER BY created_at DESC;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetUserTickets]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetUserTickets]    Script Date: 12/31/2025 10:26:54 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -517,7 +520,7 @@ GROUP BY t.id, t.user_email, t.title, t.status, t.assigned_to, t.created_date, t
 ORDER BY t.created_date DESC;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_LoadChatMessages]    Script Date: 12/26/2025 1:09:50 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_LoadChatMessages]    Script Date: 12/31/2025 10:26:54 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON

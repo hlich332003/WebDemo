@@ -34,10 +34,7 @@
                     'bg-warning': order.status === 'PENDING',
                     'bg-info': order.status === 'PROCESSING',
                     'bg-primary': order.status === 'SHIPPED',
-                    'bg-success':
-                      order.status === 'DELIVERED' ||
-                      order.status === 'COMPLETED' ||
-                      order.status === 'ĐÃ HOÀN THÀNH',
+                    'bg-success': order.status === 'DELIVERED' || order.status === 'COMPLETED' || order.status === 'ĐÃ HOÀN THÀNH',
                     'bg-danger': order.status === 'CANCELLED',
                   }"
                   >{{ getStatusText(order.status) }}</span
@@ -45,20 +42,12 @@
               </td>
               <td class="text-end">
                 <div class="btn-group">
-                  <button
-                    type="submit"
-                    [routerLink]="['/order', order.id]"
-                    class="btn btn-info btn-sm rounded-pill me-1"
-                  >
+                  <button type="submit" [routerLink]="['/account/my-orders', order.id]" class="btn btn-info btn-sm rounded-pill me-1">
                     <fa-icon icon="eye"></fa-icon>
                     <span class="d-none d-md-inline">Xem chi tiết</span>
                   </button>
                   @if (order.status === 'PENDING') {
-                    <button
-                      type="button"
-                      (click)="cancelOrder(order.id!)"
-                      class="btn btn-danger btn-sm rounded-pill"
-                    >
+                    <button type="button" (click)="cancelOrder(order.id!)" class="btn btn-danger btn-sm rounded-pill">
                       <fa-icon icon="times"></fa-icon>
                       <span class="d-none d-md-inline">Hủy</span>
                     </button>

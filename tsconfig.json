@@ -21,13 +21,9 @@
     "types": ["node"],
     "lib": ["es2018", "es2020", "dom"]
   },
-  "exclude": ["node_modules", "target"],
+  // exclude test files from root compilation to avoid pulling test runner types into app build
+  "exclude": ["node_modules", "target", "**/*.spec.ts"],
   "include": ["src/main/webapp/**/*", "src/test/**/*"],
-  "references": [
-    {
-      "path": "tsconfig.spec.json"
-    }
-  ],
   "angularCompilerOptions": {
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,

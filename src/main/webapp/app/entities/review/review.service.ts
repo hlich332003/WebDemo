@@ -29,14 +29,13 @@ export class ReviewService {
   protected http = inject(HttpClient);
   protected applicationConfigService = inject(ApplicationConfigService);
 
-  protected resourceUrl =
-    this.applicationConfigService.getEndpointFor('api/reviews');
+  protected resourceUrl = this.applicationConfigService.getEndpointFor('api/reviews');
 
   create(review: NewReview): Observable<EntityResponseType> {
     const copy = this.convertDateFromClient(review);
     return this.http
       .post<RestReview>(this.resourceUrl, copy, { observe: 'response' })
-      .pipe(map((res) => this.convertResponseFromServer(res)));
+      .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   update(review: IReview): Observable<EntityResponseType> {
@@ -45,22 +44,20 @@ export class ReviewService {
       .put<RestReview>(`${this.resourceUrl}/${review.id}`, copy, {
         observe: 'response',
       })
-      .pipe(map((res) => this.convertResponseFromServer(res)));
+      .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   find(id: number): Observable<EntityResponseType> {
     return this.http
       .get<RestReview>(`${this.resourceUrl}/${id}`, { observe: 'response' })
-      .pipe(map((res) => this.convertResponseFromServer(res)));
+      .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   query(req?: any): Observable<EntityArrayResponseType> {
     const options = createRequestOption(req);
     return this.http
-      .get<
-        RestReview[]
-      >(this.resourceUrl, { params: options, observe: 'response' })
-      .pipe(map((res) => this.convertResponseArrayFromServer(res)));
+      .get<RestReview[]>(this.resourceUrl, { params: options, observe: 'response' })
+      .pipe(map(res => this.convertResponseArrayFromServer(res)));
   }
 
   delete(id: number): Observable<HttpResponse<{}>> {
@@ -69,9 +66,7 @@ export class ReviewService {
     });
   }
 
-  protected convertDateFromClient<
-    T extends IReview | NewReview | PartialUpdateReview,
-  >(review: T): RestOf<T> {
+  protected convertDateFromClient<T extends IReview | NewReview | PartialUpdateReview>(review: T): RestOf<T> {
     return {
       ...review,
       createdDate: review.createdDate?.toJSON() ?? null,
@@ -81,27 +76,19 @@ export class ReviewService {
   protected convertDateFromServer(restReview: RestReview): IReview {
     return {
       ...restReview,
-      createdDate: restReview.createdDate
-        ? dayjs(restReview.createdDate)
-        : null,
+      createdDate: restReview.createdDate ? dayjs(restReview.createdDate) : null,
     };
   }
 
-  protected convertResponseFromServer(
-    res: HttpResponse<RestReview>,
-  ): HttpResponse<IReview> {
+  protected convertResponseFromServer(res: HttpResponse<RestReview>): HttpResponse<IReview> {
     return res.clone({
       body: res.body ? this.convertDateFromServer(res.body) : null,
     });
   }
 
-  protected convertResponseArrayFromServer(
-    res: HttpResponse<RestReview[]>,
-  ): HttpResponse<IReview[]> {
+  protected convertResponseArrayFromServer(res: HttpResponse<RestReview[]>): HttpResponse<IReview[]> {
     return res.clone({
-      body: res.body
-        ? res.body.map((item) => this.convertDateFromServer(item))
-        : null,
+      body: res.body ? res.body.map(item => this.convertDateFromServer(item)) : null,
     });
   }
 }

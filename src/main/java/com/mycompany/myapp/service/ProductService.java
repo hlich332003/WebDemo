@@ -1,21 +1,22 @@
 package com.mycompany.myapp.service;
 
-import com.mycompany.myapp.domain.Product;
-import com.mycompany.myapp.repository.ProductRepository;
-import com.mycompany.myapp.repository.CategoryRepository;
 import com.mycompany.myapp.domain.Category;
+import com.mycompany.myapp.domain.Product;
+import com.mycompany.myapp.repository.CategoryRepository;
+import com.mycompany.myapp.repository.ProductRepository;
 import jakarta.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -28,22 +29,124 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final NotificationService notificationService;
 
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
+    public ProductService(
+        ProductRepository productRepository,
+        CategoryRepository categoryRepository,
+        NotificationService notificationService
+    ) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
+        this.notificationService = notificationService;
     }
 
     @CacheEvict(value = "products", allEntries = true)
     public Product save(Product product) {
         log.debug("Request to save Product : {}", product);
-        return productRepository.save(product);
+
+        // If category only has ID, fetch the full category from database
+        if (product.getCategory() != null && product.getCategory().getId() != null) {
+            Long categoryId = product.getCategory().getId();
+            Category category = categoryRepository
+                .findById(categoryId)
+                .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + categoryId));
+            product.setCategory(category);
+        }
+
+        // Process data URL if present
+        processImageDataUrl(product);
+
+        Product savedProduct = productRepository.save(product);
+
+        // Kiểm tra stock level và gửi notification
+        checkStockLevel(savedProduct);
+
+        return savedProduct;
     }
 
     @CacheEvict(value = "products", allEntries = true)
     public Product update(Product product) {
         log.debug("Request to update Product : {}", product);
-        return productRepository.save(product);
+
+        // If category only has ID, fetch the full category from database
+        if (product.getCategory() != null && product.getCategory().getId() != null) {
+            Long categoryId = product.getCategory().getId();
+            Category category = categoryRepository
+                .findById(categoryId)
+                .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + categoryId));
+            product.setCategory(category);
+        }
+
+        // Process data URL if present
+        processImageDataUrl(product);
+
+        Product updatedProduct = productRepository.save(product);
+
+        // Kiểm tra stock level và gửi notification
+        checkStockLevel(updatedProduct);
+
+        return updatedProduct;
+    }
+
+    /**
+     * Process data URL and extract binary data
+     * Convert data:image/jpeg;base64,... to byte[] and store in imageData field
+     */
+    private void processImageDataUrl(Product product) {
+        String imageUrl = product.getImageUrl();
+        if (imageUrl != null && imageUrl.startsWith("data:image/")) {
+            try {
+                // Extract content type and base64 data
+                // Format: data:image/jpeg;base64,/9j/4AAQ...
+                String[] parts = imageUrl.split(",");
+                if (parts.length == 2) {
+                    String meta = parts[0]; // data:image/jpeg;base64
+                    String base64Data = parts[1];
+
+                    // Extract content type
+                    String contentType = meta.substring(5, meta.indexOf(";"));
+
+                    // Decode base64 to byte array
+                    byte[] imageData = Base64.getDecoder().decode(base64Data);
+
+                    // Store in database fields
+                    product.setImageData(imageData);
+                    product.setImageContentType(contentType);
+
+                    // Keep the data URL in imageUrl field for backward compatibility
+                    // Or you can set it to null if you want to only use imageData
+                    // product.setImageUrl(null);
+
+                    log.debug("Processed image data URL, size: {} bytes, type: {}", imageData.length, contentType);
+                }
+            } catch (Exception e) {
+                log.error("Error processing image data URL", e);
+            }
+        }
+    }
+
+    /**
+     * Kiểm tra mức tồn kho và gửi notification nếu cần
+     */
+    private void checkStockLevel(Product product) {
+        if (product.getQuantity() == null) {
+            return;
+        }
+
+        int quantity = product.getQuantity();
+        String productName = product.getName();
+        Long productId = product.getId();
+
+        if (quantity == 0) {
+            // Hết hàng hoàn toàn
+            log.warn("⚠️ Sản phẩm {} đã hết hàng!", productName);
+            notificationService.notifyAdminOutOfStock(productId, productName);
+        } else if (quantity < 10) {
+            // Sắp hết hàng (dưới 10)
+            log.warn("⚠️ Sản phẩm {} chỉ còn {} sản phẩm!", productName, quantity);
+            notificationService.notifyAdminLowStock(productId, productName, quantity);
+        }
     }
 
     public Optional<Product> partialUpdate(Product product) {
@@ -94,7 +197,9 @@ public class ProductService {
         String nameContains,
         BigDecimal minPrice,
         BigDecimal maxPrice,
-        Boolean inStock
+        Boolean inStock,
+        Boolean isActive,
+        Boolean isPinned
     ) {
         log.debug("Request to get a page of Products with dynamic filters");
 
@@ -120,6 +225,12 @@ public class ProductService {
                     predicates.add(criteriaBuilder.equal(root.get("quantity"), 0));
                 }
             }
+            if (isActive != null) {
+                predicates.add(criteriaBuilder.equal(root.get("isActive"), isActive));
+            }
+            if (isPinned != null) {
+                predicates.add(criteriaBuilder.equal(root.get("isPinned"), isPinned));
+            }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
@@ -134,7 +245,7 @@ public class ProductService {
         return productRepository.findById(id);
     }
 
-    @CacheEvict(value = {"products", "categories"}, allEntries = true)
+    @CacheEvict(value = { "products", "categories" }, allEntries = true)
     public void delete(Long id) {
         log.debug("Request to delete Product : {}", id);
         productRepository.deleteById(id);
@@ -145,8 +256,7 @@ public class ProductService {
         return productRepository
             .findById(id)
             .map(product -> {
-                // Assuming Product entity has isFeatured field
-                // product.setFeatured(!product.isFeatured());
+                product.setIsPinned(!product.getIsPinned());
                 return product;
             })
             .map(productRepository::save);

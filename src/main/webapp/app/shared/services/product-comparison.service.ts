@@ -14,9 +14,7 @@ export class ProductComparisonService {
   // Computed signals
   public items = computed(() => this.comparisonItems());
   public count = computed(() => this.comparisonItems().length);
-  public isFull = computed(
-    () => this.comparisonItems().length >= this.MAX_ITEMS,
-  );
+  public isFull = computed(() => this.comparisonItems().length >= this.MAX_ITEMS);
 
   constructor() {
     this.loadFromStorage();
@@ -43,10 +41,7 @@ export class ProductComparisonService {
    */
   private saveToStorage(): void {
     try {
-      localStorage.setItem(
-        this.STORAGE_KEY,
-        JSON.stringify(this.comparisonItems()),
-      );
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.comparisonItems()));
     } catch (error) {
       console.error('Error saving comparison list to storage:', error);
     }
@@ -70,7 +65,7 @@ export class ProductComparisonService {
       return false;
     }
 
-    this.comparisonItems.update((items) => [...items, product]);
+    this.comparisonItems.update(items => [...items, product]);
     this.saveToStorage();
     return true;
   }
@@ -79,9 +74,7 @@ export class ProductComparisonService {
    * Xóa sản phẩm khỏi danh sách so sánh
    */
   removeFromComparison(productId: number): void {
-    this.comparisonItems.update((items) =>
-      items.filter((item) => item.id !== productId),
-    );
+    this.comparisonItems.update(items => items.filter(item => item.id !== productId));
     this.saveToStorage();
   }
 
@@ -105,7 +98,7 @@ export class ProductComparisonService {
    * Kiểm tra sản phẩm có trong danh sách so sánh không
    */
   isInComparison(productId: number): boolean {
-    return this.comparisonItems().some((item) => item.id === productId);
+    return this.comparisonItems().some(item => item.id === productId);
   }
 
   /**

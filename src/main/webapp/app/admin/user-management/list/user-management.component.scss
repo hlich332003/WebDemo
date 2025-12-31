@@ -10,11 +10,7 @@
 }
 
 .admin-header {
-  background: linear-gradient(
-    135deg,
-    rgba($primary, 0.15),
-    rgba($secondary, 0.1)
-  );
+  background: linear-gradient(135deg, rgba($primary, 0.15), rgba($secondary, 0.1));
   padding: 2rem;
   border-radius: $border-radius-lg;
   margin-bottom: 2rem;
@@ -74,23 +70,28 @@
 
     thead th {
       font-weight: 600;
-      background: $primary;
+      background: $gradient-primary; // Dùng gradient hồng tím của dự án
       color: $white;
       position: sticky;
       top: 0;
       z-index: 10;
-      border-bottom: 2px solid color.adjust($primary, $lightness: -10%);
+      border-bottom: 2px solid $primary-dark;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
+      padding: 1rem 0.75rem;
+
+      fa-icon {
+        margin-left: 0.25rem;
+        opacity: 0.8;
+      }
     }
 
     tbody tr {
       transition: $transition-base;
 
       &:hover {
-        background: linear-gradient(
-          135deg,
-          rgba($primary, 0.03),
-          rgba($secondary, 0.03)
-        );
+        background: linear-gradient(135deg, rgba($primary, 0.03), rgba($secondary, 0.03));
       }
 
       &:last-child td {
@@ -105,49 +106,106 @@
   padding: 0.5rem 0.75rem;
   border-radius: $border-radius-sm;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 
   &.bg-success {
     background: $success !important;
+    color: white;
   }
 
   &.bg-info {
     background: #17a2b8 !important;
+    color: white;
   }
 
   &.bg-secondary {
     background: $text-secondary !important;
+    color: white;
   }
 
   &.bg-danger {
     background: $danger !important;
+    color: white;
+  }
+
+  &.bg-warning {
+    background: #ffc107 !important;
+    color: #333;
+  }
+
+  fa-icon {
+    font-size: 0.9rem;
   }
 }
 
 .btn-group {
   white-space: nowrap;
   display: flex;
-  gap: 0.5rem;
+  gap: 0.35rem;
+  justify-content: flex-end;
 
   .btn {
     border-radius: $border-radius-sm;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.85rem;
     font-weight: 600;
-    transition: $transition-base;
+    transition: all 0.2s ease;
     box-shadow: $shadow-sm;
+    font-size: 0.875rem;
+    min-width: 70px;
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: $shadow-md;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    &.btn-info {
+      background: $secondary; // Dùng màu tím thay vì xanh
+      border: none;
+      color: white;
+
+      &:hover {
+        background: $secondary-dark;
+      }
     }
 
     &.btn-primary {
-      background: linear-gradient(135deg, $primary, $secondary);
+      background: $gradient-primary; // Gradient hồng tím
       border: none;
+
+      &:hover {
+        background: linear-gradient(135deg, $primary-dark, $secondary-dark);
+      }
     }
 
     &.btn-danger {
       background: $danger;
       border: none;
+
+      &:hover {
+        background: color.adjust($danger, $lightness: -10%);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        &:hover {
+          transform: none;
+          box-shadow: $shadow-sm;
+        }
+      }
+    }
+
+    fa-icon {
+      margin-right: 0.25rem;
+    }
+
+    // Always show text on larger screens
+    @media (min-width: 992px) {
+      .d-none {
+        display: inline !important;
+      }
     }
   }
 }

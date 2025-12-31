@@ -1,5 +1,8 @@
 package com.mycompany.myapp.config;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -11,17 +14,14 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.util.StringUtils;
 
-/**
- * WebSocket security configuration: provides a ChannelInterceptor that authenticates
- * STOMP CONNECT frames by extracting a Bearer token from native headers (or token header)
- * and converting it to a Spring Authentication using existing JwtDecoder + JwtAuthenticationConverter.
- */
 @Configuration
 public class WebSocketSecurityConfiguration {
 
@@ -35,14 +35,15 @@ public class WebSocketSecurityConfiguration {
                 StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
                 if (accessor == null) return message;
 
+                // Handle CONNECT command
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
                     try {
+                        // 1. Try to get JWT Token
                         String authHeader = accessor.getFirstNativeHeader("Authorization");
                         String token = null;
                         if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
                             token = authHeader.substring(7);
                         } else {
-                            // Fallback: SockJS handshake may pass token in the ``nativeHeaders.token`` or query param
                             String tokenHeader = accessor.getFirstNativeHeader("token");
                             if (StringUtils.hasText(tokenHeader)) {
                                 token = tokenHeader;
@@ -56,10 +57,47 @@ public class WebSocketSecurityConfiguration {
                             SecurityContextHolder.getContext().setAuthentication(auth);
                             log.info("[WS_AUTH_OK] Principal set from STOMP CONNECT: {}", auth.getName());
                         } else {
-                            log.warn("[WS_NO_TOKEN] No token provided in STOMP CONNECT headers");
+                            // 2. If no token, check for Guest ID from Session Attributes (set by HandshakeInterceptor)
+                            String guestId = null;
+                            Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
+                            if (sessionAttributes != null && sessionAttributes.containsKey("guestId")) {
+                                guestId = (String) sessionAttributes.get("guestId");
+                            }
+
+                            // Fallback: Check STOMP headers
+                            if (!StringUtils.hasText(guestId)) {
+                                guestId = accessor.getFirstNativeHeader("guestId");
+                            }
+
+                            if (StringUtils.hasText(guestId)) {
+                                List<SimpleGrantedAuthority> authorities = Collections.singletonList(
+                                    new SimpleGrantedAuthority("ROLE_GUEST")
+                                );
+                                Authentication guestAuth = new UsernamePasswordAuthenticationToken(guestId, null, authorities);
+                                accessor.setUser(guestAuth);
+                                SecurityContextHolder.getContext().setAuthentication(guestAuth);
+                                log.info("[WS_GUEST_OK] Guest Principal set: {}", guestId);
+                            } else {
+                                log.warn("[WS_NO_TOKEN] No token or guestId provided in STOMP CONNECT headers/session");
+                            }
                         }
                     } catch (Exception e) {
                         log.warn("[WS_AUTH_FAILED] Failed to authenticate STOMP CONNECT: {}", e.getMessage());
+                    }
+                }
+                // For MESSAGE commands, ensure authentication is propagated from session
+                else if (StompCommand.SEND.equals(accessor.getCommand()) || StompCommand.MESSAGE.equals(accessor.getCommand())) {
+                    // If no user is set, try to get from session attributes (guest user)
+                    if (accessor.getUser() == null) {
+                        Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
+                        if (sessionAttributes != null && sessionAttributes.containsKey("guestId")) {
+                            String guestId = (String) sessionAttributes.get("guestId");
+                            List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_GUEST"));
+                            Authentication guestAuth = new UsernamePasswordAuthenticationToken(guestId, null, authorities);
+                            accessor.setUser(guestAuth);
+                            SecurityContextHolder.getContext().setAuthentication(guestAuth);
+                            log.debug("[WS_MESSAGE] Guest Principal restored for MESSAGE: {}", guestId);
+                        }
                     }
                 }
 

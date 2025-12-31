@@ -20,6 +20,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -113,6 +115,8 @@ public class ProductResource {
         @RequestParam(required = false) BigDecimal minPrice,
         @RequestParam(required = false) BigDecimal maxPrice,
         @RequestParam(required = false) Boolean inStock,
+        @RequestParam(required = false) Boolean isActive,
+        @RequestParam(required = false) Boolean isPinned,
         @RequestParam Map<String, String> allRequestParams
     ) {
         log.debug("REST request to get a page of Products with filters: {}", allRequestParams);
@@ -130,7 +134,24 @@ public class ProductResource {
             }
         }
 
-        Page<Product> page = productService.findAllWithFilters(pageable, categorySlug, resolvedName, minPrice, maxPrice, inStock);
+        // Handle isPinned from query params
+        if (isPinned == null && allRequestParams != null) {
+            String pinnedParam = allRequestParams.get("isPinned.equals");
+            if (pinnedParam != null) {
+                isPinned = Boolean.parseBoolean(pinnedParam);
+            }
+        }
+
+        Page<Product> page = productService.findAllWithFilters(
+            pageable,
+            categorySlug,
+            resolvedName,
+            minPrice,
+            maxPrice,
+            inStock,
+            isActive,
+            isPinned
+        );
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -140,6 +161,38 @@ public class ProductResource {
         log.debug("REST request to get Product : {}", id);
         Optional<Product> product = productService.findOne(id);
         return ResponseUtil.wrapOrNotFound(product);
+    }
+
+    /**
+     * GET  /products/:id/image : get product image from database
+     */
+    @GetMapping("/products/{id}/image")
+    public ResponseEntity<byte[]> getProductImage(@PathVariable Long id) {
+        log.debug("REST request to get Product image : {}", id);
+        Optional<Product> productOpt = productService.findOne(id);
+
+        if (productOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Product product = productOpt.get();
+        byte[] imageData = product.getImageData();
+        String contentType = product.getImageContentType();
+
+        if (imageData == null || imageData.length == 0) {
+            return ResponseEntity.notFound().build();
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        if (contentType != null) {
+            headers.setContentType(MediaType.parseMediaType(contentType));
+        } else {
+            headers.setContentType(MediaType.IMAGE_JPEG); // Default
+        }
+        headers.setContentLength(imageData.length);
+        headers.setCacheControl("max-age=31536000"); // Cache for 1 year
+
+        return new ResponseEntity<>(imageData, headers, HttpStatus.OK);
     }
 
     @DeleteMapping("/products/{id}")
@@ -165,5 +218,13 @@ public class ProductResource {
             log.error("Unexpected error deleting product: {}", e.getMessage(), e);
             throw new BadRequestAlertException("Lỗi khi xóa sản phẩm: " + e.getMessage(), ENTITY_NAME, "deleteerror");
         }
+    }
+
+    @PatchMapping("/products/{id}/toggle-featured")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    public ResponseEntity<Product> toggleFeatured(@PathVariable Long id) {
+        log.debug("REST request to toggle featured status for Product : {}", id);
+        Optional<Product> result = productService.toggleFeatured(id);
+        return ResponseUtil.wrapOrNotFound(result, HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, id.toString()));
     }
 }

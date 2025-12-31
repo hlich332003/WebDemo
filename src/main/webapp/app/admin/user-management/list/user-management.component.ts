@@ -1,6 +1,8 @@
 import { Component, OnInit, inject, signal, ViewChild, ElementRef } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { HttpHeaders, HttpResponse } from '@angular/common/http';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import SharedModule from 'app/shared/shared.module';
 import { SortByDirective, SortDirective, SortService, sortStateSignal } from 'app/shared/sort';
@@ -10,13 +12,14 @@ import { User } from '../user-management.model';
 import ItemCountComponent from 'app/shared/pagination/item-count.component';
 import { UserImportService } from '../service/user-import.service';
 import { NotificationService } from 'app/shared/notification/notification.service';
+import UserManagementDeleteDialogComponent from '../delete/user-management-delete-dialog.component';
 
 @Component({
   selector: 'jhi-user-mgmt',
   standalone: true,
   templateUrl: './user-management.component.html',
   styleUrls: ['./user-management.component.scss'],
-  imports: [RouterModule, SharedModule, SortDirective, SortByDirective, ItemCountComponent],
+  imports: [RouterModule, SharedModule, SortDirective, SortByDirective, ItemCountComponent, FontAwesomeModule],
 })
 export default class UserManagementComponent implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef;
@@ -25,7 +28,7 @@ export default class UserManagementComponent implements OnInit {
   users = signal<User[] | null>(null);
   isLoading = signal(false);
   totalItems = signal(0);
-  page = 1; // Start with page 1
+  page = 1;
   itemsPerPage = 20;
   sortState = sortStateSignal({ predicate: 'id', order: 'asc' });
   searchTerm = signal('');
@@ -35,6 +38,7 @@ export default class UserManagementComponent implements OnInit {
   private readonly userImportService = inject(UserImportService);
   private readonly sortService = inject(SortService);
   private readonly notificationService = inject(NotificationService);
+  private readonly modalService = inject(NgbModal);
 
   ngOnInit(): void {
     this.loadAll();
@@ -46,19 +50,35 @@ export default class UserManagementComponent implements OnInit {
 
   loadAll(): void {
     this.isLoading.set(true);
-    this.userService
-      .query({
-        page: this.page - 1,
-        size: this.itemsPerPage,
-        sort: this.sortService.buildSortParam(this.sortState()),
-      })
-      .subscribe({
-        next: (res: HttpResponse<User[]>) => {
-          this.isLoading.set(false);
-          this.onSuccess(res.body, res.headers);
-        },
-        error: () => this.isLoading.set(false),
-      });
+
+    const queryParams: any = {
+      page: this.page - 1,
+      size: this.itemsPerPage,
+      sort: this.sortService.buildSortParam(this.sortState()),
+    };
+
+    if (this.searchTerm()) {
+      queryParams['login.contains'] = this.searchTerm();
+    }
+
+    this.userService.query(queryParams).subscribe({
+      next: (res: HttpResponse<User[]>) => {
+        this.isLoading.set(false);
+        this.onSuccess(res.body, res.headers);
+      },
+      error: () => this.isLoading.set(false),
+    });
+  }
+
+  deleteUser(user: User): void {
+    const modalRef = this.modalService.open(UserManagementDeleteDialogComponent, { size: 'lg', backdrop: 'static' });
+    modalRef.componentInstance.user = user;
+    // unsubscribe not needed because closed completes on modal close
+    modalRef.closed.subscribe(reason => {
+      if (reason === 'deleted') {
+        this.loadAll();
+      }
+    });
   }
 
   triggerFileInput(): void {
@@ -76,9 +96,9 @@ export default class UserManagementComponent implements OnInit {
           this.notificationService.success('Tải lên người dùng thành công!');
           this.loadAll();
         },
-        error: err => {
+        error: (err: { message: string }) => {
           this.isLoading.set(false);
-          this.notificationService.error('Lỗi khi tải lên người dùng: ' + err.message);
+          this.notificationService.error(`Lỗi khi tải lên người dùng: ${err.message}`);
         },
       });
     }
@@ -87,11 +107,40 @@ export default class UserManagementComponent implements OnInit {
   onSearchInput(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
-    // No need to call loadAll, filtering is done on the client side
+
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    this.searchTimeout = setTimeout(() => {
+      this.page = 1;
+      this.loadAll();
+    }, 500);
   }
 
   onClearSearch(): void {
     this.searchTerm.set('');
+    this.page = 1;
+    this.loadAll();
+  }
+
+  exportUsers(): void {
+    const users = this.users();
+    if (!users || users.length === 0) {
+      this.notificationService.error('Không có dữ liệu để xuất');
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.userImportService.exportUsers(users).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.notificationService.success('Xuất dữ liệu người dùng thành công!');
+      },
+      error: (err: { message: string }) => {
+        this.isLoading.set(false);
+        this.notificationService.error(`Lỗi khi xuất dữ liệu: ${err.message}`);
+      },
+    });
   }
 
   transition(): void {
@@ -100,24 +149,6 @@ export default class UserManagementComponent implements OnInit {
 
   private onSuccess(users: User[] | null, headers: HttpHeaders): void {
     this.totalItems.set(Number(headers.get('X-Total-Count')));
-    // The filtering logic will be handled by a computed signal or a pipe in the template
     this.users.set(users);
   }
-
-  // We need a computed signal to handle filtering
-  filteredUsers = () => {
-    const usersList = this.users();
-    const term = this.searchTerm().toLowerCase();
-    if (!usersList || !term) {
-      return usersList;
-    }
-    return usersList.filter(
-      user =>
-        (user.login?.toLowerCase() ?? '').includes(term) ||
-        (user.email?.toLowerCase() ?? '').includes(term) ||
-        (user.firstName?.toLowerCase() ?? '').includes(term) ||
-        (user.lastName?.toLowerCase() ?? '').includes(term) ||
-        (user.phone?.toLowerCase() ?? '').includes(term),
-    );
-  };
 }

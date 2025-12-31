@@ -1,6 +1,7 @@
 package com.mycompany.myapp.domain.analytics;
 
 import com.mycompany.myapp.domain.enumeration.TicketStatus;
+import com.mycompany.myapp.domain.enumeration.TicketType;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.HashSet;
@@ -15,7 +16,7 @@ public class SupportTicket {
     private Long id;
 
     @Column(name = "user_email", nullable = false)
-    private String userEmail;
+    private String userEmail; // Can be email or guest session ID
 
     @Column(name = "title", length = 500)
     private String title;
@@ -23,6 +24,10 @@ public class SupportTicket {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
     private TicketStatus status = TicketStatus.OPEN;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false, length = 50)
+    private TicketType type = TicketType.TICKET;
 
     @Column(name = "assigned_to")
     private String assignedTo;
@@ -70,6 +75,14 @@ public class SupportTicket {
 
     public void setStatus(TicketStatus status) {
         this.status = status;
+    }
+
+    public TicketType getType() {
+        return type;
+    }
+
+    public void setType(TicketType type) {
+        this.type = type;
     }
 
     public String getAssignedTo() {

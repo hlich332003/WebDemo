@@ -7,9 +7,7 @@ import { mergeMap } from 'rxjs/operators';
 import { IProduct } from '../product.model';
 import { ProductService } from '../product.service';
 
-export const productResolve = (
-  route: ActivatedRouteSnapshot,
-): Observable<NonNullable<IProduct>> => {
+export const productResolve = (route: ActivatedRouteSnapshot): Observable<IProduct | null> => {
   const id = route.params['id'];
   if (id) {
     return inject(ProductService)
@@ -25,9 +23,6 @@ export const productResolve = (
         }),
       );
   }
-  // Trả về một sản phẩm hợp lệ với các thuộc tính bắt buộc khi không có ID
-  // Hoặc điều hướng đến trang lỗi nếu không muốn hiển thị sản phẩm rỗng
-  // Hiện tại, tôi sẽ điều hướng đến trang lỗi nếu không có ID
-  inject(Router).navigate(['404']);
-  return EMPTY;
+  // Trả về null cho route 'new' để component tạo form trống
+  return of(null);
 };

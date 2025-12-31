@@ -10,12 +10,7 @@ import { CastToDayjsPipe } from 'app/shared/date/cast-to-dayjs.pipe';
   standalone: true,
   selector: 'jhi-payment-detail',
   templateUrl: './payment-detail.component.html',
-  imports: [
-    SharedModule,
-    RouterModule,
-    FormatMediumDatetimePipe,
-    CastToDayjsPipe,
-  ],
+  imports: [SharedModule, RouterModule, FormatMediumDatetimePipe, CastToDayjsPipe],
 })
 export class PaymentDetailComponent {
   payment = input<IPayment | null>(null);

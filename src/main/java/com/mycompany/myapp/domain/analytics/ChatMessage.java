@@ -34,6 +34,9 @@ public class ChatMessage implements Serializable {
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false;
 
+    @Column(name = "status", nullable = false)
+    private String status = "SENT"; // SENT, DELIVERED, SEEN
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -89,5 +92,13 @@ public class ChatMessage implements Serializable {
 
     public void setRead(boolean read) {
         isRead = read;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

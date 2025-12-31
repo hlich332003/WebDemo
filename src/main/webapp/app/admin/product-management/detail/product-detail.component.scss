@@ -1,1 +1,188 @@
-/* Add custom styles for your component here */
+/* Admin Product Detail - Pink Purple Theme */
+@use 'sass:color';
+@use 'app/shared/styles/variables' as *;
+
+:host {
+  display: block;
+  padding: 2rem;
+  background: $light;
+  min-height: 100vh;
+}
+
+.admin-header {
+  background: $gradient-primary;
+  padding: 2rem;
+  border-radius: $border-radius-lg;
+  margin-bottom: 2rem;
+  box-shadow: $shadow-lg;
+  color: $white;
+
+  h2 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+
+    fa-icon {
+      color: $white;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+    }
+  }
+}
+
+.product-detail-card {
+  background: $white;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-md;
+  padding: 2rem;
+
+  .detail-section {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid $border-color;
+
+    &:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    h3 {
+      color: $primary;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      fa-icon {
+        color: $secondary;
+      }
+    }
+  }
+
+  .detail-item {
+    display: flex;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    border-radius: $border-radius-sm;
+    transition: $transition-fast;
+
+    &:hover {
+      background: rgba($primary, 0.05);
+    }
+
+    .detail-label {
+      font-weight: 600;
+      min-width: 150px;
+      color: $text-primary;
+    }
+
+    .detail-value {
+      flex: 1;
+      color: $text-secondary;
+      word-break: break-word;
+    }
+  }
+
+  .product-image {
+    max-width: 300px;
+    border-radius: $border-radius-md;
+    box-shadow: $shadow-md;
+  }
+
+  .badge {
+    padding: 0.5rem 1rem;
+    border-radius: $border-radius-sm;
+    font-weight: 600;
+
+    &.bg-success {
+      background: $success !important;
+    }
+
+    &.bg-danger {
+      background: $danger !important;
+    }
+  }
+}
+
+.btn-group {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: $border-radius-sm;
+    font-weight: 600;
+    transition: $transition-fast;
+    box-shadow: $shadow-sm;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-md;
+    }
+
+    &.btn-primary {
+      background: $gradient-primary;
+      border: none;
+      color: $white;
+    }
+
+    &.btn-info {
+      background: $secondary;
+      border: none;
+      color: $white;
+
+      &:hover {
+        background: $secondary-dark;
+      }
+    }
+
+    &.btn-danger {
+      background: $danger;
+      border: none;
+      color: $white;
+
+      &:hover {
+        background: color.adjust($danger, $lightness: -10%);
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  :host {
+    padding: 1rem;
+  }
+
+  .admin-header {
+    padding: 1.5rem;
+
+    h2 {
+      font-size: 1.5rem;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+
+  .detail-item {
+    flex-direction: column;
+
+    .detail-label {
+      min-width: auto;
+      margin-bottom: 0.25rem;
+    }
+  }
+}

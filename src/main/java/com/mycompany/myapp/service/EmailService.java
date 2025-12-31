@@ -1,8 +1,8 @@
 package com.mycompany.myapp.service;
 
 import com.mycompany.myapp.config.RabbitMQConfig;
-import com.mycompany.myapp.service.dto.OrderEventDTO;
-import com.mycompany.myapp.service.dto.UserRegistrationEventDTO;
+import com.mycompany.myapp.service.dto.AdminUserDTO;
+import com.mycompany.myapp.service.messaging.OrderMessageProducer.OrderMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -25,59 +25,73 @@ public class EmailService {
     }
 
     @RabbitListener(queues = RabbitMQConfig.ORDER_EMAIL_QUEUE)
-    public void handleOrderCreatedEvent(OrderEventDTO event) {
-        log.info("Received order created event for email: {}", event);
-        log.info("Sending confirmation email for order {} to {}", event.getOrderCode(), event.getCustomerEmail());
+    public void handleOrderCreatedEvent(OrderMessage orderMessage) {
+        log.info(
+            "Received order created event for email: OrderID={}, Email={}",
+            orderMessage.getOrderId(),
+            orderMessage.getCustomerEmail()
+        );
 
         try {
+            String customerEmail = orderMessage.getCustomerEmail();
+            String customerName = orderMessage.getCustomerFullName() != null ? orderMessage.getCustomerFullName() : "Khách hàng";
+
+            // Validate email address
+            if (customerEmail == null || customerEmail.isEmpty() || customerEmail.contains("example.com")) {
+                log.warn("Invalid or placeholder email address: {}. Skipping email send.", customerEmail);
+                return;
+            }
+
+            log.info("Sending confirmation email for order {} to {}", orderMessage.getOrderCode(), customerEmail);
+
             SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail); // Sử dụng email từ file cấu hình
-            message.setTo(event.getCustomerEmail());
-            message.setSubject("Xác nhận đơn hàng #" + event.getOrderCode());
+            message.setFrom(fromEmail);
+            message.setTo(customerEmail);
+            message.setSubject("Xác nhận đơn hàng #" + orderMessage.getOrderCode());
             message.setText(
                 "Kính gửi " +
-                event.getCustomerName() +
+                customerName +
                 ",\n\n" +
                 "Cảm ơn bạn đã đặt hàng tại cửa hàng của chúng tôi!\n" +
-                "Mã đơn hàng của bạn là: " +
-                event.getOrderCode() +
+                "Mã đơn hàng: " +
+                orderMessage.getOrderCode() +
                 "\n" +
                 "Tổng tiền: " +
-                event.getTotalAmount() +
+                orderMessage.getTotalAmount() +
                 " VND\n" +
                 "Chúng tôi sẽ xử lý đơn hàng của bạn sớm nhất có thể.\n\n" +
                 "Trân trọng,\n" +
                 "Đội ngũ WebDemo"
             );
             mailSender.send(message);
-            log.info("Confirmation email sent for order {}", event.getOrderCode());
+            log.info("✅ Confirmation email sent successfully to {}", customerEmail);
         } catch (Exception e) {
-            log.error("Failed to send confirmation email for order {}: {}", event.getOrderCode(), e.getMessage());
+            log.error("❌ Failed to send confirmation email: {}", e.getMessage(), e);
         }
     }
 
     @RabbitListener(queues = RabbitMQConfig.USER_REGISTRATION_QUEUE)
-    public void handleUserRegisteredEvent(UserRegistrationEventDTO event) {
-        log.info("Received user registered event for email: {}", event);
-        log.info("Sending welcome email to user {}", event.getEmail());
+    public void handleUserRegisteredEvent(AdminUserDTO user) {
+        log.info("Received user registered event for email: {}", user);
+        log.info("Sending welcome email to user {}", user.getEmail());
 
         try {
             SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail); // Sử dụng email từ file cấu hình
-            message.setTo(event.getEmail());
+            message.setFrom(fromEmail);
+            message.setTo(user.getEmail());
             message.setSubject("Chào mừng bạn đến với WebDemo!");
             message.setText(
                 "Kính gửi " +
-                event.getFirstName() +
+                user.getFirstName() +
                 ",\n\n" +
                 "Chào mừng bạn đã đăng ký tài khoản tại WebDemo. Chúc bạn có trải nghiệm mua sắm tuyệt vời!\n\n" +
                 "Trân trọng,\n" +
                 "Đội ngũ WebDemo"
             );
             mailSender.send(message);
-            log.info("Welcome email sent for user {}", event.getEmail());
+            log.info("Welcome email sent for user {}", user.getEmail());
         } catch (Exception e) {
-            log.error("Failed to send welcome email for user {}: {}", event.getEmail(), e.getMessage());
+            log.error("Failed to send welcome email for user {}: {}", user.getEmail(), e.getMessage());
         }
     }
 }

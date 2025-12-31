@@ -29,7 +29,7 @@ export class MyOrderDetailComponent implements OnInit {
   private notify = inject(NotificationService);
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe((params) => {
+    this.route.paramMap.subscribe(params => {
       const orderId = params.get('id');
       if (orderId) {
         this.loadOrder(Number(orderId));
@@ -44,7 +44,7 @@ export class MyOrderDetailComponent implements OnInit {
         // Đã đổi kiểu IOrder thành any
         this.order = res.body;
         this.isLoading = false;
-        this.newDeliveryAddress = this.order?.deliveryAddress || ''; // Khởi tạo địa chỉ mới
+        this.newDeliveryAddress = this.order?.deliveryAddress ?? ''; // Khởi tạo địa chỉ mới
       },
       error: () => {
         this.isLoading = false;
@@ -73,7 +73,7 @@ export class MyOrderDetailComponent implements OnInit {
   toggleEditAddress(): void {
     this.isEditingAddress = !this.isEditingAddress;
     if (!this.isEditingAddress) {
-      this.newDeliveryAddress = this.order?.deliveryAddress || ''; // Reset nếu hủy chỉnh sửa
+      this.newDeliveryAddress = this.order?.deliveryAddress ?? ''; // Reset nếu hủy chỉnh sửa
     }
   }
 
@@ -82,20 +82,18 @@ export class MyOrderDetailComponent implements OnInit {
       this.notify.error('Địa chỉ giao hàng không được để trống.');
       return;
     }
-    this.orderService
-      .updateDeliveryAddress(orderId, this.newDeliveryAddress)
-      .subscribe({
-        next: (res: HttpResponse<IOrder>) => {
-          if (res.body) {
-            this.order = res.body;
-            this.notify.success('Địa chỉ giao hàng đã được cập nhật.');
-            this.isEditingAddress = false;
-          }
-        },
-        error: () => {
-          this.notify.error('Không thể cập nhật địa chỉ giao hàng.');
-        },
-      });
+    this.orderService.updateDeliveryAddress(orderId, this.newDeliveryAddress).subscribe({
+      next: (res: HttpResponse<IOrder>) => {
+        if (res.body) {
+          this.order = res.body;
+          this.notify.success('Địa chỉ giao hàng đã được cập nhật.');
+          this.isEditingAddress = false;
+        }
+      },
+      error: () => {
+        this.notify.error('Không thể cập nhật địa chỉ giao hàng.');
+      },
+    });
   }
 
   formatPrice(price: number | null | undefined): string {
@@ -117,6 +115,21 @@ export class MyOrderDetailComponent implements OnInit {
       minute: '2-digit',
     };
     return new Date(date).toLocaleDateString('vi-VN', options);
+  }
+
+  getStatusText(status: string | null | undefined): string {
+    if (!status) return 'Không xác định';
+
+    const statusMap: Record<string, string> = {
+      PENDING: 'Chờ xác nhận',
+      PROCESSING: 'Đang xử lý',
+      SHIPPED: 'Đang giao hàng',
+      DELIVERED: 'Đã giao hàng',
+      COMPLETED: 'Đã hoàn thành',
+      CANCELLED: 'Đã hủy',
+    };
+
+    return statusMap[status.toUpperCase()] ?? status;
   }
 
   previousState(): void {

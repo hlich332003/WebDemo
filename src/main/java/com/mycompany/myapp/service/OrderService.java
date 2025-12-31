@@ -5,8 +5,8 @@ import com.mycompany.myapp.domain.enumeration.OrderStatus;
 import com.mycompany.myapp.repository.*;
 import com.mycompany.myapp.security.SecurityUtils;
 import com.mycompany.myapp.service.dto.OrderDTO;
-import com.mycompany.myapp.service.dto.OrderEventDTO;
 import com.mycompany.myapp.service.dto.OrderItemDTO;
+import com.mycompany.myapp.service.messaging.OrderMessageProducer;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -32,7 +32,7 @@ public class OrderService {
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
     private final WishlistItemRepository wishlistItemRepository;
-    private final MessageProducer messageProducer;
+    private final OrderMessageProducer orderMessageProducer;
     private final MailService mailService;
     private final NotificationService notificationService;
 
@@ -43,7 +43,7 @@ public class OrderService {
         UserRepository userRepository,
         CartRepository cartRepository,
         WishlistItemRepository wishlistItemRepository,
-        MessageProducer messageProducer,
+        OrderMessageProducer orderMessageProducer,
         MailService mailService,
         NotificationService notificationService
     ) {
@@ -53,11 +53,16 @@ public class OrderService {
         this.userRepository = userRepository;
         this.cartRepository = cartRepository;
         this.wishlistItemRepository = wishlistItemRepository;
-        this.messageProducer = messageProducer;
+        this.orderMessageProducer = orderMessageProducer;
         this.mailService = mailService;
         this.notificationService = notificationService;
     }
 
+    /**
+     * Create new order
+     * ✅ OPTIMIZED: Evict dashboard cache when new order is created
+     */
+    @CacheEvict(value = { "userOrders", "dashboardStats" }, allEntries = true)
     public Order create(OrderDTO orderDTO) {
         Order order = new Order();
         order.setOrderDate(Instant.now());
@@ -121,19 +126,13 @@ public class OrderService {
 
         // --- NOTIFICATION LOGIC (CORRECTED) ---
         currentUserOpt.ifPresent(user -> {
-            notificationService.notifyUserOrderSuccess(user.getId(), savedOrder.getId());
+            notificationService.notifyUserOrderSuccess(user.getId(), savedOrder.getId(), savedOrder.getOrderCode());
         });
-        notificationService.notifyAdminNewOrder(savedOrder.getId());
+        notificationService.notifyAdminNewOrder(savedOrder.getId(), savedOrder.getOrderCode());
         // --- END NOTIFICATION LOGIC ---
 
-        OrderEventDTO orderEvent = new OrderEventDTO(
-            savedOrder.getId(),
-            savedOrder.getOrderCode(),
-            savedOrder.getCustomerEmail(),
-            savedOrder.getCustomerFullName(),
-            savedOrder.getTotalAmount()
-        );
-        messageProducer.sendOrderCreatedEvent(orderEvent);
+        // Send order to RabbitMQ for async processing
+        orderMessageProducer.publishOrderCreated(savedOrder);
         // mailService.sendOrderStatusUpdateEmail(savedOrder, "email.order.confirmation.title", "orderConfirmationEmail");
 
         return savedOrder;
@@ -149,13 +148,46 @@ public class OrderService {
         order.setStatus(newStatus);
         Order updatedOrder = orderRepository.save(order);
 
-        if (newStatus == OrderStatus.PROCESSING) {
-            mailService.sendOrderStatusUpdateEmail(updatedOrder, "email.order.confirmed.title", "orderConfirmedEmail");
-        } else if (newStatus == OrderStatus.DELIVERED || newStatus == OrderStatus.COMPLETED) {
-            mailService.sendOrderStatusUpdateEmail(updatedOrder, "email.order.completed.title", "orderCompletedEmail");
-        }
+        // Gửi email và notification theo từng trạng thái
+        String customerEmail = updatedOrder.getCustomerEmail();
+        String orderCode = updatedOrder.getOrderCode();
 
-        // The problematic call to notifyOrderStatusChange has been removed.
+        switch (newStatus) {
+            case PROCESSING:
+                mailService.sendOrderStatusUpdateEmail(updatedOrder, "email.order.confirmed.title", "orderConfirmedEmail");
+                if (customerEmail != null) {
+                    notificationService.notifyUserOrderConfirmed(customerEmail, orderId, orderCode);
+                }
+                break;
+            case SHIPPED:
+                if (customerEmail != null) {
+                    notificationService.notifyUserOrderShipped(customerEmail, orderId, orderCode);
+                }
+                break;
+            case DELIVERED:
+                mailService.sendOrderStatusUpdateEmail(updatedOrder, "email.order.completed.title", "orderCompletedEmail");
+                if (customerEmail != null) {
+                    notificationService.notifyUserOrderDelivered(customerEmail, orderId, orderCode);
+                }
+                break;
+            case COMPLETED:
+                mailService.sendOrderStatusUpdateEmail(updatedOrder, "email.order.completed.title", "orderCompletedEmail");
+                if (customerEmail != null) {
+                    notificationService.notifyUserOrderDelivered(customerEmail, orderId, orderCode);
+                }
+                break;
+            case CANCELLED:
+                String customerName = updatedOrder.getCustomerFullName() != null ? updatedOrder.getCustomerFullName() : "Khách hàng";
+                String reason = updatedOrder.getNotes() != null ? updatedOrder.getNotes() : "Không có lý do";
+                notificationService.notifyAdminOrderCancelled(orderId, customerName, reason, orderCode);
+                break;
+            default:
+                // Các trạng thái khác gửi notification chung
+                if (customerEmail != null) {
+                    notificationService.notifyOrderStatusChange(customerEmail, orderId, newStatus.toString(), orderCode);
+                }
+                break;
+        }
 
         return updatedOrder;
     }

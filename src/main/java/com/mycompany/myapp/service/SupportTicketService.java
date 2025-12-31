@@ -3,6 +3,7 @@ package com.mycompany.myapp.service;
 import com.mycompany.myapp.domain.analytics.SupportMessage;
 import com.mycompany.myapp.domain.analytics.SupportTicket;
 import com.mycompany.myapp.domain.enumeration.TicketStatus;
+import com.mycompany.myapp.domain.enumeration.TicketType;
 import com.mycompany.myapp.repository.analytics.SupportMessageRepository;
 import com.mycompany.myapp.repository.analytics.SupportTicketRepository;
 import com.mycompany.myapp.service.dto.SupportMessageDTO;
@@ -10,14 +11,12 @@ import com.mycompany.myapp.service.dto.SupportTicketDTO;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,48 +28,50 @@ public class SupportTicketService {
 
     private final SupportTicketRepository ticketRepository;
     private final SupportMessageRepository messageRepository;
-    private final SimpMessageSendingOperations messagingTemplate;
     private final NotificationService notificationService;
 
     public SupportTicketService(
         SupportTicketRepository ticketRepository,
         SupportMessageRepository messageRepository,
-        SimpMessageSendingOperations messagingTemplate,
         NotificationService notificationService
     ) {
         this.ticketRepository = ticketRepository;
         this.messageRepository = messageRepository;
-        this.messagingTemplate = messagingTemplate;
         this.notificationService = notificationService;
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<SupportTicketDTO> findById(Long id) {
+        return ticketRepository.findById(id).map(this::convertToDTO);
     }
 
     @Transactional(readOnly = true)
     @Cacheable(value = "activeTickets", key = "#userEmail", unless = "#result == null")
     public SupportTicketDTO getCurrentActiveTicket(String userEmail) {
         log.debug("Getting current active ticket for user: {}", userEmail);
-
         Optional<SupportTicket> existingTicket = ticketRepository.findFirstByUserEmailAndStatusInOrderByCreatedDateDesc(
             userEmail,
             Arrays.asList(TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.WAITING_FOR_CUSTOMER)
         );
-
         return existingTicket.map(this::convertToDTO).orElse(null);
     }
 
     @CacheEvict(value = "activeTickets", key = "#userEmail")
-    public SupportTicketDTO createTicket(String userEmail, String title, String description) {
-        log.debug("Creating new ticket for user: {}", userEmail);
+    public SupportTicketDTO createTicket(String userEmail, String title, String description, TicketType type) {
+        log.debug("Creating new TICKET for user: {}", userEmail);
 
-        // Tạo ticket mới
         SupportTicket newTicket = new SupportTicket();
         newTicket.setUserEmail(userEmail);
         newTicket.setTitle(title);
         newTicket.setStatus(TicketStatus.OPEN);
+        newTicket.setType(type);
 
         SupportTicket savedTicket = ticketRepository.save(newTicket);
         log.info("✅ Created new support ticket #{} for user: {}", savedTicket.getId(), userEmail);
 
-        // Lưu tin nhắn đầu tiên (mô tả vấn đề)
+        // Gửi thông báo cho admin về ticket mới
+        notificationService.notifyAdminNewSupportTicket(savedTicket.getId(), userEmail, title != null ? title : "Không có tiêu đề");
+
         if (description != null && !description.trim().isEmpty()) {
             SupportMessage message = new SupportMessage();
             message.setTicket(savedTicket);
@@ -81,43 +82,21 @@ public class SupportTicketService {
             messageRepository.save(message);
         }
 
-        // Gửi thông báo đến admin qua WebSocket - TẠM THỜI VÔ HIỆU HÓA
-        // notificationService.notifyAdminNewSupportTicket(savedTicket.getId(), savedTicket.getUserEmail());
-
         return convertToDTO(savedTicket);
     }
 
-    public SupportTicketDTO getOrCreateActiveTicket(String userEmail) {
-        log.debug("Getting or creating active ticket for user: {}", userEmail);
-
-        // Query directly to avoid cache self-invocation issue
-        Optional<SupportTicket> existingTicket = ticketRepository.findFirstByUserEmailAndStatusInOrderByCreatedDateDesc(
-            userEmail,
-            Arrays.asList(TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.WAITING_FOR_CUSTOMER)
-        );
-
-        if (existingTicket.isPresent()) {
-            return convertToDTO(existingTicket.get());
-        }
-
-        return createTicket(userEmail, "Yêu cầu hỗ trợ từ " + userEmail, null);
-    }
-
     @CacheEvict(value = "activeTickets", allEntries = true)
-    public SupportMessageDTO sendMessage(Long ticketId, String senderEmail, String message, boolean isFromAdmin) {
-        log.debug("Sending message for ticket #{} from {}", ticketId, senderEmail);
+    public SupportMessageDTO addMessageToTicket(Long ticketId, String senderEmail, String message, boolean isFromAdmin) {
+        log.debug("Adding message to ticket #{} from {}", ticketId, senderEmail);
 
-        SupportTicket ticket = ticketRepository
-            .findById(ticketId)
-            .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu hỗ trợ: " + ticketId));
+        SupportTicket ticket = ticketRepository.findById(ticketId).orElseThrow(() -> new RuntimeException("Ticket not found: " + ticketId));
 
-        // Cập nhật trạng thái ticket
+        // Update status logic for Ticket flow
         if (ticket.getStatus() == TicketStatus.OPEN && isFromAdmin) {
             ticket.setStatus(TicketStatus.IN_PROGRESS);
         } else if (ticket.getStatus() == TicketStatus.WAITING_FOR_CUSTOMER && !isFromAdmin) {
             ticket.setStatus(TicketStatus.IN_PROGRESS);
         }
-
         ticket.setLastModifiedDate(Instant.now());
 
         SupportMessage supportMessage = new SupportMessage();
@@ -130,8 +109,16 @@ public class SupportTicketService {
         SupportMessage savedMessage = messageRepository.save(supportMessage);
         ticketRepository.save(ticket);
 
-        // Gửi thông báo real-time
-        notifyNewMessage(savedMessage, ticket);
+        // Gửi thông báo cho user khi admin reply
+        if (isFromAdmin && ticket.getUserEmail() != null) {
+            String messagePreview = message.length() > 100 ? message.substring(0, 100) + "..." : message;
+            notificationService.notifyUserTicketReply(ticket.getUserEmail(), ticketId, senderEmail, messagePreview);
+        }
+        // Gửi thông báo cho admin khi user reply
+        else if (!isFromAdmin) {
+            String messagePreview = message.length() > 100 ? message.substring(0, 100) + "..." : message;
+            notificationService.notifyAdminTicketReply(ticketId, senderEmail, messagePreview);
+        }
 
         return convertToDTO(savedMessage);
     }
@@ -139,13 +126,16 @@ public class SupportTicketService {
     @Transactional(readOnly = true)
     @Cacheable(value = "allActiveTickets")
     public List<SupportTicketDTO> getAllActiveTickets() {
-        log.debug("Getting all active support tickets");
-        return ticketRepository.findActiveTickets().stream().map(this::convertToDTO).collect(Collectors.toList());
+        return ticketRepository.findAllOrderByLastModifiedDateDesc().stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<SupportTicketDTO> getAllActiveTicketsByType(TicketType type) {
+        return ticketRepository.findByTypeOrderByLastModifiedDateDesc(type).stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<SupportTicketDTO> getUserTickets(String userEmail) {
-        log.debug("Getting tickets for user: {}", userEmail);
         return ticketRepository
             .findByUserEmailOrderByCreatedDateDesc(userEmail)
             .stream()
@@ -156,93 +146,58 @@ public class SupportTicketService {
     @Transactional(readOnly = true)
     @Cacheable(value = "ticketMessages", key = "#ticketId")
     public List<SupportMessageDTO> getTicketMessages(Long ticketId) {
-        log.debug("Getting messages for ticket #{}", ticketId);
         return messageRepository.findByTicketIdOrderByCreatedAtAsc(ticketId).stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    /**
+     * ✅ Load messages with pagination support (for scroll-up-to-load-more)
+     * Query: SELECT * FROM support_message WHERE ticket_id = ? AND (beforeId IS NULL OR id < beforeId) ORDER BY id DESC LIMIT ?
+     * Note: Client should reverse the result to display oldest first
+     *
+     * @param ticketId Conversation ID
+     * @param beforeId Load messages before this ID (null = load latest)
+     * @param limit Maximum number of messages
+     * @return List of messages in descending order (newest first) - client should reverse
+     */
+    @Transactional(readOnly = true)
+    public List<SupportMessageDTO> getTicketMessages(Long ticketId, Long beforeId, int limit) {
+        List<SupportMessage> messages;
+
+        if (beforeId == null) {
+            // Load latest messages (first page)
+            messages = messageRepository.findTop30ByTicketIdOrderByIdDesc(ticketId);
+        } else {
+            // Load older messages (pagination)
+            messages = messageRepository.findTop30ByTicketIdAndIdLessThanOrderByIdDesc(ticketId, beforeId);
+        }
+
+        // Note: Messages are in DESC order from DB, client should reverse them for display
+        return messages.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     @CacheEvict(value = { "activeTickets", "allActiveTickets", "ticketMessages" }, allEntries = true)
     public void closeTicket(Long ticketId) {
         log.debug("Closing ticket #{}", ticketId);
-        SupportTicket ticket = ticketRepository.findById(ticketId).orElseThrow(() -> new RuntimeException("Ticket not found: " + ticketId));
-
+        SupportTicket ticket = ticketRepository.findById(ticketId).orElseThrow(() -> new RuntimeException("Ticket not found"));
         ticket.setStatus(TicketStatus.CLOSED);
         ticket.setClosedAt(Instant.now());
         ticket.setLastModifiedDate(Instant.now());
         ticketRepository.save(ticket);
-
-        // Gửi thông báo kết thúc phiên cho khách hàng
-        // Cập nhật destination cho khớp với WebSocketService mới
-        messagingTemplate.convertAndSendToUser(
-            ticket.getUserEmail(),
-            "/queue/chat", // Đã sửa từ /queue/chat thành /queue/chat để khớp với client subscribe
-            Map.of(
-                "type",
-                "SESSION_ENDED",
-                "message",
-                "Phiên hỗ trợ đã kết thúc.",
-                "content",
-                "Phiên hỗ trợ đã kết thúc.", // Thêm content để tương thích
-                "senderType",
-                "SYSTEM",
-                "createdAt",
-                Instant.now().toString()
-            )
-        );
-
-        log.info("✅ Closed ticket #{}", ticketId);
     }
 
     @CacheEvict(value = { "activeTickets", "allActiveTickets" }, allEntries = true)
     public void assignTicket(Long ticketId, String adminEmail) {
-        log.debug("Assigning ticket #{} to {}", ticketId, adminEmail);
-        SupportTicket ticket = ticketRepository.findById(ticketId).orElseThrow(() -> new RuntimeException("Ticket not found: " + ticketId));
-
+        SupportTicket ticket = ticketRepository.findById(ticketId).orElseThrow(() -> new RuntimeException("Ticket not found"));
         ticket.setAssignedTo(adminEmail);
         if (ticket.getStatus() == TicketStatus.OPEN) {
             ticket.setStatus(TicketStatus.IN_PROGRESS);
         }
         ticket.setLastModifiedDate(Instant.now());
         ticketRepository.save(ticket);
-
-        log.info("✅ Assigned ticket #{} to {}", ticketId, adminEmail);
     }
 
     public void markMessagesAsRead(Long ticketId) {
-        log.debug("Marking messages as read for ticket #{}", ticketId);
-        messageRepository.markMessagesAsRead(ticketId);
-    }
-
-    private void notifyNewMessage(SupportMessage message, SupportTicket ticket) {
-        try {
-            SupportMessageDTO dto = convertToDTO(message);
-
-            // Chuẩn hóa payload để khớp với WebSocketService ở Frontend
-            Map<String, Object> payload = Map.of(
-                "content",
-                dto.getMessage(),
-                "senderType",
-                dto.getIsFromAdmin() ? "ADMIN" : "USER",
-                "timestamp",
-                dto.getCreatedAt().toString(),
-                "type",
-                "MESSAGE",
-                "conversationId",
-                ticket.getId()
-            );
-
-            // Gửi đến admin nếu tin nhắn từ user
-            if (!message.getIsFromAdmin()) {
-                messagingTemplate.convertAndSend("/topic/admin/messages", payload);
-                log.info("📢 Sent message notification to admins for ticket #{}", ticket.getId());
-            } else {
-                // Gửi đến user nếu tin nhắn từ admin
-                // QUAN TRỌNG: Destination phải khớp với client subscribe: /user/queue/chat
-                messagingTemplate.convertAndSendToUser(ticket.getUserEmail(), "/queue/chat", payload);
-                log.info("📢 Sent message notification to user {} for ticket #{}", ticket.getUserEmail(), ticket.getId());
-            }
-        } catch (Exception e) {
-            log.error("❌ Failed to send message notification", e);
-        }
+        messageRepository.markAsReadByAdmin(ticketId);
     }
 
     private SupportTicketDTO convertToDTO(SupportTicket ticket) {
@@ -255,11 +210,9 @@ public class SupportTicketService {
         dto.setCreatedDate(ticket.getCreatedDate());
         dto.setLastModifiedDate(ticket.getLastModifiedDate());
         dto.setClosedAt(ticket.getClosedAt());
-
-        // Đếm số tin nhắn chưa đọc
-        long unreadCount = messageRepository.countByTicketIdAndIsReadFalseAndIsFromAdminTrue(ticket.getId());
+        // Use the corrected method to count unread messages from user
+        long unreadCount = messageRepository.countByTicketIdAndIsReadFalseAndIsFromAdminFalse(ticket.getId());
         dto.setUnreadCount(unreadCount);
-
         return dto;
     }
 

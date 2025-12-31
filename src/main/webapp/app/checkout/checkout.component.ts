@@ -1,12 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import {
-  ReactiveFormsModule,
-  FormGroup,
-  FormControl,
-  Validators,
-} from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Subject, of, forkJoin } from 'rxjs';
 import { takeUntil, switchMap } from 'rxjs/operators';
@@ -38,19 +33,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   vietnamesePhonePattern = /^(0[35789])+([0-9]{8})$/;
 
   checkoutForm = new FormGroup({
-    fullName: new FormControl('', [
-      Validators.required,
-      Validators.minLength(5),
-    ]),
-    phone: new FormControl('', [
-      Validators.required,
-      Validators.pattern(this.vietnamesePhonePattern),
-    ]),
+    fullName: new FormControl('', [Validators.required, Validators.minLength(5)]),
+    phone: new FormControl('', [Validators.required, Validators.pattern(this.vietnamesePhonePattern)]),
     email: new FormControl('', [Validators.required, Validators.email]),
-    address: new FormControl('', [
-      Validators.required,
-      Validators.minLength(10),
-    ]),
+    address: new FormControl('', [Validators.required, Validators.minLength(10)]),
     paymentMethod: new FormControl('cod', [Validators.required]),
     notes: new FormControl(''),
   });
@@ -69,7 +55,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     // Clear buy now item when leaving checkout if not successful
     if (!this.orderSuccess) {
-        this.cartService.clearBuyNowItem();
+      this.cartService.clearBuyNowItem();
     }
     this.destroy$.next();
     this.destroy$.complete();
@@ -78,21 +64,18 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private loadCartAndAccount(): void {
     // Check for Buy Now item first
     const buyNowItem = this.cartService.getBuyNowItem();
-    
+
     if (buyNowItem) {
-        this.cart = [buyNowItem];
-        this.isBuyNow = true;
+      this.cart = [buyNowItem];
+      this.isBuyNow = true;
     } else {
-        // Fallback to selected cart items
-        this.cart = this.cartService.getItemsForCheckout();
-        this.isBuyNow = false;
+      // Fallback to selected cart items
+      this.cart = this.cartService.getItemsForCheckout();
+      this.isBuyNow = false;
     }
 
     // Calculate total for these items
-    this.total = this.cart.reduce(
-      (sum, item) => sum + (item.product.price ?? 0) * item.quantity,
-      0,
-    );
+    this.total = this.cart.reduce((sum, item) => sum + (item.product.price ?? 0) * item.quantity, 0);
 
     // If no items, redirect back to cart
     if (this.cart.length === 0) {
@@ -104,12 +87,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.accountService
       .getAuthenticationState()
       .pipe(takeUntil(this.destroy$))
-      .subscribe((account) => {
+      .subscribe(account => {
         this.account = account;
         if (this.account) {
           this.checkoutForm.patchValue({
-            fullName:
-              `${this.account.firstName ?? ''} ${this.account.lastName ?? ''}`.trim(),
+            fullName: `${this.account.firstName ?? ''} ${this.account.lastName ?? ''}`.trim(),
             email: this.account.email,
           });
         }
@@ -140,7 +122,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   private markFormAsTouched(): void {
-    Object.values(this.checkoutForm.controls).forEach((control) => {
+    Object.values(this.checkoutForm.controls).forEach(control => {
       control.markAsTouched();
     });
   }
@@ -155,7 +137,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         address: formValue.address || '',
         paymentMethod: formValue.paymentMethod || 'cod',
       },
-      items: cartItems.map((item) => ({
+      items: cartItems.map(item => ({
         product: item.product, // Send the whole product object
         quantity: item.quantity,
       })),
@@ -176,24 +158,24 @@ export class CheckoutComponent implements OnInit, OnDestroy {
             totalAmount: orderData.totalAmount,
             customerInfo: orderData.customerInfo,
           };
-          
+
           // If this is a Buy Now order, we DO NOT remove items from the cart
           if (this.isBuyNow) {
-              this.cartService.clearBuyNowItem();
-              return of(null);
+            this.cartService.clearBuyNowItem();
+            return of(null);
           }
 
           // Otherwise, remove purchased items from cart
-          const purchasedProductIds = this.cart.map(item => item.product.id!);
+          const purchasedProductIds = this.cart.map(item => item.product.id);
           const removeObservables = purchasedProductIds.map(id => this.cartService.removeFromCart(id));
-          
+
           if (removeObservables.length > 0) {
-             return forkJoin(removeObservables).pipe(
-                 switchMap(() => {
-                     this.cartService.loadCart(); // Reload cart to reflect changes
-                     return of(null);
-                 })
-             );
+            return forkJoin(removeObservables).pipe(
+              switchMap(() => {
+                this.cartService.loadCart(); // Reload cart to reflect changes
+                return of(null);
+              }),
+            );
           }
           return of(null);
         }),
@@ -206,9 +188,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         },
         error: (_error: any) => {
           console.error('Order creation failed', _error);
-          this.notify.error(
-            '❌ Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.',
-          );
+          this.notify.error('❌ Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.');
         },
       });
   }

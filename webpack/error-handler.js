@@ -1,5 +1,5 @@
 // Global error handler for dev server to prevent crashes
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
   // Only suppress connection-related errors
   if (
     error.code === 'ECONNRESET' ||

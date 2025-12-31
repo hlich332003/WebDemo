@@ -7,8 +7,7 @@ import { IProductSearchDTO } from 'app/shared/model/product-search-dto.model'; /
 
 @Injectable({ providedIn: 'root' })
 export class ProductAdminService {
-  protected resourceUrl =
-    this.applicationConfigService.getEndpointFor('api/admin/products');
+  protected resourceUrl = this.applicationConfigService.getEndpointFor('api/admin/products');
 
   constructor(
     protected http: HttpClient,

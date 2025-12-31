@@ -22,6 +22,4 @@ export const reducers: ActionReducerMap<AppState> = {
 /**
  * Meta Reducers (for logging, debugging, etc.)
  */
-export const metaReducers: MetaReducer<AppState>[] = !environment.production
-  ? []
-  : [];
+export const metaReducers: MetaReducer<AppState>[] = !environment.production ? [] : [];

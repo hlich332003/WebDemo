@@ -16,24 +16,23 @@ export class LoginService {
 
   login(credentials: Login): Observable<Account | null> {
     return this.authServerProvider.login(credentials).pipe(
-      // After login succeeds and token is stored, fetch account identity – no WebSocket side-effect here
       mergeMap(() => this.accountService.identity(true)),
-      // After identity is loaded, connect websocket for user if token exists
       tap(() => {
-        try {
-          const token = this.authServerProvider.getToken();
-          if (token) {
-            // Connect the user websocket after token stored
-            this.webSocketService.connect('/websocket', token);
-          }
-        } catch (e) {
-          // ignore connection errors here
+        // FIX: Connect WebSocket ngay sau khi login thành công
+        const token = this.authServerProvider.getToken();
+        if (token && !this.webSocketService.isConnected) {
+          console.warn('[LoginService] Login success -> Connecting WebSocket...');
+          // FIX: Pass endpoint as first param, token as second param
+          this.webSocketService.connect('/websocket', token);
         }
       }),
     );
   }
 
   logout(): void {
+    // FIX: Disconnect WebSocket ngay khi logout
+
+    console.warn('[LoginService] Logout -> Disconnecting WebSocket...');
     this.webSocketService.disconnect();
     this.authServerProvider.logout().subscribe({ complete: () => this.accountService.authenticate(null) });
   }

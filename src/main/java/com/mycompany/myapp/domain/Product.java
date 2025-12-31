@@ -1,6 +1,5 @@
 package com.mycompany.myapp.domain;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -42,6 +41,13 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
     @Column(name = "image_url", length = 1024)
     private String imageUrl;
 
+    @Lob
+    @Column(name = "image_data", columnDefinition = "VARBINARY(MAX)")
+    private byte[] imageData;
+
+    @Column(name = "image_content_type", length = 100)
+    private String imageContentType;
+
     @NotNull
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
@@ -49,9 +55,11 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
     @Column(name = "sales_count", nullable = false)
     private Long salesCount = 0L;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @Column(name = "is_pinned", nullable = false)
+    private Boolean isPinned = false;
+
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "category_id", nullable = false)
-    @JsonBackReference
     @JsonIgnoreProperties(value = { "products", "hibernateLazyInitializer", "handler" }, allowSetters = true)
     private Category category;
 
@@ -105,6 +113,22 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
         this.imageUrl = imageUrl;
     }
 
+    public byte[] getImageData() {
+        return imageData;
+    }
+
+    public void setImageData(byte[] imageData) {
+        this.imageData = imageData;
+    }
+
+    public String getImageContentType() {
+        return imageContentType;
+    }
+
+    public void setImageContentType(String imageContentType) {
+        this.imageContentType = imageContentType;
+    }
+
     public Boolean getIsActive() {
         return isActive;
     }
@@ -119,6 +143,14 @@ public class Product extends AbstractAuditingEntity<Long> implements Serializabl
 
     public void setSalesCount(Long salesCount) {
         this.salesCount = salesCount;
+    }
+
+    public Boolean getIsPinned() {
+        return isPinned;
+    }
+
+    public void setIsPinned(Boolean isPinned) {
+        this.isPinned = isPinned;
     }
 
     public Category getCategory() {

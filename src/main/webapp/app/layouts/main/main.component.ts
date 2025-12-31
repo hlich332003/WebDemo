@@ -24,93 +24,48 @@ export default class MainComponent implements OnInit, OnDestroy {
   private readonly authServerProvider = inject(AuthServerProvider);
   private readonly webSocketService = inject(WebSocketService);
   private readonly appRef = inject(ApplicationRef);
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroy$ = new Subject<never>();
 
   ngOnInit(): void {
-    // Subscribe to authentication state and connect WS only after account is present and app is stable
+    // FIX: Chủ động kiểm tra danh tính user khi reload trang
+    this.accountService.identity().subscribe();
+
+    // 1. Lắng nghe trạng thái đăng nhập để hiển thị Chat Widget
     this.accountService
       .getAuthenticationState()
-      .pipe(
-        filter(account => !!account),
-        takeUntil(this.destroy$),
-      )
+      .pipe(takeUntil(this.destroy$))
       .subscribe(account => {
-        // account is guaranteed to be non-null here due to filter
+        if (account) {
+          // User đã đăng nhập
+          this.showChatWidget = !this.accountService.hasAnyAuthority(['ROLE_ADMIN', 'ROLE_CSKH']);
+          const token = this.authServerProvider.getToken();
+          if (token && !this.webSocketService.isConnected) {
+            console.warn('[MainComponent] User logged in -> Connecting WebSocket...');
+            // FIX: Pass endpoint as first param, token as second param
+            this.webSocketService.connect('/websocket', token);
 
-        // Show chat widget for regular users
-        this.showChatWidget = !this.accountService.hasAnyAuthority(['ROLE_ADMIN', 'ROLE_CSKH']);
-
-        // Connect WebSocket once app is stable and account exists
-        const token = this.authServerProvider.getToken();
-        if (!token) return;
-
-        const isUser = !account.authorities.includes('ROLE_ADMIN') && !account.authorities.includes('ROLE_CSKH');
-
-        // We removed isConnected check from WebSocketService facade as it's ambiguous now.
-        // Instead, we rely on the individual sockets to handle their connection state (idempotency).
-        // The new connect() method in WebSocketService delegates to ChatSocket or SupportSocket,
-        // which both have checks to prevent double connection.
-
-        if (isUser) {
-          this.appRef.isStable
-            .pipe(
-              filter(stable => stable),
-              take(1),
-            )
-            .subscribe(() => {
-              Promise.resolve().then(() => {
-                try {
-                  // This will call ChatSocket.connect()
-                  // Use explicit endpoint + token to avoid parameter order bugs
-                  this.webSocketService.connect('/websocket', token);
-                } catch (e) {
-                  console.error('[WS] USER connect failed', e);
-                }
+            // Subscribe to notifications after connection
+            this.webSocketService.onConnected().subscribe(() => {
+              console.warn('[MainComponent] ✅ WebSocket connected, subscribing to notifications...');
+              this.webSocketService.subscribe('/user/queue/notifications', (notification: any) => {
+                console.warn('[MainComponent] 🔔 Received notification:', notification);
+                this.webSocketService.pushNotification(notification);
               });
             });
+          }
         } else {
-          // Admin/CSKH: wait for explicit adminReady signal before connecting
-          this.accountService
-            .adminReady()
-            .pipe(take(1))
-            .subscribe(ready => {
-              if (!ready) return;
-              this.appRef.isStable
-                .pipe(
-                  filter(stable => stable),
-                  take(1),
-                )
-                .subscribe(() => {
-                  Promise.resolve().then(() => {
-                    try {
-                      // This will call SupportSocket.connect()
-                      // Use explicit endpoint + token to avoid parameter order bugs
-                      this.webSocketService.connect('/websocket', token);
-                    } catch (e) {
-                      console.error('[WS] ADMIN connect failed', e);
-                    }
-                  });
-                });
-            });
+          // Guest
+          this.showChatWidget = true; // Luôn hiện chat widget cho guest
+          if (!this.webSocketService.isConnected) {
+            console.warn('[MainComponent] Guest session -> Connecting WebSocket...');
+            this.webSocketService.connect('/websocket'); // Connect không cần token
+          }
         }
-      });
-
-    // Also listen for logout case to update UI
-    this.accountService
-      .getAuthenticationState()
-      .pipe(
-        filter(account => !account),
-        takeUntil(this.destroy$),
-      )
-      .subscribe(() => {
-        this.showChatWidget = false;
-        // Do not disconnect here; logout flow will call disconnect explicitly.
       });
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
+    this.destroy$.next(undefined as never);
     this.destroy$.complete();
-    // Do not disconnect here; keep control in LoginService.logout()
   }
 }

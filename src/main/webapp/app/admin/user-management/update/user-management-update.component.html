@@ -107,12 +107,30 @@
       </div>
 
       <div class="mb-3">
-        <label class="form-label" for="field_authority">Vai trò</label>
-        <select class="form-control" id="field_authority" name="authority" formControlName="authority">
+        <label class="form-label" for="field_authority"> Vai trò <span class="text-danger">*</span> </label>
+        <select class="form-control" id="field_authority" name="authority" formControlName="authority" required>
+          <option value="">-- Chọn vai trò --</option>
           @for (authority of authorities(); track $index) {
-            <option [value]="authority">{{ authority }}</option>
+            <option [value]="authority">
+              @if (authority === 'ROLE_ADMIN') {
+                Quản trị viên
+              } @else if (authority === 'ROLE_USER') {
+                Người dùng
+              } @else {
+                {{ authority }}
+              }
+            </option>
           }
         </select>
+
+        @let authorityRef = editForm.get('authority')!;
+        @if (authorityRef.invalid && (authorityRef.dirty || authorityRef.touched)) {
+          <div>
+            @if (authorityRef?.errors?.required) {
+              <small class="form-text text-danger">Vui lòng chọn vai trò cho người dùng.</small>
+            }
+          </div>
+        }
       </div>
       <button type="button" class="btn btn-secondary" (click)="previousState()">
         <fa-icon icon="ban"></fa-icon>&nbsp;<span>Hủy</span>

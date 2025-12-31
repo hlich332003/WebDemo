@@ -1,109 +1,139 @@
 <div>
-  <div class="admin-header">
-    <h2>
-      <span id="user-management-page-heading" data-cy="userManagementPageHeading">Quản lý người dùng</span>
+  <h2>
+    <span id="user-management-page-heading" data-cy="userManagementPageHeading">Quản lý người dùng</span>
 
-      <div class="d-flex justify-content-end">
-        <button class="btn btn-info me-2 rounded-pill" (click)="loadAll()" [disabled]="isLoading()">
-          <fa-icon icon="sync" [animation]="isLoading() ? 'spin' : undefined"></fa-icon>
-          <span>Làm mới danh sách</span>
-        </button>
-        <button class="btn btn-secondary me-2 rounded-pill" (click)="triggerFileInput()">
-          <fa-icon icon="upload"></fa-icon> <span>Import người dùng</span>
-        </button>
-        <input type="file" hidden #fileInput (change)="onFileSelected($event)" accept=".xlsx, .xls" />
-        <button class="btn btn-primary jh-create-entity rounded-pill" [routerLink]="['./new']">
-          <fa-icon icon="plus"></fa-icon> <span>Tạo người dùng mới</span>
-        </button>
-      </div>
-    </h2>
-  </div>
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-info me-2" (click)="loadAll()" [disabled]="isLoading()">
+        <fa-icon icon="sync" [class.fa-spin]="isLoading()"></fa-icon>
+        <span>Làm mới danh sách</span>
+      </button>
+      <button class="btn btn-primary jh-create-entity" [routerLink]="['./new']">
+        <fa-icon icon="plus"></fa-icon>
+        <span>Tạo người dùng mới</span>
+      </button>
 
-  <jhi-alert-error />
+      <!-- Nút Import Excel -->
+      <button class="btn btn-success ms-2" (click)="triggerFileInput()">
+        <fa-icon icon="file-import"></fa-icon>
+        <span>Import người dùng</span>
+      </button>
+      <input #fileInput type="file" style="display: none" (change)="onFileSelected($event)" accept=".xlsx, .xls" />
 
-  <jhi-alert />
+      <!-- Nút Export Excel -->
+      <button class="btn btn-warning ms-2" (click)="exportUsers()" [disabled]="!users() || users()!.length === 0">
+        <fa-icon icon="file-export"></fa-icon>
+        <span>Xuất danh sách người dùng</span>
+      </button>
+    </div>
+  </h2>
 
+  <jhi-alert-error></jhi-alert-error>
+
+  <jhi-alert></jhi-alert>
+
+  <!-- Search Box -->
   <div class="row mb-3">
     <div class="col-md-6">
       <div class="input-group">
+        <span class="input-group-text">
+          <fa-icon icon="search"></fa-icon>
+        </span>
         <input
           type="text"
           class="form-control"
-          placeholder="Tìm kiếm theo tên, email hoặc số điện thoại..."
+          placeholder="Tìm kiếm theo email..."
           [value]="searchTerm()"
           (input)="onSearchInput($event)"
         />
-        @if (searchTerm()) {
-          <button class="btn btn-outline-secondary" type="button" (click)="onClearSearch()">
-            <fa-icon icon="times"></fa-icon>
-          </button>
-        }
+        <button *ngIf="searchTerm()" class="btn btn-outline-secondary" type="button" (click)="onClearSearch()">
+          <fa-icon icon="times"></fa-icon>
+        </button>
       </div>
     </div>
   </div>
 
-  @if (filteredUsers() && filteredUsers()!.length > 0) {
+  @if (users()) {
     <div class="table-responsive">
-      <table class="table table-striped table-bordered table-hover" aria-describedby="user-management-page-heading">
-        <thead>
-          <tr jhiSort [(sortState)]="sortState" (sortChange)="loadAll()">
-            <th scope="col" jhiSortBy="id"><span>ID</span> <fa-icon icon="sort"></fa-icon></th>
-            <th scope="col" jhiSortBy="email"><span>Email</span> <fa-icon icon="sort"></fa-icon></th>
-            <th scope="col" jhiSortBy="firstName"><span>Họ và Tên</span> <fa-icon icon="sort"></fa-icon></th>
-            <th scope="col" jhiSortBy="activated"><span>Trạng thái</span> <fa-icon icon="sort"></fa-icon></th>
-            <th scope="col"><span>Vai trò</span></th>
-            <th scope="col" jhiSortBy="createdDate"><span>Ngày tạo</span> <fa-icon icon="sort"></fa-icon></th>
-            <th scope="col"></th>
+      <table class="table table-striped table-hover" aria-describedby="user-management-page-heading">
+        <thead class="table-dark">
+          <tr jhiSort [(sortState)]="sortState" (sortChange)="transition()">
+            <th scope="col" jhiSortBy="id" style="width: 60px"><span>ID</span> <fa-icon icon="sort"></fa-icon></th>
+            <th scope="col" jhiSortBy="email"><span>Email / Tên</span> <fa-icon icon="sort"></fa-icon></th>
+            <th scope="col" style="width: 130px">
+              <span>Trạng thái</span>
+            </th>
+            <th scope="col" style="width: 150px">
+              <span>Vai trò</span>
+            </th>
+            <th scope="col" jhiSortBy="createdDate" style="width: 150px"><span>Ngày tạo</span> <fa-icon icon="sort"></fa-icon></th>
+            <th scope="col" class="text-end" style="width: 180px">
+              <span>Thao tác</span>
+            </th>
           </tr>
         </thead>
         <tbody>
-          @for (user of filteredUsers(); track user.id) {
+          @for (user of users(); track user.id) {
             <tr>
-              <td>{{ user.id }}</td>
-              <td>{{ user.email }}</td>
-              <td>{{ user.firstName }} {{ user.lastName }}</td>
               <td>
-                @if (user.activated) {
-                  <span class="badge bg-success">Hoạt động</span>
+                <strong>{{ user.id }}</strong>
+              </td>
+              <td>
+                <div>
+                  <strong>{{ user.email }}</strong>
+                </div>
+                @if (user.firstName || user.lastName) {
+                  <small class="text-muted"> {{ user.firstName }} {{ user.lastName }} </small>
+                }
+              </td>
+              <td>
+                @if (!user.activated) {
+                  <span class="badge bg-danger"> <fa-icon icon="ban"></fa-icon> Chưa kích hoạt </span>
                 } @else {
-                  <span class="badge bg-danger">Đã khóa</span>
+                  <span class="badge bg-success"> <fa-icon icon="check-circle"></fa-icon> Đã kích hoạt </span>
                 }
               </td>
               <td>
                 @for (authority of user.authorities; track $index) {
                   <div>
-                    <span class="badge bg-info">{{ authority }}</span>
+                    @if (authority === 'ROLE_ADMIN') {
+                      <span class="badge bg-danger"> <fa-icon icon="user-shield"></fa-icon> Quản trị viên </span>
+                    } @else if (authority === 'ROLE_USER') {
+                      <span class="badge bg-info"> <fa-icon icon="user"></fa-icon> Người dùng </span>
+                    } @else {
+                      <span class="badge bg-secondary">{{ authority }}</span>
+                    }
                   </div>
                 }
+                @if (!user.authorities || user.authorities.length === 0) {
+                  <span class="badge bg-warning text-dark"> <fa-icon icon="exclamation-triangle"></fa-icon> Chưa có quyền </span>
+                }
               </td>
-              <td>{{ user.createdDate | date: 'dd/MM/yy HH:mm' }}</td>
+              <td>
+                <small>{{ user.createdDate | date: 'dd/MM/yyyy' }}</small
+                ><br />
+                <small class="text-muted">{{ user.createdDate | date: 'HH:mm' }}</small>
+              </td>
               <td class="text-end">
-                <div class="btn-group">
-                  <button type="button" [routerLink]="['./', user.email, 'view']" class="btn btn-info btn-sm">
+                <div class="btn-group" role="group">
+                  <a [routerLink]="['./', user.email, 'view']" class="btn btn-info btn-sm" title="Xem chi tiết">
                     <fa-icon icon="eye"></fa-icon>
-                    <span class="d-none d-md-inline">Xem</span>
-                  </button>
+                    <span class="d-none d-lg-inline ms-1">Xem</span>
+                  </a>
 
-                  <button
-                    type="button"
-                    [routerLink]="['./', user.email, 'edit']"
-                    queryParamsHandling="merge"
-                    class="btn btn-primary btn-sm"
-                    [disabled]="currentAccount()?.email === user.email"
-                  >
+                  <a [routerLink]="['./', user.email, 'edit']" class="btn btn-primary btn-sm" title="Sửa người dùng">
                     <fa-icon icon="pencil-alt"></fa-icon>
-                    <span class="d-none d-md-inline">Sửa</span>
-                  </button>
+                    <span class="d-none d-lg-inline ms-1">Sửa</span>
+                  </a>
 
                   <button
                     type="button"
-                    (click)="setActive(user, !user.activated)"
-                    class="btn btn-sm"
-                    [ngClass]="user.activated ? 'btn-danger' : 'btn-success'"
+                    (click)="deleteUser(user)"
+                    class="btn btn-danger btn-sm"
                     [disabled]="currentAccount()?.email === user.email"
+                    title="Xóa người dùng"
                   >
-                    <fa-icon [icon]="user.activated ? 'lock' : 'lock-open'"></fa-icon>
-                    <span class="d-none d-md-inline">{{ user.activated ? 'Khóa' : 'Mở khóa' }}</span>
+                    <fa-icon icon="trash"></fa-icon>
+                    <span class="d-none d-lg-inline ms-1">Xóa</span>
                   </button>
                 </div>
               </td>
@@ -112,31 +142,25 @@
         </tbody>
       </table>
     </div>
-  } @else if (filteredUsers() && filteredUsers()!.length === 0) {
-    <div class="alert alert-warning">
-      <span>Không có người dùng nào được tìm thấy.</span>
-    </div>
   }
-  @if (totalItems()) {
-    <div class="d-flex justify-content-end mt-3">
-      <jhi-item-count
-        [params]="{
-          page: page,
-          totalItems: totalItems(),
-          itemsPerPage: itemsPerPage,
-        }"
-      />
-    </div>
-    <div class="d-flex justify-content-center">
-      <ngb-pagination
-        [collectionSize]="totalItems()"
-        [(page)]="page"
-        [pageSize]="itemsPerPage"
-        [maxSize]="5"
-        [rotate]="true"
-        [boundaryLinks]="true"
-        (pageChange)="transition()"
-      />
+
+  @if (users()) {
+    <div>
+      <div class="d-flex justify-content-center">
+        <jhi-item-count [params]="{ page: page, totalItems: totalItems(), itemsPerPage: itemsPerPage }"></jhi-item-count>
+      </div>
+
+      <div class="d-flex justify-content-center">
+        <ngb-pagination
+          [collectionSize]="totalItems()"
+          [(page)]="page"
+          [pageSize]="itemsPerPage"
+          [maxSize]="5"
+          [rotate]="true"
+          [boundaryLinks]="true"
+          (pageChange)="transition()"
+        ></ngb-pagination>
+      </div>
     </div>
   }
 </div>

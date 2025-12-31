@@ -1,8 +1,10 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src/main/webapp/**/*.ts"],
+  "include": ["src/main/webapp/**/*.ts", "src/main/webapp/**/*.d.ts"],
+  "exclude": ["node_modules", "target"],
   "compilerOptions": {
     "composite": true,
+    "declaration": true,
     "outDir": "target/out-tsc/spec",
     "types": ["jest", "node"]
   }

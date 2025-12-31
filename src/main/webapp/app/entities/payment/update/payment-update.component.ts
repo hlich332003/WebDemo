@@ -32,8 +32,7 @@ export class PaymentUpdateComponent implements OnInit {
 
   editForm: PaymentFormGroup = this.paymentFormService.createPaymentFormGroup();
 
-  compareOrder = (o1: IOrder | null, o2: IOrder | null): boolean =>
-    this.orderService.compareOrder(o1, o2);
+  compareOrder = (o1: IOrder | null, o2: IOrder | null): boolean => this.orderService.compareOrder(o1, o2);
 
   ngOnInit(): void {
     this.activatedRoute.data.subscribe(({ payment }) => {
@@ -60,9 +59,7 @@ export class PaymentUpdateComponent implements OnInit {
     }
   }
 
-  protected subscribeToSaveResponse(
-    result: Observable<HttpResponse<IPayment>>,
-  ): void {
+  protected subscribeToSaveResponse(result: Observable<HttpResponse<IPayment>>): void {
     result.pipe(finalize(() => this.onSaveFinalize())).subscribe({
       next: () => this.onSaveSuccess(),
       error: () => this.onSaveError(),
@@ -85,25 +82,14 @@ export class PaymentUpdateComponent implements OnInit {
     this.payment = payment;
     this.paymentFormService.resetForm(this.editForm, payment);
 
-    this.ordersSharedCollection =
-      this.orderService.addOrderToCollectionIfMissing<IOrder>(
-        this.ordersSharedCollection,
-        payment.order,
-      );
+    this.ordersSharedCollection = this.orderService.addOrderToCollectionIfMissing<IOrder>(this.ordersSharedCollection, payment.order);
   }
 
   protected loadRelationshipsOptions(): void {
     this.orderService
       .query()
       .pipe(map((res: HttpResponse<IOrder[]>) => res.body ?? []))
-      .pipe(
-        map((orders: IOrder[]) =>
-          this.orderService.addOrderToCollectionIfMissing<IOrder>(
-            orders,
-            this.payment?.order,
-          ),
-        ),
-      )
+      .pipe(map((orders: IOrder[]) => this.orderService.addOrderToCollectionIfMissing<IOrder>(orders, this.payment?.order)))
       .subscribe((orders: IOrder[]) => (this.ordersSharedCollection = orders));
   }
 }

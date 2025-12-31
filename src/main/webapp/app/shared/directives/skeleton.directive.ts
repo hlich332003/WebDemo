@@ -1,12 +1,4 @@
-import {
-  Directive,
-  ElementRef,
-  Input,
-  OnInit,
-  Renderer2,
-  inject,
-  OnChanges,
-} from '@angular/core';
+import { Directive, ElementRef, Input, OnInit, Renderer2, inject, OnChanges } from '@angular/core';
 
 @Directive({
   selector: '[jhiSkeleton]',
@@ -31,16 +23,8 @@ export class SkeletonDirective implements OnInit, OnChanges {
   private updateSkeleton(): void {
     if (this.isLoading) {
       this.renderer.addClass(this.el.nativeElement, 'skeleton');
-      this.renderer.setStyle(
-        this.el.nativeElement,
-        'height',
-        this.skeletonHeight,
-      );
-      this.renderer.setStyle(
-        this.el.nativeElement,
-        'width',
-        this.skeletonWidth,
-      );
+      this.renderer.setStyle(this.el.nativeElement, 'height', this.skeletonHeight);
+      this.renderer.setStyle(this.el.nativeElement, 'width', this.skeletonWidth);
     } else {
       this.renderer.removeClass(this.el.nativeElement, 'skeleton');
       this.renderer.removeStyle(this.el.nativeElement, 'height');

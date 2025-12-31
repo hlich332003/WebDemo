@@ -4,9 +4,7 @@ import dayjs from 'dayjs/esm';
 
 import { IPayment, NewPayment } from '../payment.model';
 
-type PartialWithRequiredKeyOf<T extends { id: unknown }> = Partial<
-  Omit<T, 'id'>
-> & { id: T['id'] };
+type PartialWithRequiredKeyOf<T extends { id: unknown }> = Partial<Omit<T, 'id'>> & { id: T['id'] };
 type PaymentFormGroupInput = IPayment | PartialWithRequiredKeyOf<NewPayment>;
 type FormValueOf<T extends IPayment | NewPayment> = Omit<T, 'paidAt'> & {
   paidAt?: string | null;
@@ -28,9 +26,7 @@ export type PaymentFormGroup = FormGroup<PaymentFormGroupContent>;
 
 @Injectable({ providedIn: 'root' })
 export class PaymentFormService {
-  createPaymentFormGroup(
-    payment: PaymentFormGroupInput = { id: null },
-  ): PaymentFormGroup {
+  createPaymentFormGroup(payment: PaymentFormGroupInput = { id: null }): PaymentFormGroup {
     const paymentRawValue = this.convertPaymentToPaymentRawValue({
       ...this.getFormDefaults(),
       ...payment,
@@ -52,9 +48,7 @@ export class PaymentFormService {
   }
 
   getPayment(form: PaymentFormGroup): IPayment | NewPayment {
-    return this.convertPaymentRawValueToPayment(
-      form.getRawValue() as PaymentFormRawValue | NewPaymentFormRawValue,
-    );
+    return this.convertPaymentRawValueToPayment(form.getRawValue() as PaymentFormRawValue | NewPaymentFormRawValue);
   }
 
   resetForm(form: PaymentFormGroup, payment: PaymentFormGroupInput): void {
@@ -84,9 +78,7 @@ export class PaymentFormService {
     };
   }
 
-  private convertPaymentRawValueToPayment(
-    rawPayment: PaymentFormRawValue | NewPaymentFormRawValue,
-  ): IPayment | NewPayment {
+  private convertPaymentRawValueToPayment(rawPayment: PaymentFormRawValue | NewPaymentFormRawValue): IPayment | NewPayment {
     return {
       ...rawPayment,
       paidAt: rawPayment.paidAt ? dayjs(rawPayment.paidAt) : null,

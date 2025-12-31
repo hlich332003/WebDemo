@@ -1,11 +1,135 @@
+@use 'sass:color';
+@use '../../../content/scss/variables' as *;
+
 .my-orders-container {
-  padding: 20px;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: $light;
+}
+
+h2 {
+  color: $body-color;
+  font-weight: 700;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid;
+  border-image: linear-gradient(135deg, $primary, $secondary) 1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  fa-icon {
+    color: $primary;
+  }
 }
 
 .table-responsive {
-  margin-top: 20px;
+  margin-top: 1.5rem;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+table {
+  margin-bottom: 0;
+
+  thead {
+    background: linear-gradient(135deg, $primary, $secondary);
+    color: white;
+
+    th {
+      font-weight: 600;
+      padding: 1rem;
+      border: none;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-size: 0.9rem;
+    }
+  }
+
+  tbody {
+    tr {
+      transition: all 0.3s ease;
+      border-bottom: 1px solid $border-color;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        background: linear-gradient(135deg, rgba($primary, 0.03), rgba($secondary, 0.03));
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      td {
+        padding: 1rem;
+        vertical-align: middle;
+        color: $body-color;
+      }
+    }
+  }
+}
+
+.badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+
+  &.bg-warning {
+    background: linear-gradient(135deg, #ffc107, #ff9800) !important;
+    color: white;
+  }
+
+  &.bg-success {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+  }
+
+  &.bg-danger {
+    background: linear-gradient(135deg, #dc3545, #c82333) !important;
+  }
+
+  &.bg-info {
+    background: linear-gradient(135deg, $primary, $secondary) !important;
+  }
+}
+
+.btn-sm {
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  &.btn-info {
+    background: linear-gradient(135deg, $primary, $secondary);
+    border: none;
+    color: white;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba($primary, 0.4);
+    }
+  }
 }
 
 .alert-warning {
-  margin-top: 20px;
+  margin-top: 2rem;
+  border-radius: 15px;
+  border-left: 5px solid #ffc107;
+  background: linear-gradient(135deg, rgba(#ffc107, 0.1), rgba(#ff9800, 0.05));
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  fa-icon {
+    font-size: 2rem;
+    color: #ffc107;
+  }
 }

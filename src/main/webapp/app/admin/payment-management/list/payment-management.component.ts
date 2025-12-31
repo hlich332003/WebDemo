@@ -17,14 +17,7 @@ import { NotificationDatePipe } from '../../../shared/date/notification-date.pip
 @Component({
   selector: 'jhi-payment-management',
   standalone: true,
-  imports: [
-    RouterModule,
-    CommonModule,
-    FormsModule,
-    SharedModule,
-    FormatMediumDatetimePipe,
-    NotificationDatePipe,
-  ],
+  imports: [RouterModule, CommonModule, FormsModule, SharedModule, FormatMediumDatetimePipe, NotificationDatePipe],
   templateUrl: './payment-management.component.html',
 })
 export class PaymentManagementComponent implements OnInit {
@@ -42,9 +35,7 @@ export class PaymentManagementComponent implements OnInit {
   }
 
   loadPayments(): void {
-    this.payments$ = this.paymentService
-      .query()
-      .pipe(map((res) => res.body ?? []));
+    this.payments$ = this.paymentService.query().pipe(map(res => res.body ?? []));
   }
 
   delete(payment: IPayment): void {
@@ -53,7 +44,7 @@ export class PaymentManagementComponent implements OnInit {
       backdrop: 'static',
     });
     modalRef.componentInstance.payment = payment;
-    modalRef.closed.subscribe((reason) => {
+    modalRef.closed.subscribe(reason => {
       if (reason === 'deleted') {
         this.loadPayments();
       }

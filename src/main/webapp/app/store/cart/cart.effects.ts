@@ -12,8 +12,8 @@ export class CartEffects {
       ofType(CartActions.loadCart),
       mergeMap(() =>
         this.cartService.getCart().pipe(
-          map((items) => CartActions.loadCartSuccess({ items })),
-          catchError((error) => of(CartActions.loadCartFailure({ error }))),
+          map(items => CartActions.loadCartSuccess({ items })),
+          catchError(error => of(CartActions.loadCartFailure({ error }))),
         ),
       ),
     ),
@@ -24,9 +24,9 @@ export class CartEffects {
       ofType(CartActions.addToCart),
       mergeMap(({ productId, quantity }) =>
         this.cartService.addToCart(productId, quantity).pipe(
-          map((item) => CartActions.addToCartSuccess({ item })),
+          map(item => CartActions.addToCartSuccess({ item })),
           tap(() => console.log('✅ Item added to cart')),
-          catchError((error) => of(CartActions.addToCartFailure({ error }))),
+          catchError(error => of(CartActions.addToCartFailure({ error }))),
         ),
       ),
     ),
@@ -39,9 +39,7 @@ export class CartEffects {
         this.cartService.removeFromCart(productId).pipe(
           map(() => CartActions.removeFromCartSuccess()),
           tap(() => console.log('✅ Item removed from cart')),
-          catchError((error) =>
-            of(CartActions.removeFromCartFailure({ error })),
-          ),
+          catchError(error => of(CartActions.removeFromCartFailure({ error }))),
         ),
       ),
     ),
@@ -54,7 +52,7 @@ export class CartEffects {
         this.cartService.clearCart().pipe(
           map(() => CartActions.clearCartSuccess()),
           tap(() => console.log('✅ Cart cleared')),
-          catchError((error) => of(CartActions.loadCartFailure({ error }))),
+          catchError(error => of(CartActions.loadCartFailure({ error }))),
         ),
       ),
     ),

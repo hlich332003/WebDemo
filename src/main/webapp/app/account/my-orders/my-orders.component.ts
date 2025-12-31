@@ -35,7 +35,7 @@ export class MyOrdersComponent implements OnInit {
         this.orders = res.body ?? [];
         this.isLoading = false;
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to load orders:', error);
         this.isLoading = false;
         this.orders = [];

@@ -1,22 +1,12 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import {
-  HttpHeaders,
-  HttpResponse,
-  HttpErrorResponse,
-} from '@angular/common/http';
+import { HttpHeaders, HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { combineLatest } from 'rxjs';
 import { NgbModal, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import { HttpClient } from '@angular/common/http';
 
 import SharedModule from 'app/shared/shared.module';
-import {
-  SortByDirective,
-  SortDirective,
-  SortService,
-  SortState,
-  sortStateSignal,
-} from 'app/shared/sort';
+import { SortByDirective, SortDirective, SortService, SortState, sortStateSignal } from 'app/shared/sort';
 import { ITEMS_PER_PAGE } from 'app/config/pagination.constants';
 import { SORT } from 'app/config/navigation.constants';
 import { ProductService } from 'app/entities/product/product.service';
@@ -30,14 +20,7 @@ import { ItemCountComponent } from 'app/shared/pagination';
   selector: 'jhi-product-management',
   standalone: true,
   templateUrl: './product-management.component.html',
-  imports: [
-    RouterModule,
-    SharedModule,
-    SortDirective,
-    SortByDirective,
-    NgbPaginationModule,
-    ItemCountComponent,
-  ],
+  imports: [RouterModule, SharedModule, SortDirective, SortByDirective, NgbPaginationModule, ItemCountComponent],
 })
 export default class ProductManagementComponent implements OnInit {
   products = signal<IProduct[] | null>(null);
@@ -67,15 +50,48 @@ export default class ProductManagementComponent implements OnInit {
   }
 
   deleteProduct(product: IProduct): void {
+    // FIX: Kiểm tra salesCount trước khi xóa
+    if (product.salesCount && product.salesCount > 0) {
+      if (
+        confirm(
+          `Sản phẩm này đã bán được ${product.salesCount} lượt. Bạn không thể xóa vĩnh viễn.\nBạn có muốn chuyển sang trạng thái "Ngừng kinh doanh" (Tồn kho = 0) không?`,
+        )
+      ) {
+        this.stopBusiness(product);
+      }
+      return;
+    }
+
     const modalRef = this.modalService.open(ProductDeleteDialogComponent, {
       size: 'lg',
       backdrop: 'static',
     });
     modalRef.componentInstance.product = product;
-    modalRef.closed.subscribe((reason) => {
+    modalRef.closed.subscribe(reason => {
       if (reason === 'deleted') {
         this.loadAll();
       }
+    });
+  }
+
+  stopBusiness(product: IProduct): void {
+    if (!product.id) return;
+
+    // Logic ngừng kinh doanh: Set quantity = 0 và bỏ ghim
+    const payload = {
+      id: product.id,
+      quantity: 0,
+      isPinned: false,
+    };
+
+    this.productService.partialUpdate(payload).subscribe({
+      next: () => {
+        this.notify.success(`Đã ngừng kinh doanh sản phẩm: ${product.name}`);
+        this.loadAll();
+      },
+      error: () => {
+        this.notify.error('Có lỗi xảy ra khi cập nhật trạng thái sản phẩm.');
+      },
     });
   }
 
@@ -165,23 +181,16 @@ export default class ProductManagementComponent implements OnInit {
   }
 
   exportProducts(): void {
-    this.http
-      .get(
-        this.applicationConfigService.getEndpointFor(
-          'api/admin/export/products',
-        ),
-        { responseType: 'blob' },
-      )
-      .subscribe({
-        next: (data: Blob) => {
-          this.downloadFile(data, 'products.xlsx');
-          this.notify.success('Export sản phẩm thành công!');
-        },
-        error: (error: HttpErrorResponse) => {
-          console.error('Failed to export products:', error);
-          this.notify.error('Export sản phẩm thất bại!');
-        },
-      });
+    this.http.get(this.applicationConfigService.getEndpointFor('api/admin/export/products'), { responseType: 'blob' }).subscribe({
+      next: (data: Blob) => {
+        this.downloadFile(data, 'products.xlsx');
+        this.notify.success('Export sản phẩm thành công!');
+      },
+      error: (error: HttpErrorResponse) => {
+        console.error('Failed to export products:', error);
+        this.notify.error('Export sản phẩm thất bại!');
+      },
+    });
   }
 
   importProducts(event: Event): void {
@@ -194,29 +203,19 @@ export default class ProductManagementComponent implements OnInit {
     const formData = new FormData();
     formData.append('file', file, file.name);
 
-    this.http
-      .post(
-        this.applicationConfigService.getEndpointFor(
-          'api/admin/import/products',
-        ),
-        formData,
-      )
-      .subscribe({
-        next: () => {
-          this.notify.success('Import sản phẩm thành công!');
-          this.loadAll();
-          input.value = '';
-        },
-        error: (error: HttpErrorResponse) => {
-          console.error('Failed to import products');
-          const errorMessage =
-            error.error?.message ??
-            error.error?.detail ??
-            'Import sản phẩm thất bại.';
-          this.notify.error(errorMessage);
-          input.value = '';
-        },
-      });
+    this.http.post(this.applicationConfigService.getEndpointFor('api/admin/import/products'), formData).subscribe({
+      next: () => {
+        this.notify.success('Import sản phẩm thành công!');
+        this.loadAll();
+        input.value = '';
+      },
+      error: (error: HttpErrorResponse) => {
+        console.error('Failed to import products');
+        const errorMessage = error.error?.message ?? error.error?.detail ?? 'Import sản phẩm thất bại.';
+        this.notify.error(errorMessage);
+        input.value = '';
+      },
+    });
   }
 
   private downloadFile(data: Blob, filename: string): void {
@@ -234,15 +233,10 @@ export default class ProductManagementComponent implements OnInit {
   }
 
   private handleNavigation(): void {
-    combineLatest([
-      this.activatedRoute.data,
-      this.activatedRoute.queryParamMap,
-    ]).subscribe(([data, params]) => {
+    combineLatest([this.activatedRoute.data, this.activatedRoute.queryParamMap]).subscribe(([data, params]) => {
       const page = params.get('page');
       this.page = +(page ?? 1);
-      this.sortState.set(
-        this.sortService.parseSortParam(params.get(SORT) ?? data.defaultSort),
-      );
+      this.sortState.set(this.sortService.parseSortParam(params.get(SORT) ?? data.defaultSort));
       this.loadAll();
     });
   }

@@ -7,9 +7,7 @@ import { mergeMap } from 'rxjs/operators';
 import { IPayment } from '../payment.model';
 import { PaymentService } from '../payment.service';
 
-export const paymentResolve: ResolveFn<IPayment | null> = (
-  route: ActivatedRouteSnapshot,
-) => {
+export const paymentResolve: ResolveFn<IPayment | null> = (route: ActivatedRouteSnapshot) => {
   const id = route.params['id'];
   if (id) {
     return inject(PaymentService)

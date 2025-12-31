@@ -1,15 +1,39 @@
 USE [jhipster_db]
 GO
-/****** Object:  User [jhipster_user]    Script Date: 12/26/2025 12:19:39 AM ******/
+/****** Object:  User [jhipster_user]    Script Date: 12/31/2025 10:47:32 AM ******/
 CREATE USER [jhipster_user] FOR LOGIN [jhipster_user] WITH DEFAULT_SCHEMA=[dbo]
 GO
 ALTER ROLE [db_owner] ADD MEMBER [jhipster_user]
 GO
-/****** Object:  Table [dbo].[jhi_authority]    Script Date: 12/26/2025 12:19:39 AM ******/
+/****** Object:  Table [dbo].[customer]    Script Date: 12/31/2025 10:47:32 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+CREATE TABLE [dbo].[customer](
+  [id] [bigint] IDENTITY(1,1) NOT NULL,
+  [phone] [nvarchar](10) NOT NULL,
+  [full_name] [nvarchar](100) NOT NULL,
+  [products_purchased] [nvarchar](max) NOT NULL,
+  [created_date] [datetimeoffset](6) NOT NULL,
+  [last_purchase_date] [datetimeoffset](6) NOT NULL,
+  [notes] [nvarchar](max) NULL,
+  [user_id] [bigint] NULL,
+  PRIMARY KEY CLUSTERED
+(
+[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+  UNIQUE NONCLUSTERED
+(
+[phone] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+  ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+  GO
+/****** Object:  Table [dbo].[jhi_authority]    Script Date: 12/31/2025 10:47:32 AM ******/
+  SET ANSI_NULLS ON
+  GO
+  SET QUOTED_IDENTIFIER ON
+  GO
 CREATE TABLE [dbo].[jhi_authority](
   [name] [nvarchar](50) NOT NULL,
   PRIMARY KEY CLUSTERED
@@ -18,7 +42,7 @@ CREATE TABLE [dbo].[jhi_authority](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[jhi_cart]    Script Date: 12/26/2025 12:19:39 AM ******/
+/****** Object:  Table [dbo].[jhi_cart]    Script Date: 12/31/2025 10:47:32 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -34,7 +58,7 @@ CREATE TABLE [dbo].[jhi_cart](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[jhi_cart_item]    Script Date: 12/26/2025 12:19:39 AM ******/
+/****** Object:  Table [dbo].[jhi_cart_item]    Script Date: 12/31/2025 10:47:32 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -50,7 +74,7 @@ CREATE TABLE [dbo].[jhi_cart_item](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[jhi_category]    Script Date: 12/26/2025 12:19:39 AM ******/
+/****** Object:  Table [dbo].[jhi_category]    Script Date: 12/31/2025 10:47:32 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -82,7 +106,7 @@ CREATE TABLE [dbo].[jhi_category](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[jhi_order]    Script Date: 12/26/2025 12:19:39 AM ******/
+/****** Object:  Table [dbo].[jhi_order]    Script Date: 12/31/2025 10:47:32 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -92,10 +116,10 @@ CREATE TABLE [dbo].[jhi_order](
   [user_id] [bigint] NOT NULL,
   [customer_email] [nvarchar](255) NULL,
   [customer_full_name] [nvarchar](255) NULL,
-  [customer_phone] [varchar](255) NULL,
+  [customer_phone] [nvarchar](255) NULL,
   [delivery_address] [nvarchar](255) NULL,
   [order_date] [datetimeoffset](6) NOT NULL,
-  [payment_method] [varchar](255) NULL,
+  [payment_method] [nvarchar](255) NULL,
   [status] [nvarchar](50) NULL,
   [total_amount] [float] NULL,
   [notes] [nvarchar](500) NULL,
@@ -106,7 +130,7 @@ CREATE TABLE [dbo].[jhi_order](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[jhi_order_item]    Script Date: 12/26/2025 12:19:39 AM ******/
+/****** Object:  Table [dbo].[jhi_order_item]    Script Date: 12/31/2025 10:47:32 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -125,7 +149,7 @@ CREATE TABLE [dbo].[jhi_order_item](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[jhi_payment]    Script Date: 12/26/2025 12:19:39 AM ******/
+/****** Object:  Table [dbo].[jhi_payment]    Script Date: 12/31/2025 10:47:32 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -143,7 +167,7 @@ CREATE TABLE [dbo].[jhi_payment](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[jhi_product]    Script Date: 12/26/2025 12:19:39 AM ******/
+/****** Object:  Table [dbo].[jhi_product]    Script Date: 12/31/2025 10:47:32 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -162,13 +186,16 @@ CREATE TABLE [dbo].[jhi_product](
   [last_modified_by] [nvarchar](50) NULL,
   [last_modified_date] [datetimeoffset](6) NULL,
   [sales_count] [bigint] NOT NULL,
+  [image_data] [varbinary](max) NULL,
+  [image_content_type] [nvarchar](100) NULL,
+  [is_pinned] [bit] NOT NULL,
   PRIMARY KEY CLUSTERED
 (
 [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[jhi_refresh_token]    Script Date: 12/26/2025 12:19:39 AM ******/
+/****** Object:  Table [dbo].[jhi_refresh_token]    Script Date: 12/31/2025 10:47:32 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -188,7 +215,7 @@ CREATE TABLE [dbo].[jhi_refresh_token](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[jhi_review]    Script Date: 12/26/2025 12:19:39 AM ******/
+/****** Object:  Table [dbo].[jhi_review]    Script Date: 12/31/2025 10:47:32 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -206,7 +233,7 @@ CREATE TABLE [dbo].[jhi_review](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[jhi_user]    Script Date: 12/26/2025 12:19:39 AM ******/
+/****** Object:  Table [dbo].[jhi_user]    Script Date: 12/31/2025 10:47:32 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -243,7 +270,7 @@ CREATE TABLE [dbo].[jhi_user](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[jhi_user_authority]    Script Date: 12/26/2025 12:19:39 AM ******/
+/****** Object:  Table [dbo].[jhi_user_authority]    Script Date: 12/31/2025 10:47:32 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -258,7 +285,7 @@ CREATE TABLE [dbo].[jhi_user_authority](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[jhi_wishlist_item]    Script Date: 12/26/2025 12:19:39 AM ******/
+/****** Object:  Table [dbo].[jhi_wishlist_item]    Script Date: 12/31/2025 10:47:32 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -274,7 +301,7 @@ CREATE TABLE [dbo].[jhi_wishlist_item](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
   ) ON [PRIMARY]
   GO
-/****** Object:  Table [dbo].[notification_backup]    Script Date: 12/26/2025 12:19:39 AM ******/
+/****** Object:  Table [dbo].[notification_backup]    Script Date: 12/31/2025 10:47:32 AM ******/
   SET ANSI_NULLS ON
   GO
   SET QUOTED_IDENTIFIER ON
@@ -288,6 +315,15 @@ CREATE TABLE [dbo].[notification_backup](
   [is_read] [bit] NOT NULL,
   [link] [nvarchar](500) NULL
   ) ON [PRIMARY]
+  GO
+ALTER TABLE [dbo].[customer] ADD  DEFAULT (sysdatetimeoffset()) FOR [created_date]
+  GO
+ALTER TABLE [dbo].[jhi_product] ADD  DEFAULT ((0)) FOR [is_pinned]
+  GO
+ALTER TABLE [dbo].[customer]  WITH CHECK ADD  CONSTRAINT [FK_customer_user] FOREIGN KEY([user_id])
+  REFERENCES [dbo].[jhi_user] ([id])
+  GO
+ALTER TABLE [dbo].[customer] CHECK CONSTRAINT [FK_customer_user]
   GO
 ALTER TABLE [dbo].[jhi_cart]  WITH CHECK ADD FOREIGN KEY([user_id])
   REFERENCES [dbo].[jhi_user] ([id])
@@ -381,7 +417,7 @@ ALTER TABLE [dbo].[jhi_cart_item]  WITH CHECK ADD  CONSTRAINT [CHK_cart_item_qua
   GO
 ALTER TABLE [dbo].[jhi_cart_item] CHECK CONSTRAINT [CHK_cart_item_quantity_positive]
   GO
-ALTER TABLE [dbo].[jhi_order]  WITH CHECK ADD  CONSTRAINT [CHK_order_status] CHECK  (([status]=N'CANCELLED' OR [status]=N'ĐÃ HOÀN THÀNH' OR [status]=N'HOÀN THÀNH' OR [status]=N'COMPLETED' OR [status]=N'DELIVERED' OR [status]=N'SHIPPED' OR [status]=N'PROCESSING' OR [status]=N'PENDING'))
+ALTER TABLE [dbo].[jhi_order]  WITH CHECK ADD  CONSTRAINT [CHK_order_status] CHECK  (([status]=N'PENDING' OR [status]=N'PROCESSING' OR [status]=N'SHIPPED' OR [status]=N'DELIVERED' OR [status]=N'COMPLETED' OR [status]=N'HOÀN THÀNH' OR [status]=N'ĐÃ HOÀN THÀNH' OR [status]=N'CANCELLED'))
   GO
 ALTER TABLE [dbo].[jhi_order] CHECK CONSTRAINT [CHK_order_status]
   GO

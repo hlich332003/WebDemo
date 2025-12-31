@@ -28,8 +28,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(3px);
+    background: rgba(0, 0, 0, 0.1);
+    //backdrop-filter: blur(1px);
     z-index: 1;
   }
 
@@ -181,15 +181,45 @@
     gap: 0.5rem;
     padding: 0 1rem 1rem;
 
+    .btn {
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+
+    .btn-wishlist,
+    .btn-add-to-cart {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid;
+
+      // Fix icon centering
+      ::ng-deep fa-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        margin: 0;
+
+        svg {
+          vertical-align: middle;
+        }
+      }
+    }
+
     .btn-wishlist {
       background: rgba($primary, 0.1);
       color: $primary;
-      border: 2px solid rgba($primary, 0.2);
-      transition: all 0.3s ease;
+      border-color: rgba($primary, 0.2);
 
       &:hover {
         background: rgba($primary, 0.2);
         border-color: $primary;
+        transform: scale(1.05);
       }
 
       &.in-wishlist {
@@ -207,19 +237,14 @@
     .btn-add-to-cart {
       background: rgba($primary, 0.1);
       color: $primary;
-      border: 2px solid rgba($primary, 0.2);
+      border-color: rgba($primary, 0.2);
       font-weight: 600;
-      width: 40px;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
 
       &:hover {
         background: $primary;
         color: white;
         border-color: $primary;
+        transform: scale(1.05);
       }
 
       &:disabled {
@@ -227,17 +252,18 @@
         color: bootstrap.$gray-500;
         border-color: bootstrap.$gray-300;
         cursor: not-allowed;
+        transform: none;
       }
     }
 
     .btn-buy-now {
       flex-grow: 1;
+      height: 40px;
       background: linear-gradient(135deg, $primary, $secondary);
       color: white;
       border: none;
       font-weight: 600;
       box-shadow: 0 2px 8px rgba($primary, 0.3);
-      transition: all 0.3s ease;
 
       &:hover {
         background: linear-gradient(135deg, color.adjust($primary, $lightness: -10%), color.adjust($secondary, $lightness: -10%));
@@ -246,8 +272,8 @@
       }
 
       &:disabled {
-        background: bootstrap.$gray-200;
-        color: bootstrap.$gray-500;
+        background: #e9ecef;
+        color: #6c757d;
         cursor: not-allowed;
         box-shadow: none;
         transform: none;

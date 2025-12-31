@@ -8,8 +8,7 @@ import { IOrder } from '../order.model'; // Sửa đường dẫn đúng
 
 @Injectable({ providedIn: 'root' })
 export class OrderManagementService {
-  protected resourceUrl =
-    this.applicationConfigService.getEndpointFor('api/admin/orders');
+  protected resourceUrl = this.applicationConfigService.getEndpointFor('api/admin/orders');
 
   constructor(
     protected http: HttpClient,

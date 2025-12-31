@@ -18,12 +18,7 @@ import { LazyLoadImageDirective } from 'app/shared/directives/lazy-load-image.di
   standalone: true,
   templateUrl: './wishlist.component.html',
   styleUrls: ['./wishlist.component.scss'],
-  imports: [
-    CommonModule,
-    RouterModule,
-    FontAwesomeModule,
-    LazyLoadImageDirective,
-  ],
+  imports: [CommonModule, RouterModule, FontAwesomeModule, LazyLoadImageDirective],
 })
 export class WishlistComponent implements OnInit {
   public wishlistService = inject(WishlistService);
@@ -82,9 +77,7 @@ export class WishlistComponent implements OnInit {
   }
 
   isInCart(productId: number): boolean {
-    return this.cartService
-      .getCartItems()
-      .some((item) => item.product.id === productId);
+    return this.cartService.getCartItems().some(item => item.product.id === productId);
   }
 
   viewProductDetail(productId: number): void {
@@ -98,6 +91,10 @@ export class WishlistComponent implements OnInit {
   getProxiedImageUrl(imageUrl: string | null | undefined): string {
     if (!imageUrl) {
       return 'content/images/no-product-image.png';
+    }
+    // If imageUrl is a data URL (base64), return it directly
+    if (imageUrl.startsWith('data:')) {
+      return imageUrl;
     }
     return `/api/public/image-proxy?url=${encodeURIComponent(imageUrl)}`;
   }

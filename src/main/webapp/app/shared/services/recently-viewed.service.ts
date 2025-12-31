@@ -17,7 +17,7 @@ export class RecentlyViewedService {
     const recentlyViewed = this.getProducts();
 
     // Loại bỏ sản phẩm nếu đã tồn tại (để đưa lên đầu)
-    const filtered = recentlyViewed.filter((p) => p.id !== product.id);
+    const filtered = recentlyViewed.filter(p => p.id !== product.id);
 
     // Thêm sản phẩm mới vào đầu danh sách
     filtered.unshift(product);
@@ -56,7 +56,7 @@ export class RecentlyViewedService {
    */
   removeProduct(productId: number): void {
     const recentlyViewed = this.getProducts();
-    const filtered = recentlyViewed.filter((p) => p.id !== productId);
+    const filtered = recentlyViewed.filter(p => p.id !== productId);
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(filtered));
   }
 }

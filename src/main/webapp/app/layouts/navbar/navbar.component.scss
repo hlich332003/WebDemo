@@ -163,11 +163,13 @@
       }
 
       &.cart-item .nav-link,
-      &.wishlist-item .nav-link {
+      &.wishlist-item .nav-link,
+      &.notification-item .nav-link {
         position: relative;
 
         .cart-badge,
-        .wishlist-badge {
+        .wishlist-badge,
+        .notification-badge {
           position: absolute;
           top: -5px;
           right: -5px;
@@ -184,7 +186,7 @@
         }
       }
 
-      &.notification-bell .nav-link.dropdown-toggle::after {
+      &.notification-item .nav-link.dropdown-toggle::after {
         display: none;
       }
     }
@@ -242,6 +244,49 @@
     }
 
     // Specific styles for notification dropdown
+    &.notification-dropdown {
+      max-width: 400px;
+      max-height: 500px;
+      overflow-y: auto;
+
+      .dropdown-item {
+        flex-direction: column; // Stack content vertically
+        align-items: flex-start;
+        gap: 0.25rem;
+        padding-left: 1.5rem; // Default padding
+
+        &.unread {
+          background-color: rgba(255, 193, 7, 0.1); // Using accent color with transparency
+          font-weight: 600;
+          padding-left: 2rem; // Extra padding for the unread dot
+
+          &::before {
+            content: '';
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--primary);
+          }
+        }
+
+        p {
+          margin: 0;
+          font-size: 0.9rem;
+          line-height: 1.4;
+        }
+
+        small {
+          color: #888;
+          font-size: 0.75rem;
+        }
+      }
+    }
+
+    // Legacy support for old selector
     &[aria-labelledby='notification-menu'] {
       .dropdown-item {
         flex-direction: column; // Stack content vertically

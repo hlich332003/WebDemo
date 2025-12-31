@@ -14,27 +14,18 @@ export class MyOrdersService {
   protected http = inject(HttpClient);
   protected applicationConfigService = inject(ApplicationConfigService);
 
-  protected resourceUrl =
-    this.applicationConfigService.getEndpointFor('api/my-orders'); // Giả định API endpoint cho đơn hàng của người dùng
+  protected resourceUrl = this.applicationConfigService.getEndpointFor('api/my-orders'); // Giả định API endpoint cho đơn hàng của người dùng
 
   query(): Observable<EntityArrayResponseType> {
     return this.http
       .get<IOrder[]>(this.resourceUrl, { observe: 'response' })
-      .pipe(
-        map((res: EntityArrayResponseType) =>
-          this.convertDateArrayFromServer(res),
-        ),
-      );
+      .pipe(map((res: EntityArrayResponseType) => this.convertDateArrayFromServer(res)));
   }
 
-  protected convertDateArrayFromServer(
-    res: EntityArrayResponseType,
-  ): EntityArrayResponseType {
+  protected convertDateArrayFromServer(res: EntityArrayResponseType): EntityArrayResponseType {
     if (res.body) {
       res.body.forEach((order: IOrder) => {
-        order.orderDate = order.orderDate
-          ? dayjs(order.orderDate).toDate()
-          : null; // Chuyển đổi Dayjs sang Date, hoặc null
+        order.orderDate = order.orderDate ? dayjs(order.orderDate).toDate() : null; // Chuyển đổi Dayjs sang Date, hoặc null
       });
     }
     return res;

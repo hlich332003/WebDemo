@@ -2,10 +2,7 @@ import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
-  showNotification(
-    message: string,
-    type: 'success' | 'error' | 'info' | 'warning' = 'info',
-  ): void {
+  showNotification(message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info'): void {
     const notification = document.getElementById('notification');
     if (!notification) return;
 

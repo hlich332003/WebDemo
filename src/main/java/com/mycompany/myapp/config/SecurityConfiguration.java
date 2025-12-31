@@ -72,16 +72,17 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true); // allow cookies/credentials for SockJS requests
+        config.setAllowCredentials(true);
         config.setAllowedOriginPatterns(List.of("http://localhost:9001", "http://localhost:4200"));
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         config.setMaxAge(1800L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Register for SockJS endpoints and API just in case
+        source.registerCorsConfiguration("/api/**", config);
+        source.registerCorsConfiguration("/management/**", config);
+        source.registerCorsConfiguration("/v3/api-docs", config);
+        source.registerCorsConfiguration("/swagger-ui/**", config);
         source.registerCorsConfiguration("/websocket/**", config);
-        source.registerCorsConfiguration("/websocket", config);
-        source.registerCorsConfiguration("/api/**", jHipsterProperties.getCors());
         return source;
     }
 
@@ -92,15 +93,14 @@ public class SecurityConfiguration {
         com.mycompany.myapp.web.rest.AuthenticateController authenticateController
     ) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // <-- enable CORS support for Spring Security
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .addFilterAfter(new SpaWebFilter(), BasicAuthenticationFilter.class)
             .addFilterAfter(jwtBlacklistFilter, BasicAuthenticationFilter.class)
             .headers(headers ->
                 headers
                     .contentSecurityPolicy(csp -> csp.policyDirectives(jHipsterProperties.getSecurity().getContentSecurityPolicy()))
-                    // Allow iframe from different origin for SockJS iframe transport (dev server on different port)
-                    .frameOptions(frame -> frame.disable())
+                    .frameOptions(FrameOptionsConfig::sameOrigin)
                     .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
                     .permissionsPolicyHeader(permissions ->
                         permissions.policy(
@@ -108,36 +108,8 @@ public class SecurityConfiguration {
                         )
                     )
             )
-            .authorizeHttpRequests(authz -> {
-                // Các endpoint công khai
+            .authorizeHttpRequests(authz ->
                 authz
-                    .requestMatchers(mvc.pattern(HttpMethod.POST, "/api/authenticate"))
-                    .permitAll()
-                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/authenticate"))
-                    .permitAll()
-                    .requestMatchers(mvc.pattern("/api/register"))
-                    .permitAll()
-                    .requestMatchers(mvc.pattern("/api/activate"))
-                    .permitAll()
-                    .requestMatchers(mvc.pattern("/api/account/reset-password/init"))
-                    .permitAll()
-                    .requestMatchers(mvc.pattern("/api/account/reset-password/finish"))
-                    .permitAll()
-                    // Cho phép xem sản phẩm, danh mục, đánh giá công khai
-                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/products"))
-                    .permitAll()
-                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/products/**"))
-                    .permitAll()
-                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/categories"))
-                    .permitAll()
-                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/reviews/**"))
-                    .permitAll() // Giả định có endpoint reviews
-                    .requestMatchers(antMatcher("/api/public/**"))
-                    .permitAll()
-                    // WebSocket endpoints - permit ALL methods for SockJS xhr_streaming, websocket, etc
-                    .requestMatchers("/websocket", "/websocket/**")
-                    .permitAll()
-                    // Các tệp tĩnh
                     .requestMatchers(
                         mvc.pattern("/index.html"),
                         mvc.pattern("/*.js"),
@@ -155,9 +127,51 @@ public class SecurityConfiguration {
                     .permitAll()
                     .requestMatchers(mvc.pattern("/content/**"))
                     .permitAll()
+                    .requestMatchers(mvc.pattern("/uploads/**"))
+                    .permitAll()
                     .requestMatchers(mvc.pattern("/swagger-ui/**"))
                     .permitAll()
-                    // Các endpoint quản lý
+                    .requestMatchers(mvc.pattern(HttpMethod.POST, "/api/authenticate"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/authenticate"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern("/api/register"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern("/api/activate"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern("/api/account/reset-password/init"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern("/api/account/reset-password/finish"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern("/api/admin/**"))
+                    .hasAuthority(AuthoritiesConstants.ADMIN)
+                    // Public API endpoints - no authentication required
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/products"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/products/*"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/categories"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/categories/*"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/reviews"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/reviews/*"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern("/api/public/**"))
+                    .permitAll()
+                    // FIX: Allow chat endpoints for guests
+                    .requestMatchers(mvc.pattern("/api/chat/conversations"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern("/api/support/tickets/**"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern("/api/support/tickets"))
+                    .permitAll()
+                    // All other API endpoints require authentication
+                    .requestMatchers(mvc.pattern("/api/**"))
+                    .authenticated()
+                    .requestMatchers(mvc.pattern("/v3/api-docs/**"))
+                    .hasAuthority(AuthoritiesConstants.ADMIN)
                     .requestMatchers(mvc.pattern("/management/health"))
                     .permitAll()
                     .requestMatchers(mvc.pattern("/management/health/**"))
@@ -168,22 +182,10 @@ public class SecurityConfiguration {
                     .permitAll()
                     .requestMatchers(mvc.pattern("/management/**"))
                     .hasAuthority(AuthoritiesConstants.ADMIN)
-                    .requestMatchers(mvc.pattern("/v3/api-docs/**"))
-                    .hasAuthority(AuthoritiesConstants.ADMIN)
-                    // Các endpoint yêu cầu quyền ADMIN
-                    .requestMatchers(mvc.pattern("/api/admin/**"))
-                    .hasAuthority(AuthoritiesConstants.ADMIN)
-                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/orders"))
-                    .hasAuthority(AuthoritiesConstants.ADMIN);
-
-                // Cho phép H2 console trong môi trường dev
-                if (env.acceptsProfiles(Profiles.of(JHipsterConstants.SPRING_PROFILE_DEVELOPMENT))) {
-                    authz.requestMatchers(antMatcher("/h2-console/**")).permitAll();
-                }
-
-                // Tất cả các request còn lại đều yêu cầu xác thực
-                authz.anyRequest().authenticated();
-            })
+                    // FIX: Allow websocket connection for guests
+                    .requestMatchers(mvc.pattern("/websocket/**"))
+                    .permitAll()
+            )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(exceptions ->
                 exceptions
@@ -193,6 +195,9 @@ public class SecurityConfiguration {
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
             .oauth2Login(oauth2 -> oauth2.successHandler(oauth2AuthenticationSuccessHandler(authenticateController)));
 
+        if (env.acceptsProfiles(Profiles.of(JHipsterConstants.SPRING_PROFILE_DEVELOPMENT))) {
+            http.authorizeHttpRequests(authz -> authz.requestMatchers(antMatcher("/h2-console/**")).permitAll());
+        }
         return http.build();
     }
 

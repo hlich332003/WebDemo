@@ -238,6 +238,12 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- In-memory DB for tests that need a datasource (WebSocket integration test) -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>

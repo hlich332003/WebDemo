@@ -19,15 +19,7 @@ import { CastToDayjsPipe } from 'app/shared/date/cast-to-dayjs.pipe';
   standalone: true,
   selector: 'jhi-review',
   templateUrl: './review.component.html',
-  imports: [
-    RouterModule,
-    FormsModule,
-    SharedModule,
-    SortDirective,
-    SortByDirective,
-    FormatMediumDatetimePipe,
-    CastToDayjsPipe,
-  ],
+  imports: [RouterModule, FormsModule, SharedModule, SortDirective, SortByDirective, FormatMediumDatetimePipe, CastToDayjsPipe],
 })
 export class ReviewComponent implements OnInit {
   reviews?: IReview[];
@@ -53,7 +45,7 @@ export class ReviewComponent implements OnInit {
       backdrop: 'static',
     });
     modalRef.componentInstance.review = review;
-    modalRef.closed.subscribe((reason) => {
+    modalRef.closed.subscribe(reason => {
       if (reason === 'deleted') {
         this.load();
       }
@@ -69,10 +61,7 @@ export class ReviewComponent implements OnInit {
   }
 
   protected handleNavigation(): void {
-    combineLatest(
-      this.activatedRoute.queryParamMap,
-      this.activatedRoute.data,
-    ).subscribe(([params, data]) => {
+    combineLatest(this.activatedRoute.queryParamMap, this.activatedRoute.data).subscribe(([params, data]) => {
       const sort = (params.get(SORT) ?? data['defaultSort']).split(',');
       this.sortState.predicate = sort[0];
       this.sortState.order = sort[1];
@@ -89,15 +78,10 @@ export class ReviewComponent implements OnInit {
     const queryObject: any = {
       sort: this.getSortQueryParam(),
     };
-    return this.reviewService
-      .query(queryObject)
-      .pipe(tap(() => (this.isLoading = false)));
+    return this.reviewService.query(queryObject).pipe(tap(() => (this.isLoading = false)));
   }
 
-  protected getSortQueryParam(
-    predicate = this.sortState.predicate,
-    order = this.sortState.order,
-  ): string[] {
+  protected getSortQueryParam(predicate = this.sortState.predicate, order = this.sortState.order): string[] {
     const orderQueryParam = order;
     if (predicate === '') {
       return [];

@@ -46,10 +46,12 @@ public class PublicProductResource {
         @RequestParam(value = "name", required = false) String name,
         @RequestParam(value = "minPrice", required = false) BigDecimal minPrice,
         @RequestParam(value = "maxPrice", required = false) BigDecimal maxPrice,
-        @RequestParam(value = "inStock", required = false) Boolean inStock
+        @RequestParam(value = "inStock", required = false) Boolean inStock,
+        @RequestParam(value = "isPinned", required = false) Boolean isPinned
     ) {
         log.debug("Public REST request to get a page of Products with filters");
-        var page = productService.findAllWithFilters(pageable, categorySlug, name, minPrice, maxPrice, inStock);
+        // Public endpoint always shows only active products
+        var page = productService.findAllWithFilters(pageable, categorySlug, name, minPrice, maxPrice, inStock, true, isPinned);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }

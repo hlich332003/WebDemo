@@ -4,6 +4,7 @@ import com.mycompany.myapp.config.Constants;
 import com.mycompany.myapp.domain.Authority;
 import com.mycompany.myapp.domain.User;
 import com.mycompany.myapp.repository.AuthorityRepository;
+import com.mycompany.myapp.repository.CustomerRepository;
 import com.mycompany.myapp.repository.UserRepository;
 import com.mycompany.myapp.security.AuthoritiesConstants;
 import com.mycompany.myapp.security.SecurityUtils;
@@ -48,18 +49,22 @@ public class UserService {
 
     private final MailService mailService;
 
+    private final CustomerRepository customerRepository;
+
     public UserService(
         UserRepository userRepository,
         PasswordEncoder passwordEncoder,
         AuthorityRepository authorityRepository,
         CacheManager cacheManager,
-        MailService mailService
+        MailService mailService,
+        CustomerRepository customerRepository
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authorityRepository = authorityRepository;
         this.cacheManager = cacheManager;
         this.mailService = mailService;
+        this.customerRepository = customerRepository;
     }
 
     public Optional<User> activateRegistration(String key) {
@@ -140,9 +145,36 @@ public class UserService {
 
         userRepository.save(newUser);
         this.clearUserCaches(newUser);
+
+        // Link với customer nếu có (theo phone hoặc email)
+        linkCustomerToUser(newUser);
+
         mailService.sendCreationEmail(newUser);
         log.debug("Created Information for User: {}", newUser);
         return newUser;
+    }
+
+    /**
+     * Tự động link customer (offline) với user (online) khi đăng ký
+     */
+    private void linkCustomerToUser(User user) {
+        try {
+            com.mycompany.myapp.domain.Customer customer = null;
+
+            // Tìm customer theo phone
+            if (user.getPhone() != null && !user.getPhone().isEmpty()) {
+                customer = customerRepository.findOneByPhone(user.getPhone()).orElse(null);
+            }
+
+            // Link nếu tìm thấy
+            if (customer != null && customer.getUser() == null) {
+                customer.setUser(user);
+                customerRepository.save(customer);
+                log.info("Linked customer (phone: {}) to user (email: {})", customer.getPhone(), user.getEmail());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to link customer to user: {}", e.getMessage());
+        }
     }
 
     private boolean removeNonActivatedUser(User existingUser) {
@@ -170,7 +202,12 @@ public class UserService {
         } else {
             user.setLangKey(userDTO.getLangKey());
         }
-        String authorityName = userDTO.getAuthorities().stream().findFirst().orElse(AuthoritiesConstants.USER);
+
+        // Handle authorities - check if not null and not empty
+        final String authorityName = (userDTO.getAuthorities() != null && !userDTO.getAuthorities().isEmpty())
+            ? userDTO.getAuthorities().stream().findFirst().orElse(AuthoritiesConstants.USER)
+            : AuthoritiesConstants.USER;
+
         Authority authority = authorityRepository
             .findById(authorityName)
             .orElseThrow(() -> new IllegalStateException("Authority '" + authorityName + "' not found"));
@@ -205,7 +242,11 @@ public class UserService {
                 user.setActivated(userDTO.isActivated());
                 user.setLangKey(userDTO.getLangKey());
 
-                String authorityName = userDTO.getAuthorities().stream().findFirst().orElse(AuthoritiesConstants.USER);
+                // Handle authorities - check if not null and not empty
+                final String authorityName = (userDTO.getAuthorities() != null && !userDTO.getAuthorities().isEmpty())
+                    ? userDTO.getAuthorities().stream().findFirst().orElse(AuthoritiesConstants.USER)
+                    : AuthoritiesConstants.USER;
+
                 Authority authority = authorityRepository
                     .findById(authorityName)
                     .orElseThrow(() -> new IllegalStateException("Authority '" + authorityName + "' not found"));

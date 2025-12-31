@@ -49,18 +49,12 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     this.accountService
       .getAuthenticationState()
       .pipe(takeUntil(this.destroy$))
-      .subscribe((account) => (this.account = account));
+      .subscribe(account => (this.account = account));
 
     // Subscribe to wishlist changes for realtime updates
-    this.wishlistService.items$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((items) => {
-        this.wishlistProductIds = new Set(
-          items
-            .map((item) => item.id)
-            .filter((id): id is number => id !== undefined),
-        );
-      });
+    this.wishlistService.items$.pipe(takeUntil(this.destroy$)).subscribe(items => {
+      this.wishlistProductIds = new Set(items.map(item => item.id).filter((id): id is number => id !== undefined));
+    });
   }
 
   ngOnDestroy(): void {
@@ -109,9 +103,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         }
       },
       error: (error: Error) => {
-        this.notify.error(
-          `❌ Lỗi khi cập nhật danh sách yêu thích: ${error.message}`,
-        );
+        this.notify.error(`❌ Lỗi khi cập nhật danh sách yêu thích: ${error.message}`);
       },
     });
   }

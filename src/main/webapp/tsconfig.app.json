@@ -5,10 +5,7 @@
     "types": ["@angular/localize"],
     "composite": true
   },
-  "files": ["src/main/webapp/main.ts"],
-  "include": [
-    "src/main/webapp/app/**/*.ts",
-    "src/main/webapp/environments/**/*.ts"
-  ],
-  "exclude": ["src/main/webapp/**/*.spec.ts"]
+  "files": ["main.ts"],
+  "include": ["app/**/*.ts", "environments/**/*.ts"],
+  "exclude": ["**/*.spec.ts", "test.ts"]
 }

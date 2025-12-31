@@ -7,9 +7,7 @@ import { mergeMap } from 'rxjs/operators';
 import { IReview } from '../review.model';
 import { ReviewService } from '../review.service';
 
-export const reviewResolve: ResolveFn<IReview | null> = (
-  route: ActivatedRouteSnapshot,
-) => {
+export const reviewResolve: ResolveFn<IReview | null> = (route: ActivatedRouteSnapshot) => {
   const id = route.params['id'];
   if (id) {
     return inject(ReviewService)

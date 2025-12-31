@@ -11,13 +11,7 @@ import { IOrder } from './order.model';
 import { OrderManagementService } from './order-management.service';
 import { NotificationService } from 'app/shared/notification/notification.service';
 import { ItemCountComponent } from 'app/shared/pagination';
-import {
-  SortByDirective,
-  SortDirective,
-  SortService,
-  SortState,
-  sortStateSignal,
-} from 'app/shared/sort';
+import { SortByDirective, SortDirective, SortService, SortState, sortStateSignal } from 'app/shared/sort';
 import { ITEMS_PER_PAGE } from 'app/config/pagination.constants';
 import { SORT } from 'app/config/navigation.constants';
 
@@ -45,7 +39,11 @@ export class OrderManagementComponent implements OnInit {
   page!: number;
   sortState = sortStateSignal({});
   selectedOrder = signal<IOrder | null>(null);
+
+  // FIX: Thêm biến tìm kiếm theo SĐT
   searchOrderCode = signal<string>('');
+  searchPhone = signal<string>('');
+
   private searchTimeout: any;
 
   private orderService = inject(OrderManagementService);
@@ -71,12 +69,17 @@ export class OrderManagementComponent implements OnInit {
       queryParams.orderCode = this.searchOrderCode();
     }
 
+    // FIX: Thêm tìm kiếm theo SĐT
+    if (this.searchPhone()) {
+      queryParams.customerPhone = this.searchPhone();
+    }
+
     this.orderService.query(queryParams).subscribe({
       next: (res: HttpResponse<IOrder[]>) => {
         this.isLoading.set(false);
         this.onSuccess(res.body, res.headers);
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to load orders:', error);
         this.isLoading.set(false);
         this.orders.set([]);
@@ -120,21 +123,15 @@ export class OrderManagementComponent implements OnInit {
       this.notify.error('ID đơn hàng không hợp lệ.');
       return;
     }
-    if (
-      confirm(
-        `Bạn có chắc chắn muốn cập nhật trạng thái đơn hàng #${order.id} thành ${this.getStatusText(newStatus)} không?`,
-      )
-    ) {
+    if (confirm(`Bạn có chắc chắn muốn cập nhật trạng thái đơn hàng #${order.id} thành ${this.getStatusText(newStatus)} không?`)) {
       this.orderService.updateStatus(order.id, newStatus).subscribe({
         next: (res: HttpResponse<IOrder>) => {
           if (res.body) {
             this.loadAll();
-            this.notify.success(
-              `Trạng thái đơn hàng #${res.body.id} đã được cập nhật.`,
-            );
+            this.notify.success(`Trạng thái đơn hàng #${res.body.id} đã được cập nhật.`);
           }
         },
-        error: (error) => {
+        error: error => {
           console.error('Failed to update order status:', error);
           this.notify.error('Cập nhật trạng thái đơn hàng thất bại.');
         },
@@ -150,16 +147,17 @@ export class OrderManagementComponent implements OnInit {
     }
   }
 
-  deleteOrder(orderId: number): void {
-    if (confirm(`Bạn có chắc chắn muốn xóa đơn hàng #${orderId} không?`)) {
-      this.orderService.delete(orderId).subscribe({
+  // FIX: Thay thế deleteOrder bằng cancelOrder
+  cancelOrder(orderId: number): void {
+    if (confirm(`Bạn có chắc chắn muốn HỦY đơn hàng #${orderId} không? Hành động này không thể hoàn tác.`)) {
+      this.orderService.cancelOrder(orderId).subscribe({
         next: () => {
           this.loadAll();
-          this.notify.success(`Đơn hàng #${orderId} đã được xóa.`);
+          this.notify.success(`Đơn hàng #${orderId} đã được hủy.`);
         },
-        error: (error) => {
-          console.error('Failed to delete order:', error);
-          this.notify.error('Xóa đơn hàng thất bại.');
+        error: error => {
+          console.error('Failed to cancel order:', error);
+          this.notify.error('Hủy đơn hàng thất bại.');
         },
       });
     }
@@ -177,6 +175,7 @@ export class OrderManagementComponent implements OnInit {
 
   clearSearch(): void {
     this.searchOrderCode.set('');
+    this.searchPhone.set('');
     this.page = 1;
     this.loadAll();
   }
@@ -186,24 +185,16 @@ export class OrderManagementComponent implements OnInit {
       relativeTo: this.activatedRoute.parent,
       queryParams: {
         page: this.page,
-        sort: this.sortService.buildSortParam(
-          sortState ?? this.sortState(),
-          'orderDate,desc',
-        ),
+        sort: this.sortService.buildSortParam(sortState ?? this.sortState(), 'orderDate,desc'),
       },
     });
   }
 
   private handleNavigation(): void {
-    combineLatest([
-      this.activatedRoute.data,
-      this.activatedRoute.queryParamMap,
-    ]).subscribe(([data, params]) => {
+    combineLatest([this.activatedRoute.data, this.activatedRoute.queryParamMap]).subscribe(([data, params]) => {
       const page = params.get('page');
       this.page = +(page ?? 1);
-      this.sortState.set(
-        this.sortService.parseSortParam(params.get(SORT) ?? data.defaultSort),
-      );
+      this.sortState.set(this.sortService.parseSortParam(params.get(SORT) ?? data.defaultSort));
       this.loadAll();
     });
   }

@@ -14,25 +14,23 @@ export class ProductFilterService {
     let filtered = [...products];
 
     if (searchTerm) {
-      filtered = filtered.filter((p) =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
+      filtered = filtered.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }
 
     if (categorySlug && categorySlug !== 'all') {
-      filtered = filtered.filter((p) => p.category?.slug === categorySlug);
+      filtered = filtered.filter(p => p.category?.slug === categorySlug);
     }
 
     if (minPrice !== null) {
-      filtered = filtered.filter((p) => (p.price ?? 0) >= minPrice);
+      filtered = filtered.filter(p => (p.price ?? 0) >= minPrice);
     }
 
     if (maxPrice !== null) {
-      filtered = filtered.filter((p) => (p.price ?? 0) <= maxPrice);
+      filtered = filtered.filter(p => (p.price ?? 0) <= maxPrice);
     }
 
     if (inStockOnly) {
-      filtered = filtered.filter((p) => (p.quantity ?? 0) > 0);
+      filtered = filtered.filter(p => (p.quantity ?? 0) > 0);
     }
 
     return filtered;

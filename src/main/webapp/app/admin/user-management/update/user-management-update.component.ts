@@ -94,6 +94,9 @@ export default class UserManagementUpdateComponent implements OnInit {
   }
 
   private updateForm(user: IUser): void {
+    // Get the first authority or empty string if no authorities
+    const userAuthority = user.authorities && user.authorities.length > 0 ? user.authorities[0] : '';
+
     this.editForm.patchValue({
       id: user.id,
       firstName: user.firstName,
@@ -102,8 +105,11 @@ export default class UserManagementUpdateComponent implements OnInit {
       activated: user.activated,
       phone: user.phone,
       imageUrl: user.imageUrl,
-      authority: user.authorities?.[0] ?? 'ROLE_USER',
+      authority: userAuthority,
     });
+
+    console.log('DEBUG: User authorities:', user.authorities);
+    console.log('DEBUG: Set authority to:', userAuthority);
   }
 
   private createUserFromForm(): IUser {
@@ -111,7 +117,7 @@ export default class UserManagementUpdateComponent implements OnInit {
     return {
       ...formValue,
       id: formValue.id,
-      authorities: [authority],
+      authorities: authority ? [authority] : [],
     };
   }
 }

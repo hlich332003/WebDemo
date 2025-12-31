@@ -18,6 +18,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import tech.jhipster.config.DefaultProfileUtil;
 import tech.jhipster.config.JHipsterConstants;
 
@@ -25,6 +26,7 @@ import tech.jhipster.config.JHipsterConstants;
 @EnableConfigurationProperties({ ApplicationProperties.class })
 @EnableCaching
 @EnableAsync
+@EnableScheduling
 public class WebDemoApp {
 
     private static final Logger LOG = LoggerFactory.getLogger(WebDemoApp.class);

@@ -89,9 +89,7 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
         if (
             ex instanceof com.mycompany.myapp.service.UsernameAlreadyUsedException
         ) return (ProblemDetailWithCause) new LoginAlreadyUsedException().getBody();
-        if (
-            ex instanceof com.mycompany.myapp.service.EmailAlreadyUsedException
-        ) return (ProblemDetailWithCause) new EmailAlreadyUsedException().getBody();
+        // Removed service.EmailAlreadyUsedException - using web.rest.errors.EmailAlreadyUsedException instead
         if (
             ex instanceof com.mycompany.myapp.service.InvalidPasswordException
         ) return (ProblemDetailWithCause) new InvalidPasswordException().getBody();

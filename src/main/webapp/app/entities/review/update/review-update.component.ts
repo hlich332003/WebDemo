@@ -39,11 +39,9 @@ export class ReviewUpdateComponent implements OnInit {
     this.editForm = this.reviewFormService.createReviewFormGroup();
   }
 
-  compareUser = (o1: IUser | null, o2: IUser | null): boolean =>
-    this.userService.compareUser(o1, o2);
+  compareUser = (o1: IUser | null, o2: IUser | null): boolean => this.userService.compareUser(o1, o2);
 
-  compareProduct = (o1: IProduct | null, o2: IProduct | null): boolean =>
-    this.productService.compareProduct(o1, o2);
+  compareProduct = (o1: IProduct | null, o2: IProduct | null): boolean => this.productService.compareProduct(o1, o2);
 
   ngOnInit(): void {
     this.activatedRoute.data.subscribe(({ review }) => {
@@ -70,9 +68,7 @@ export class ReviewUpdateComponent implements OnInit {
     }
   }
 
-  protected subscribeToSaveResponse(
-    result: Observable<HttpResponse<IReview>>,
-  ): void {
+  protected subscribeToSaveResponse(result: Observable<HttpResponse<IReview>>): void {
     result.pipe(finalize(() => this.onSaveFinalize())).subscribe({
       next: () => this.onSaveSuccess(),
       error: () => this.onSaveError(),
@@ -95,44 +91,21 @@ export class ReviewUpdateComponent implements OnInit {
     this.review = review;
     this.reviewFormService.resetForm(this.editForm, review);
 
-    this.usersSharedCollection = this.userService.addUserToCollectionIfMissing(
-      this.usersSharedCollection,
-      review.user,
-    );
-    this.productsSharedCollection =
-      this.productService.addProductToCollectionIfMissing(
-        this.productsSharedCollection,
-        review.product,
-      );
+    this.usersSharedCollection = this.userService.addUserToCollectionIfMissing(this.usersSharedCollection, review.user);
+    this.productsSharedCollection = this.productService.addProductToCollectionIfMissing(this.productsSharedCollection, review.product);
   }
 
   protected loadRelationshipsOptions(): void {
     this.userService
       .query()
       .pipe(map((res: HttpResponse<IUser[]>) => res.body ?? []))
-      .pipe(
-        map((users: IUser[]) =>
-          this.userService.addUserToCollectionIfMissing(
-            users,
-            this.review?.user,
-          ),
-        ),
-      )
+      .pipe(map((users: IUser[]) => this.userService.addUserToCollectionIfMissing(users, this.review?.user)))
       .subscribe((users: IUser[]) => (this.usersSharedCollection = users));
 
     this.productService
       .query()
       .pipe(map((res: HttpResponse<IProduct[]>) => res.body ?? []))
-      .pipe(
-        map((products: IProduct[]) =>
-          this.productService.addProductToCollectionIfMissing(
-            products,
-            this.review?.product,
-          ),
-        ),
-      )
-      .subscribe(
-        (products: IProduct[]) => (this.productsSharedCollection = products),
-      );
+      .pipe(map((products: IProduct[]) => this.productService.addProductToCollectionIfMissing(products, this.review?.product)))
+      .subscribe((products: IProduct[]) => (this.productsSharedCollection = products));
   }
 }

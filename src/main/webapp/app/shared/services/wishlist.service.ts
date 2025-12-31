@@ -27,7 +27,7 @@ export class WishlistService implements OnDestroy {
     this.accountService
       .getAuthenticationState()
       .pipe(takeUntil(this.destroy$))
-      .subscribe((account) => {
+      .subscribe(account => {
         if (account) {
           this.loadWishlist();
         } else {
@@ -46,15 +46,13 @@ export class WishlistService implements OnDestroy {
     this.http
       .get<IProduct[]>(this.API_URL)
       .pipe(
-        map((products) => {
-          const uniqueProducts = Array.from(
-            new Map(products.map((p) => [p.id, p])).values(),
-          );
+        map(products => {
+          const uniqueProducts = Array.from(new Map(products.map(p => [p.id, p])).values());
           return uniqueProducts;
         }),
         catchError(() => of([])),
       )
-      .subscribe((products) => {
+      .subscribe(products => {
         this._itemsSubject.next(products);
         this._countSubject.next(products.length);
       });
@@ -66,11 +64,9 @@ export class WishlistService implements OnDestroy {
     }
 
     const currentItems = this._itemsSubject.value;
-    const isInWishlist = currentItems.some((p) => p.id === product.id);
+    const isInWishlist = currentItems.some(p => p.id === product.id);
 
-    const apiCall = isInWishlist
-      ? this.http.delete(`${this.API_URL}/${product.id}`)
-      : this.http.post(`${this.API_URL}/${product.id}`, {});
+    const apiCall = isInWishlist ? this.http.delete(`${this.API_URL}/${product.id}`) : this.http.post(`${this.API_URL}/${product.id}`, {});
 
     return apiCall.pipe(
       tap(() => {
@@ -78,7 +74,7 @@ export class WishlistService implements OnDestroy {
         this.loadWishlist();
       }),
       map(() => !isInWishlist),
-      catchError((err) => {
+      catchError(err => {
         // On error, revert by reloading the original state from the server
         this.loadWishlist();
         // Re-throw the error to be handled by the component
@@ -88,6 +84,6 @@ export class WishlistService implements OnDestroy {
   }
 
   isInWishlist(productId: number): boolean {
-    return this._itemsSubject.value.some((p) => p.id === productId);
+    return this._itemsSubject.value.some(p => p.id === productId);
   }
 }

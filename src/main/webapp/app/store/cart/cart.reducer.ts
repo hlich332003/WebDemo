@@ -21,7 +21,7 @@ export const cartReducer = createReducer(
   initialState,
 
   // Load Cart
-  on(CartActions.loadCart, (state) => ({
+  on(CartActions.loadCart, state => ({
     ...state,
     loading: true,
   })),
@@ -29,10 +29,7 @@ export const cartReducer = createReducer(
     ...state,
     items,
     totalItems: items.reduce((sum, item) => sum + item.quantity, 0),
-    totalPrice: items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0,
-    ),
+    totalPrice: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
     loading: false,
     error: null,
   })),
@@ -43,22 +40,16 @@ export const cartReducer = createReducer(
   })),
 
   // Add to Cart
-  on(CartActions.addToCart, (state) => ({
+  on(CartActions.addToCart, state => ({
     ...state,
     loading: true,
   })),
   on(CartActions.addToCartSuccess, (state, { item }) => {
-    const existingItem = state.items.find(
-      (i) => i.productId === item.productId,
-    );
+    const existingItem = state.items.find(i => i.productId === item.productId);
     let updatedItems;
 
     if (existingItem) {
-      updatedItems = state.items.map((i) =>
-        i.productId === item.productId
-          ? { ...i, quantity: i.quantity + item.quantity }
-          : i,
-      );
+      updatedItems = state.items.map(i => (i.productId === item.productId ? { ...i, quantity: i.quantity + item.quantity } : i));
     } else {
       updatedItems = [...state.items, item];
     }
@@ -67,10 +58,7 @@ export const cartReducer = createReducer(
       ...state,
       items: updatedItems,
       totalItems: updatedItems.reduce((sum, i) => sum + i.quantity, 0),
-      totalPrice: updatedItems.reduce(
-        (sum, i) => sum + i.price * i.quantity,
-        0,
-      ),
+      totalPrice: updatedItems.reduce((sum, i) => sum + i.price * i.quantity, 0),
       loading: false,
     };
   }),
@@ -81,33 +69,28 @@ export const cartReducer = createReducer(
   })),
 
   // Remove from Cart
-  on(CartActions.removeFromCart, (state) => ({
+  on(CartActions.removeFromCart, state => ({
     ...state,
     loading: true,
   })),
-  on(CartActions.removeFromCartSuccess, (state) => ({
+  on(CartActions.removeFromCartSuccess, state => ({
     ...state,
     loading: false,
   })),
 
   // Update Quantity
   on(CartActions.updateQuantity, (state, { productId, quantity }) => {
-    const updatedItems = state.items.map((item) =>
-      item.productId === productId ? { ...item, quantity } : item,
-    );
+    const updatedItems = state.items.map(item => (item.productId === productId ? { ...item, quantity } : item));
     return {
       ...state,
       items: updatedItems,
       totalItems: updatedItems.reduce((sum, i) => sum + i.quantity, 0),
-      totalPrice: updatedItems.reduce(
-        (sum, i) => sum + i.price * i.quantity,
-        0,
-      ),
+      totalPrice: updatedItems.reduce((sum, i) => sum + i.price * i.quantity, 0),
     };
   }),
 
   // Clear Cart
-  on(CartActions.clearCart, (state) => ({
+  on(CartActions.clearCart, state => ({
     ...state,
     loading: true,
   })),

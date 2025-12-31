@@ -188,55 +188,102 @@
     gap: 0.5rem;
     padding: 0 1rem 1rem;
 
-    .btn-wishlist {
-      background: bootstrap.$gray-200;
-      color: bootstrap.$gray-600;
-      border: none;
-      &:hover {
-        background: bootstrap.$gray-300;
+    .btn {
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+
+    .btn-wishlist,
+    .btn-add-to-cart {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid;
+
+      // Fix icon centering
+      ::ng-deep fa-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        margin: 0;
+
+        svg {
+          vertical-align: middle;
+        }
       }
+    }
+
+    .btn-wishlist {
+      background: rgba($primary, 0.1);
+      color: $primary;
+      border-color: rgba($primary, 0.2);
+
+      &:hover {
+        background: rgba($primary, 0.2);
+        border-color: $primary;
+        transform: scale(1.05);
+      }
+
       &.in-wishlist {
-        background: color.adjust($danger, $alpha: -0.8);
+        background: rgba($danger, 0.1);
         color: $danger;
+        border-color: rgba($danger, 0.3);
+
         &:hover {
-          background: color.adjust($danger, $alpha: -0.7);
+          background: rgba($danger, 0.2);
+          border-color: $danger;
         }
       }
     }
 
     .btn-add-to-cart {
-      background: color.adjust($primary, $alpha: -0.8);
+      background: rgba($primary, 0.1);
       color: $primary;
-      border: none;
+      border-color: rgba($primary, 0.2);
       font-weight: 600;
-      width: 40px;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+
       &:hover {
-        background: color.adjust($primary, $alpha: -0.7);
+        background: $primary;
+        color: white;
+        border-color: $primary;
+        transform: scale(1.05);
       }
+
       &:disabled {
         background: bootstrap.$gray-200;
         color: bootstrap.$gray-500;
+        border-color: bootstrap.$gray-300;
         cursor: not-allowed;
+        transform: none;
       }
     }
 
     .btn-buy-now {
       flex-grow: 1;
-      background: #9333ea;  // Màu tím
+      height: 40px;
+      background: linear-gradient(135deg, $primary, $secondary);
       color: white;
       border: none;
       font-weight: 600;
+      box-shadow: 0 2px 8px rgba($primary, 0.3);
+
       &:hover {
-        background: #7e22ce;  // Tím đậm hơn khi hover
+        background: linear-gradient(135deg, color.adjust($primary, $lightness: -10%), color.adjust($secondary, $lightness: -10%));
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba($primary, 0.4);
       }
+
       &:disabled {
         background: bootstrap.$gray-200;
         color: bootstrap.$gray-500;
         cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
       }
     }
   }
@@ -251,7 +298,8 @@
   gap: 1rem;
 }
 
-.loading-indicator, .no-results {
+.loading-indicator,
+.no-results {
   text-align: center;
   padding: 4rem;
   font-size: 1.2rem;

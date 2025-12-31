@@ -10,13 +10,7 @@ import { NotificationDatePipe } from '../../../shared/date/notification-date.pip
 @Component({
   selector: 'jhi-payment-management-detail',
   standalone: true,
-  imports: [
-    RouterModule,
-    CommonModule,
-    SharedModule,
-    FormatMediumDatetimePipe,
-    NotificationDatePipe,
-  ],
+  imports: [RouterModule, CommonModule, SharedModule, FormatMediumDatetimePipe, NotificationDatePipe],
   templateUrl: './payment-management-detail.component.html',
 })
 export class PaymentManagementDetailComponent {

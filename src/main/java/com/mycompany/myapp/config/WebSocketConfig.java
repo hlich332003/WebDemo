@@ -13,6 +13,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.server.HandshakeInterceptor;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -20,21 +21,26 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final ChannelInterceptor stompAuthChannelInterceptor;
+    private final HandshakeInterceptor handshakeInterceptor;
 
-    public WebSocketConfig(ChannelInterceptor stompAuthChannelInterceptor) {
+    public WebSocketConfig(ChannelInterceptor stompAuthChannelInterceptor, HandshakeInterceptor handshakeInterceptor) {
         this.stompAuthChannelInterceptor = stompAuthChannelInterceptor;
+        this.handshakeInterceptor = handshakeInterceptor;
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
+        // FIX: Enable /topic for public/group chat and /queue for user-specific messages
+        config.enableSimpleBroker("/topic", "/queue").setTaskScheduler(getTaskScheduler()).setHeartbeatValue(new long[] { 10000, 10000 }); // Send heartbeat every 10 seconds
         config.setApplicationDestinationPrefixes("/app");
-        config.enableSimpleBroker("/topic", "/queue").setHeartbeatValue(new long[] { 25000, 25000 }).setTaskScheduler(getTaskScheduler());
+        // FIX: Configure user destination prefix for convertAndSendToUser
         config.setUserDestinationPrefix("/user");
     }
 
     @Override
     public void registerStompEndpoints(@NonNull StompEndpointRegistry registry) {
-        registry.addEndpoint("/websocket").setAllowedOriginPatterns("*").withSockJS().setDisconnectDelay(30 * 60 * 1000);
+        // FIX: Register HandshakeInterceptor to capture guestId from query params
+        registry.addEndpoint("/websocket").addInterceptors(handshakeInterceptor).setAllowedOriginPatterns("*").withSockJS();
     }
 
     @Override

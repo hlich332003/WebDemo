@@ -32,9 +32,7 @@ export class CartComponent implements OnInit {
     const quantity = input.value.trim();
 
     if (quantity === '' || quantity === '0') {
-      const item = this.cartService
-        .getCartItems()
-        .find((i) => i.product.id === productId);
+      const item = this.cartService.getCartItems().find(i => i.product.id === productId);
       if (item) {
         input.value = item.quantity.toString();
       }
@@ -52,9 +50,7 @@ export class CartComponent implements OnInit {
       return;
     }
 
-    const item = this.cartService
-      .getCartItems()
-      .find((i) => i.product.id === productId);
+    const item = this.cartService.getCartItems().find(i => i.product.id === productId);
     if (!item) {
       return;
     }
@@ -62,9 +58,7 @@ export class CartComponent implements OnInit {
     const availableStock = item.product.quantity ?? 0;
     if (q > availableStock) {
       this.notify.error('⚠️ Đã đạt giới hạn số lượng!');
-      this.cartService
-        .updateQuantity(productId, availableStock)
-        .subscribe(() => this.cartService.loadCart());
+      this.cartService.updateQuantity(productId, availableStock).subscribe(() => this.cartService.loadCart());
       return;
     }
 
@@ -75,9 +69,7 @@ export class CartComponent implements OnInit {
   }
 
   increaseQuantity(productId: number, currentQuantity: number): void {
-    const item = this.cartService
-      .getCartItems()
-      .find((i) => i.product.id === productId);
+    const item = this.cartService.getCartItems().find(i => i.product.id === productId);
     if (!item) {
       return;
     }
@@ -95,9 +87,7 @@ export class CartComponent implements OnInit {
     if (currentQuantity > 1) {
       this.updateQuantity(productId, currentQuantity - 1);
     } else {
-      this.notify.info(
-        '💡 Số lượng tối thiểu là 1. Dùng nút xóa nếu muốn bỏ sản phẩm.',
-      );
+      this.notify.info('💡 Số lượng tối thiểu là 1. Dùng nút xóa nếu muốn bỏ sản phẩm.');
     }
   }
 
@@ -134,9 +124,7 @@ export class CartComponent implements OnInit {
         }
       },
       error: (error: Error) => {
-        this.notify.error(
-          `❌ Lỗi khi cập nhật danh sách yêu thích: ${error.message}`,
-        );
+        this.notify.error(`❌ Lỗi khi cập nhật danh sách yêu thích: ${error.message}`);
       },
     });
   }
@@ -160,6 +148,6 @@ export class CartComponent implements OnInit {
 
   isAllSelected(): boolean {
     const items = this.cartService.getCartItems();
-    return items.length > 0 && items.every((item) => item.selected);
+    return items.length > 0 && items.every(item => item.selected);
   }
 }

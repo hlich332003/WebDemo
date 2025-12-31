@@ -4,9 +4,7 @@ import dayjs from 'dayjs/esm';
 
 import { IReview, NewReview } from '../review.model';
 
-type PartialWithRequiredKeyOf<T extends { id: unknown }> = Partial<
-  Omit<T, 'id'>
-> & { id: T['id'] };
+type PartialWithRequiredKeyOf<T extends { id: unknown }> = Partial<Omit<T, 'id'>> & { id: T['id'] };
 type ReviewFormGroupInput = IReview | PartialWithRequiredKeyOf<NewReview>;
 type FormValueOf<T extends IReview | NewReview> = Omit<T, 'createdDate'> & {
   createdDate?: string | null;
@@ -28,9 +26,7 @@ export type ReviewFormGroup = FormGroup<ReviewFormGroupContent>;
 
 @Injectable({ providedIn: 'root' })
 export class ReviewFormService {
-  createReviewFormGroup(
-    review: ReviewFormGroupInput = { id: null },
-  ): ReviewFormGroup {
+  createReviewFormGroup(review: ReviewFormGroupInput = { id: null }): ReviewFormGroup {
     const reviewRawValue = this.convertReviewToReviewRawValue({
       ...this.getFormDefaults(),
       ...review,
@@ -54,9 +50,7 @@ export class ReviewFormService {
   }
 
   getReview(form: ReviewFormGroup): IReview | NewReview {
-    return this.convertReviewRawValueToReview(
-      form.getRawValue() as ReviewFormRawValue | NewReviewFormRawValue,
-    );
+    return this.convertReviewRawValueToReview(form.getRawValue() as ReviewFormRawValue | NewReviewFormRawValue);
   }
 
   resetForm(form: ReviewFormGroup, review: ReviewFormGroupInput): void {
@@ -86,9 +80,7 @@ export class ReviewFormService {
     };
   }
 
-  private convertReviewRawValueToReview(
-    rawReview: ReviewFormRawValue | NewReviewFormRawValue,
-  ): IReview | NewReview {
+  private convertReviewRawValueToReview(rawReview: ReviewFormRawValue | NewReviewFormRawValue): IReview | NewReview {
     return {
       ...rawReview,
       createdDate: rawReview.createdDate ? dayjs(rawReview.createdDate) : null,

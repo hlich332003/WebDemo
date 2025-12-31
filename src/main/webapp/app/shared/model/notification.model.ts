@@ -2,7 +2,7 @@ import { Dayjs } from 'dayjs';
 
 export interface INotification {
   id?: number;
-  type?: string; // optional type to align with service INotification
+  type?: string;
   message?: string;
   title?: string;
   content?: string;
@@ -10,18 +10,4 @@ export interface INotification {
   timestamp?: Dayjs | Date;
   orderId?: number;
   link?: string;
-}
-
-export class Notification implements INotification {
-  constructor(
-    public id?: number,
-    public message?: string,
-    public read?: boolean,
-    public timestamp?: Dayjs | Date,
-    public orderId?: number,
-    public link?: string,
-    public type?: string,
-    public title?: string,
-    public content?: string,
-  ) {}
 }

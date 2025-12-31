@@ -73,23 +73,18 @@
         </li>
 
         <!-- Notifications -->
-        <li ngbDropdown class="nav-item dropdown notification-bell" *ngIf="account()">
+        <li ngbDropdown class="nav-item dropdown notification-item" *ngIf="account()">
           <a class="nav-link" ngbDropdownToggle href="javascript:void(0);" id="notification-menu">
-            <fa-icon icon="bell"></fa-icon>
-            <span class="badge bg-danger" *ngIf="((unreadCount$ | async) || 0) > 0">{{ unreadCount$ | async }}</span>
+            <fa-icon icon="bell" class="nav-icon"></fa-icon>
+            <span class="nav-text d-none d-lg-inline"></span>
+            <span class="notification-badge" *ngIf="((unreadCount$ | async) || 0) > 0">{{ unreadCount$ | async }}</span>
           </a>
-          <ul class="dropdown-menu dropdown-menu-end" ngbDropdownMenu aria-labelledby="notification-menu">
+          <ul class="dropdown-menu dropdown-menu-end notification-dropdown" ngbDropdownMenu aria-labelledby="notification-menu">
             <li class="dropdown-header">
-              <span>Thông báo</span>
               <a href="javascript:void(0);" (click)="markAllAsRead()" class="mark-all-read">Đánh dấu đã đọc tất cả</a>
             </li>
             <li *ngFor="let notification of notifications$ | async">
-              <a
-                class="dropdown-item"
-                [class.unread]="!notification.read"
-                (click)="markAsRead(notification.id)"
-                [routerLink]="notification.link"
-              >
+              <a class="dropdown-item" [class.unread]="!notification.read" (click)="markAsRead(notification)" href="javascript:void(0);">
                 <p>{{ notification.message }}</p>
                 <small>{{ notification.timestamp | notificationDate | formatMediumDatetime }}</small>
               </a>
@@ -137,6 +132,12 @@
             <li>
               <a class="dropdown-item" routerLink="/admin/user-management" routerLinkActive="active" (click)="collapseNavbar()">
                 <span>Quản lý người dùng</span>
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" routerLink="/admin/customer-support" routerLinkActive="active" (click)="collapseNavbar()">
+                <fa-icon icon="headset" [fixedWidth]="true"></fa-icon>
+                <span>Hỗ trợ khách hàng</span>
               </a>
             </li>
             <!-- jhipster-needle-add-entity-to-menu - JHipster will add entities to the menu here -->

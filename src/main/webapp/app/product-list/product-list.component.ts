@@ -1,12 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
-import {
-  takeUntil,
-  debounceTime,
-  distinctUntilChanged,
-  map,
-} from 'rxjs/operators';
+import { takeUntil, debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 import { HttpResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -29,15 +24,7 @@ import { LazyLoadImageDirective } from 'app/shared/directives/lazy-load-image.di
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.scss'],
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    FontAwesomeModule,
-    NgbModule,
-    SharedModule,
-    LazyLoadImageDirective,
-    InfiniteScrollDirective,
-  ],
+  imports: [CommonModule, FormsModule, FontAwesomeModule, NgbModule, SharedModule, LazyLoadImageDirective, InfiniteScrollDirective],
 })
 export class ProductListComponent implements OnInit, OnDestroy {
   products: IProduct[] = [];
@@ -72,28 +59,24 @@ export class ProductListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadCategories();
-    this.route.queryParams
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((params) => {
-        // Reset list when filters change
-        this.products = [];
-        this.page = 0;
-        this.hasMore = true;
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      // Reset list when filters change
+      this.products = [];
+      this.page = 0;
+      this.hasMore = true;
 
-        this.sortOption = params['sort'] || 'name,asc';
-        this.searchTerm = params['search'] || '';
-        this.selectedCategorySlug = params['categorySlug'] || 'all';
-        this.minPrice = params['minPrice'] ? +params['minPrice'] : null;
-        this.maxPrice = params['maxPrice'] ? +params['maxPrice'] : null;
-        this.inStockOnly = params['inStock'] === 'true';
-        this.loadProducts();
-      });
+      this.sortOption = params['sort'] || 'name,asc';
+      this.searchTerm = params['search'] || '';
+      this.selectedCategorySlug = params['categorySlug'] || 'all';
+      this.minPrice = params['minPrice'] ? +params['minPrice'] : null;
+      this.maxPrice = params['maxPrice'] ? +params['maxPrice'] : null;
+      this.inStockOnly = params['inStock'] === 'true';
+      this.loadProducts();
+    });
 
-    this.searchSubject
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.applyFiltersAndNavigate();
-      });
+    this.searchSubject.pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$)).subscribe(() => {
+      this.applyFiltersAndNavigate();
+    });
   }
 
   ngOnDestroy(): void {
@@ -130,7 +113,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
     }
 
     this.productService.query(queryParams).subscribe({
-      next: (res) => {
+      next: res => {
         const newProducts = res.body ?? [];
         this.products = [...this.products, ...newProducts];
         this.totalItems = Number(res.headers.get('X-Total-Count'));
@@ -155,10 +138,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
       .getCategories()
       .pipe(map((res: HttpResponse<ICategory[]>) => res.body ?? []))
       .subscribe((cats: ICategory[]) => {
-        const unclassified = cats.find((c) => c.slug === 'chua-phan-loai');
-        const others = cats
-          .filter((c) => c.slug !== 'chua-phan-loai')
-          .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+        const unclassified = cats.find(c => c.slug === 'chua-phan-loai');
+        const others = cats.filter(c => c.slug !== 'chua-phan-loai').sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
         this.categories = unclassified ? [...others, unclassified] : others;
       });
   }
@@ -174,11 +155,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
       inStock: this.inStockOnly ? true : null,
     };
 
-    Object.keys(queryParams).forEach(
-      (key) =>
-        (queryParams[key] == null || queryParams[key] === '') &&
-        delete queryParams[key],
-    );
+    Object.keys(queryParams).forEach(key => (queryParams[key] == null || queryParams[key] === '') && delete queryParams[key]);
 
     this.router.navigate(['/products'], {
       queryParams,
@@ -256,11 +233,14 @@ export class ProductListComponent implements OnInit, OnDestroy {
     if (!imageUrl) {
       return 'content/images/no-product-image.png';
     }
+    // If imageUrl is a data URL (base64), return it directly
+    if (imageUrl.startsWith('data:')) {
+      return imageUrl;
+    }
     return `/api/public/image-proxy?url=${encodeURIComponent(imageUrl)}`;
   }
 
   onImageError(event: Event): void {
-    (event.target as HTMLImageElement).src =
-      'content/images/no-product-image.png';
+    (event.target as HTMLImageElement).src = 'content/images/no-product-image.png';
   }
 }

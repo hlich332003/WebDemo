@@ -10,12 +10,7 @@ import { CastToDayjsPipe } from 'app/shared/date/cast-to-dayjs.pipe';
   standalone: true,
   selector: 'jhi-review-detail',
   templateUrl: './review-detail.component.html',
-  imports: [
-    SharedModule,
-    RouterModule,
-    FormatMediumDatetimePipe,
-    CastToDayjsPipe,
-  ],
+  imports: [SharedModule, RouterModule, FormatMediumDatetimePipe, CastToDayjsPipe],
 })
 export class ReviewDetailComponent {
   review = input<IReview | null>(null);
