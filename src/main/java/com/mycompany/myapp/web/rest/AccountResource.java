@@ -80,9 +80,9 @@ public class AccountResource {
         if (isPasswordLengthInvalid(managedUserVM.getPassword())) {
             throw new InvalidPasswordException();
         }
-        User user = userService.registerUser(managedUserVM, managedUserVM.getPassword());
-        // Send creation/welcome email instead of an activation email (accounts are auto-activated)
-        mailService.sendCreationEmail(user);
+        userService.registerUser(managedUserVM, managedUserVM.getPassword());
+        // ✅ Email is now sent asynchronously via RabbitMQ in UserService.registerUser()
+        // No need to call mailService.sendCreationEmail() here to avoid duplicate/conflict
     }
 
     /**

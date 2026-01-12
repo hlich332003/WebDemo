@@ -5,7 +5,13 @@ import com.mycompany.myapp.domain.User;
 import com.mycompany.myapp.repository.AuthorityRepository;
 import com.mycompany.myapp.repository.UserRepository;
 import com.mycompany.myapp.security.AuthoritiesConstants;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.Instant;
+import java.util.*;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,11 +19,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.Instant;
-import java.util.*;
 
 @Service
 @Transactional
@@ -29,11 +30,7 @@ public class UserImportService {
     private final AuthorityRepository authorityRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserImportService(
-        UserRepository userRepository,
-        AuthorityRepository authorityRepository,
-        PasswordEncoder passwordEncoder
-    ) {
+    public UserImportService(UserRepository userRepository, AuthorityRepository authorityRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.authorityRepository = authorityRepository;
         this.passwordEncoder = passwordEncoder;
@@ -42,9 +39,7 @@ public class UserImportService {
     public UserImportResult importUsersFromExcel(MultipartFile file) throws IOException {
         UserImportResult result = new UserImportResult();
 
-        try (InputStream inputStream = file.getInputStream();
-             Workbook workbook = new XSSFWorkbook(inputStream)) {
-
+        try (InputStream inputStream = file.getInputStream(); Workbook workbook = new XSSFWorkbook(inputStream)) {
             Sheet sheet = workbook.getSheetAt(0);
             Iterator<Row> rowIterator = sheet.iterator();
 
@@ -68,19 +63,38 @@ public class UserImportService {
     }
 
     private void processUserRow(Row row, UserImportResult result) {
-        // Đọc dữ liệu từ Excel
+        // Đọc dữ liệu từ Excel - 4 cột: phone | name | product_purchased | date
         String phoneNumber = getCellValueAsString(row.getCell(0));
-        String firstName = getCellValueAsString(row.getCell(1));
-        String lastName = getCellValueAsString(row.getCell(2));
-        String email = getCellValueAsString(row.getCell(3));
+        String name = getCellValueAsString(row.getCell(1));
+        String productPurchased = getCellValueAsString(row.getCell(2));
+        Cell dateCell = row.getCell(3);
 
         // Validate số điện thoại (bắt buộc)
         if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
-            result.addError(row.getRowNum() + 1, "Số điện thoại không được để trống");
+            result.addError(row.getRowNum() + 1, "Cột phone (SĐT) không được để trống");
             return;
         }
 
         phoneNumber = phoneNumber.trim();
+
+        // Parse date (không bắt buộc)
+        Instant purchaseDate = null;
+        if (dateCell != null) {
+            try {
+                if (dateCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dateCell)) {
+                    purchaseDate = dateCell.getDateCellValue().toInstant();
+                } else {
+                    String dateStr = getCellValueAsString(dateCell);
+                    if (dateStr != null && !dateStr.trim().isEmpty()) {
+                        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                        java.time.LocalDate localDate = java.time.LocalDate.parse(dateStr.trim(), formatter);
+                        purchaseDate = localDate.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant();
+                    }
+                }
+            } catch (Exception e) {
+                result.addWarning(row.getRowNum() + 1, "Ngày tháng không hợp lệ, bỏ qua: " + e.getMessage());
+            }
+        }
 
         // Tìm user theo số điện thoại
         Optional<User> existingUserOpt = userRepository.findOneByPhone(phoneNumber);
@@ -101,32 +115,36 @@ public class UserImportService {
             user.setCreatedBy("system");
             user.setCreatedDate(Instant.now());
 
+            // Tạo email mặc định từ số điện thoại
+            String defaultEmail = phoneNumber + "@localhost";
+
+            // Kiểm tra email đã tồn tại chưa, nếu có thêm timestamp
+            Optional<User> existingEmail = userRepository.findOneByEmailIgnoreCase(defaultEmail);
+            if (existingEmail.isPresent()) {
+                defaultEmail = phoneNumber + "_" + System.currentTimeMillis() + "@localhost";
+            }
+
+            user.setEmail(defaultEmail);
+
             // Gán quyền USER mặc định
             authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(user::setAuthority);
         }
 
-        // Cập nhật thông tin
-        if (firstName != null && !firstName.trim().isEmpty()) {
-            user.setFirstName(firstName.trim());
-        }
-
-        if (lastName != null && !lastName.trim().isEmpty()) {
-            user.setLastName(lastName.trim());
-        }
-
-        if (email != null && !email.trim().isEmpty()) {
-            // Validate email format
-            if (isValidEmail(email.trim())) {
-                // Kiểm tra email đã tồn tại chưa (nếu không phải của user hiện tại)
-                Optional<User> userWithEmail = userRepository.findOneByEmailIgnoreCase(email.trim());
-                if (userWithEmail.isEmpty() || userWithEmail.get().getId().equals(user.getId())) {
-                    user.setEmail(email.trim().toLowerCase());
-                } else {
-                    result.addWarning(row.getRowNum() + 1, "Email đã tồn tại, giữ nguyên email cũ");
-                }
+        // Cập nhật thông tin tên
+        if (name != null && !name.trim().isEmpty()) {
+            // Tách tên thành firstName và lastName
+            String[] nameParts = name.trim().split("\\s+", 2);
+            if (nameParts.length >= 2) {
+                user.setFirstName(nameParts[0]);
+                user.setLastName(nameParts[1]);
             } else {
-                result.addWarning(row.getRowNum() + 1, "Email không hợp lệ, bỏ qua");
+                user.setFirstName(nameParts[0]);
+                user.setLastName("");
             }
+        } else if (!isUpdate) {
+            // Nếu tạo mới mà không có tên, dùng mặc định
+            user.setFirstName("Khách hàng");
+            user.setLastName(phoneNumber);
         }
 
         user.setPhone(phoneNumber);
@@ -135,12 +153,17 @@ public class UserImportService {
 
         userRepository.save(user);
 
+        // Log thông tin sản phẩm và ngày (để tích hợp với Customer sau)
+        if (productPurchased != null && !productPurchased.trim().isEmpty()) {
+            log.info("Sản phẩm đã mua: {} - Ngày: {}", productPurchased.trim(), purchaseDate);
+        }
+
         if (isUpdate) {
             result.incrementUpdated();
-            log.info("Cập nhật user: {}", phoneNumber);
+            log.info("Cập nhật user: {} - {}", phoneNumber, name);
         } else {
             result.incrementCreated();
-            log.info("Tạo mới user: {}", phoneNumber);
+            log.info("Tạo mới user: {} - {} (Email: {})", phoneNumber, name, user.getEmail());
         }
     }
 
@@ -173,13 +196,13 @@ public class UserImportService {
         }
     }
 
-
     private boolean isValidEmail(String email) {
         String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
         return email.matches(emailRegex);
     }
 
     public static class UserImportResult {
+
         private int created = 0;
         private int updated = 0;
         private final List<String> errors = new ArrayList<>();
@@ -230,4 +253,3 @@ public class UserImportService {
         }
     }
 }
-

@@ -65,9 +65,9 @@ export class ProductListComponent implements OnInit, OnDestroy {
       this.page = 0;
       this.hasMore = true;
 
-      this.sortOption = params['sort'] || 'name,asc';
-      this.searchTerm = params['search'] || '';
-      this.selectedCategorySlug = params['categorySlug'] || 'all';
+      this.sortOption = params['sort'] ?? 'name,asc';
+      this.searchTerm = params['search'] ?? '';
+      this.selectedCategorySlug = params['categorySlug'] ?? 'all';
       this.minPrice = params['minPrice'] ? +params['minPrice'] : null;
       this.maxPrice = params['maxPrice'] ? +params['maxPrice'] : null;
       this.inStockOnly = params['inStock'] === 'true';
@@ -155,6 +155,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
       inStock: this.inStockOnly ? true : null,
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     Object.keys(queryParams).forEach(key => (queryParams[key] == null || queryParams[key] === '') && delete queryParams[key]);
 
     this.router.navigate(['/products'], {
@@ -199,9 +200,10 @@ export class ProductListComponent implements OnInit, OnDestroy {
       return;
     }
     if (product.id && product.quantity && product.quantity > 0) {
-      this.cartService.addToCart(product.id).subscribe(() => {
-        this.cartService.loadCart();
-        this.router.navigate(['/checkout']);
+      // Navigate directly to checkout with buy-now mode, independent from cart
+      this.cartService.setBuyNowItem(product, 1);
+      this.router.navigate(['/checkout'], {
+        queryParams: { mode: 'buy-now' },
       });
     }
   }

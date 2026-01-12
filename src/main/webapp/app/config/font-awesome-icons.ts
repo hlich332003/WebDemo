@@ -4,6 +4,7 @@ import {
   faBan,
   faBars,
   faBell,
+  faBellSlash,
   faBook,
   faCalendarAlt,
   faCloud,
@@ -34,6 +35,7 @@ import {
   faUserPlus,
   faUsers,
   faUsersCog,
+  faUserShield,
   faWrench,
   faBoxOpen,
   faBox,
@@ -43,6 +45,8 @@ import {
   faCartShopping,
   faDollarSign,
   faCheck,
+  faCheckDouble,
+  faCheckCircle,
   faTags,
   faTrash,
   faHeartCrack,
@@ -70,6 +74,7 @@ import {
   faFileExport,
   faInfoCircle,
   faImage,
+  faExclamationTriangle,
   // jhipster-needle-add-icon-import
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -79,6 +84,7 @@ export const fontAwesomeIcons = [
   faBan,
   faBars,
   faBell,
+  faBellSlash,
   faBook,
   faCalendarAlt,
   faCloud,
@@ -109,6 +115,7 @@ export const fontAwesomeIcons = [
   faUserPlus,
   faUsers,
   faUsersCog,
+  faUserShield,
   faWrench,
   faBoxOpen,
   faBox,
@@ -118,6 +125,8 @@ export const fontAwesomeIcons = [
   faCartShopping,
   faDollarSign,
   faCheck,
+  faCheckDouble,
+  faCheckCircle,
   faTags,
   faTrash,
   faHeartCrack,
@@ -145,5 +154,6 @@ export const fontAwesomeIcons = [
   faFileExport,
   faInfoCircle,
   faImage,
+  faExclamationTriangle,
   // jhipster-needle-add-icon-import
 ];

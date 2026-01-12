@@ -57,7 +57,7 @@
       <table class="table table-striped table-hover" aria-describedby="user-management-page-heading">
         <thead class="table-dark">
           <tr jhiSort [(sortState)]="sortState" (sortChange)="transition()">
-            <th scope="col" jhiSortBy="id" style="width: 60px"><span>ID</span> <fa-icon icon="sort"></fa-icon></th>
+            <th scope="col" style="width: 60px"><span>STT</span></th>
             <th scope="col" jhiSortBy="email"><span>Email / Tên</span> <fa-icon icon="sort"></fa-icon></th>
             <th scope="col" style="width: 130px">
               <span>Trạng thái</span>
@@ -72,10 +72,10 @@
           </tr>
         </thead>
         <tbody>
-          @for (user of users(); track user.id) {
+          @for (user of users(); track user.id; let i = $index) {
             <tr>
               <td>
-                <strong>{{ user.id }}</strong>
+                <strong>{{ (page - 1) * itemsPerPage + i + 1 }}</strong>
               </td>
               <td>
                 <div>

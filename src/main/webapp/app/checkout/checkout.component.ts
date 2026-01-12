@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Subject, of, forkJoin } from 'rxjs';
@@ -45,6 +45,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private utils = inject(UtilsService);
   private notify = inject(NotificationService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private accountService = inject(AccountService);
   private orderService = inject(OrderService);
 
@@ -54,7 +55,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     // Clear buy now item when leaving checkout if not successful
-    if (!this.orderSuccess) {
+    if (!this.orderSuccess && this.isBuyNow) {
       this.cartService.clearBuyNowItem();
     }
     this.destroy$.next();
@@ -62,27 +63,36 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   private loadCartAndAccount(): void {
-    // Check for Buy Now item first
-    const buyNowItem = this.cartService.getBuyNowItem();
+    // Check query params for buy-now mode
+    const mode = this.route.snapshot.queryParamMap.get('mode');
 
-    if (buyNowItem) {
-      this.cart = [buyNowItem];
-      this.isBuyNow = true;
+    if (mode === 'buy-now') {
+      // Buy Now mode - completely independent from cart
+      const buyNowItem = this.cartService.getBuyNowItem();
+      if (buyNowItem) {
+        this.cart = [buyNowItem];
+        this.isBuyNow = true;
+      } else {
+        // No buy now item found, redirect to home
+        this.notify.warning('Không tìm thấy sản phẩm để mua.');
+        this.router.navigate(['/']);
+        return;
+      }
     } else {
-      // Fallback to selected cart items
+      // Regular checkout from cart
       this.cart = this.cartService.getItemsForCheckout();
       this.isBuyNow = false;
+
+      // If no items selected from cart, redirect back to cart
+      if (this.cart.length === 0) {
+        this.notify.warning('Vui lòng chọn sản phẩm để thanh toán.');
+        this.router.navigate(['/cart']);
+        return;
+      }
     }
 
-    // Calculate total for these items
+    // Calculate total for items
     this.total = this.cart.reduce((sum, item) => sum + (item.product.price ?? 0) * item.quantity, 0);
-
-    // If no items, redirect back to cart
-    if (this.cart.length === 0) {
-      this.notify.warning('Vui lòng chọn sản phẩm để thanh toán.');
-      this.router.navigate(['/cart']);
-      return;
-    }
 
     this.accountService
       .getAuthenticationState()

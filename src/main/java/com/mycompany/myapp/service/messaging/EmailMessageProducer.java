@@ -27,15 +27,14 @@ public class EmailMessageProducer {
      */
     public void publishUserRegistrationEmail(AdminUserDTO user) {
         try {
-            log.info("Publishing user registration email event for: {}", user.getEmail());
+            log.info("🚀 [PRODUCER] Publishing user registration email event for: {}", user.getEmail());
 
-            EmailMessage emailMessage = new EmailMessage(user.getEmail(), "Welcome to our platform", EmailType.USER_REGISTRATION, user);
+            // Send directly to USER_REGISTRATION_QUEUE like Order flow
+            rabbitTemplate.convertAndSend(RabbitMQConfig.USER_REGISTRATION_QUEUE, user);
 
-            rabbitTemplate.convertAndSend(RabbitMQConfig.EMAIL_EXCHANGE, RabbitMQConfig.EMAIL_ROUTING_KEY, emailMessage);
-
-            log.info("User registration email event published successfully");
+            log.info("✅ [PRODUCER] User registration email event published successfully to RabbitMQ");
         } catch (Exception e) {
-            log.error("Failed to publish user registration email event", e);
+            log.error("❌ [PRODUCER] Failed to publish user registration email event", e);
             throw new RuntimeException("Failed to publish email event", e);
         }
     }

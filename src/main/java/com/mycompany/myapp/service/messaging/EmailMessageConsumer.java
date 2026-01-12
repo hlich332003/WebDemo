@@ -1,5 +1,6 @@
 package com.mycompany.myapp.service.messaging;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.myapp.config.RabbitMQConfig;
 import com.mycompany.myapp.service.MailService;
 import com.mycompany.myapp.service.messaging.EmailMessageProducer.EmailMessage;
@@ -19,9 +20,11 @@ public class EmailMessageConsumer {
     private static final Logger log = LoggerFactory.getLogger(EmailMessageConsumer.class);
 
     private final MailService mailService;
+    private final ObjectMapper objectMapper;
 
-    public EmailMessageConsumer(MailService mailService) {
+    public EmailMessageConsumer(MailService mailService, ObjectMapper objectMapper) {
         this.mailService = mailService;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -213,7 +216,7 @@ public class EmailMessageConsumer {
     }
 
     private void sendOrderConfirmationEmail(EmailMessage message) {
-        OrderMessage orderData = (OrderMessage) message.getData();
+        OrderMessage orderData = objectMapper.convertValue(message.getData(), OrderMessage.class);
 
         String content = buildOrderConfirmationHtml(orderData);
 
@@ -236,8 +239,44 @@ public class EmailMessageConsumer {
     }
 
     private void sendUserRegistrationEmail(EmailMessage message) {
-        log.info("📧 User registration welcome email would be sent to: {}", message.getRecipient());
-        // TODO: Send actual welcome email to new user
+        try {
+            log.info("📧 [USER_REGISTRATION] Starting to send welcome email to: {}", message.getRecipient());
+            log.debug(
+                "📧 [USER_REGISTRATION] Message data type: {}",
+                message.getData() != null ? message.getData().getClass().getName() : "null"
+            );
+
+            // Get AdminUserDTO from message data
+            com.mycompany.myapp.service.dto.AdminUserDTO userDTO = objectMapper.convertValue(
+                message.getData(),
+                com.mycompany.myapp.service.dto.AdminUserDTO.class
+            );
+
+            log.debug(
+                "📧 [USER_REGISTRATION] UserDTO - Email: {}, FirstName: {}, LastName: {}, LangKey: {}",
+                userDTO.getEmail(),
+                userDTO.getFirstName(),
+                userDTO.getLastName(),
+                userDTO.getLangKey()
+            );
+
+            // Convert AdminUserDTO to User for email template
+            com.mycompany.myapp.domain.User user = new com.mycompany.myapp.domain.User();
+            user.setEmail(userDTO.getEmail());
+            user.setFirstName(userDTO.getFirstName());
+            user.setLastName(userDTO.getLastName());
+            user.setLangKey(userDTO.getLangKey());
+
+            log.info("📧 [USER_REGISTRATION] Calling MailService.sendCreationEmail for: {}", user.getEmail());
+
+            // Send actual welcome email using MailService
+            mailService.sendCreationEmail(user);
+
+            log.info("✅ [USER_REGISTRATION] Welcome email sent successfully to: {}", message.getRecipient());
+        } catch (Exception e) {
+            log.error("❌ [USER_REGISTRATION] Failed to send welcome email to: {}", message.getRecipient(), e);
+            throw new RuntimeException("Failed to send user registration email", e);
+        }
     }
 
     private void sendOrderStatusUpdateEmail(EmailMessage message) {

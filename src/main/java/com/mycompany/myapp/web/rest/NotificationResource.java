@@ -75,4 +75,45 @@ public class NotificationResource {
         notificationRepository.saveAll(notifications);
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("/notifications/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteNotification(@PathVariable Long id) {
+        log.debug("REST request to delete notification : {}", id);
+        String userEmail = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new RuntimeException("User not authenticated"));
+        User user = userRepository.findOneByEmailIgnoreCase(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
+
+        notificationRepository
+            .findById(id)
+            .ifPresent(notification -> {
+                // Verify the notification belongs to the current user
+                if (notification.getReceiverId().equals(user.getId())) {
+                    notificationRepository.delete(notification);
+                }
+            });
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/notifications/delete-read")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteReadNotifications() {
+        log.debug("REST request to delete read notifications");
+        String userEmail = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new RuntimeException("User not authenticated"));
+        User user = userRepository.findOneByEmailIgnoreCase(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
+        List<NotificationEntity> notifications = notificationRepository.findAllByReceiverIdOrderByCreatedAtDesc(user.getId());
+        List<NotificationEntity> readNotifications = notifications.stream().filter(NotificationEntity::isRead).toList();
+        notificationRepository.deleteAll(readNotifications);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/notifications/delete-all")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteAllNotifications() {
+        log.debug("REST request to delete all notifications");
+        String userEmail = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new RuntimeException("User not authenticated"));
+        User user = userRepository.findOneByEmailIgnoreCase(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
+        List<NotificationEntity> notifications = notificationRepository.findAllByReceiverIdOrderByCreatedAtDesc(user.getId());
+        notificationRepository.deleteAll(notifications);
+        return ResponseEntity.noContent().build();
+    }
 }

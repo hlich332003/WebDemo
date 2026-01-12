@@ -10,6 +10,7 @@ import com.mycompany.myapp.security.AuthoritiesConstants;
 import com.mycompany.myapp.security.SecurityUtils;
 import com.mycompany.myapp.service.dto.AdminUserDTO;
 import com.mycompany.myapp.service.dto.UserDTO;
+import com.mycompany.myapp.service.messaging.EmailMessageProducer;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
 import com.mycompany.myapp.web.rest.errors.EmailAlreadyUsedException;
 import com.mycompany.myapp.web.rest.errors.InvalidPasswordException;
@@ -51,13 +52,16 @@ public class UserService {
 
     private final CustomerRepository customerRepository;
 
+    private final EmailMessageProducer emailMessageProducer;
+
     public UserService(
         UserRepository userRepository,
         PasswordEncoder passwordEncoder,
         AuthorityRepository authorityRepository,
         CacheManager cacheManager,
         MailService mailService,
-        CustomerRepository customerRepository
+        CustomerRepository customerRepository,
+        EmailMessageProducer emailMessageProducer
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -65,6 +69,7 @@ public class UserService {
         this.cacheManager = cacheManager;
         this.mailService = mailService;
         this.customerRepository = customerRepository;
+        this.emailMessageProducer = emailMessageProducer;
     }
 
     public Optional<User> activateRegistration(String key) {
@@ -149,7 +154,26 @@ public class UserService {
         // Link với customer nếu có (theo phone hoặc email)
         linkCustomerToUser(newUser);
 
-        mailService.sendCreationEmail(newUser);
+        // ✅ Send welcome email asynchronously via RabbitMQ
+        try {
+            AdminUserDTO adminUserDTO = new AdminUserDTO(newUser);
+            log.info("🔔 [USER_REGISTRATION] Preparing to publish welcome email event for user: {}", newUser.getEmail());
+            log.debug(
+                "🔔 [USER_REGISTRATION] AdminUserDTO - Email: {}, FirstName: {}, LastName: {}, Phone: {}",
+                adminUserDTO.getEmail(),
+                adminUserDTO.getFirstName(),
+                adminUserDTO.getLastName(),
+                adminUserDTO.getPhone()
+            );
+
+            emailMessageProducer.publishUserRegistrationEmail(adminUserDTO);
+
+            log.info("✅ [USER_REGISTRATION] Published welcome email event to RabbitMQ for user: {}", newUser.getEmail());
+        } catch (Exception e) {
+            log.error("❌ [USER_REGISTRATION] Failed to publish welcome email event to RabbitMQ for user: {}", newUser.getEmail(), e);
+            // Don't fail registration if email fails - email will be retried via DLQ
+        }
+
         log.debug("Created Information for User: {}", newUser);
         return newUser;
     }

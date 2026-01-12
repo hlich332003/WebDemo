@@ -1,8 +1,60 @@
 @use '../../content/scss/variables' as *;
 
+.checkout-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+
+  h1 {
+    margin: 0;
+  }
+
+  .checkout-mode-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+
+    fa-icon {
+      font-size: 1.1rem;
+    }
+
+    &.buy-now-mode {
+      background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+      color: #fff;
+      border: 2px solid #ff9800;
+      animation: pulse-glow 2s infinite;
+    }
+
+    &.cart-mode {
+      background: linear-gradient(135deg, #e91e63 0%, #9c27b0 100%);
+      color: #fff;
+      border: 2px solid #9c27b0;
+    }
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(255, 193, 7, 0.7);
+  }
+}
+
 h1 {
   text-align: center;
-  margin-bottom: 2rem;
 }
 
 .checkout-container {

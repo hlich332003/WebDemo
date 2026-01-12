@@ -31,11 +31,31 @@ h1 {
 
   @media (min-width: 768px) {
     display: flex;
+    justify-content: flex-end;
+    align-items: center;
     font-weight: 700;
     color: $body-color;
     border-bottom: 2px solid #e1e8ed;
     padding-bottom: 1rem;
     margin-bottom: 1rem;
+
+    .select-all {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      label {
+        margin: 0;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      input[type='checkbox'] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+      }
+    }
   }
 }
 
@@ -48,6 +68,20 @@ h1 {
 
   &:last-child {
     border-bottom: none;
+  }
+
+  .item-select {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 1rem;
+    order: 999;
+
+    input[type='checkbox'] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
   }
 
   .item-image {
@@ -92,6 +126,25 @@ h1 {
       padding: 0.375rem 0;
       margin: 0 0.5rem;
       border-radius: 5px;
+
+      // Xóa spinner (mũi tên) cho Chrome, Safari, Edge, Opera
+      &::-webkit-outer-spin-button,
+      &::-webkit-inner-spin-button {
+        -webkit-appearance: none !important;
+        margin: 0 !important;
+        display: none !important;
+      }
+
+      // Xóa spinner cho Firefox
+      &[type='number'] {
+        -moz-appearance: textfield !important;
+        appearance: textfield !important;
+      }
+
+      &:focus {
+        outline: none;
+        border-color: $primary;
+      }
     }
   }
 
@@ -157,22 +210,27 @@ h1 {
   }
   .item-details {
     flex-grow: 2;
-    flex-basis: 40%;
+    flex-basis: 35%;
   }
   .item-quantity-controls {
     flex-grow: 1;
-    flex-basis: 20%;
+    flex-basis: 18%;
     justify-content: center;
   }
   .item-total-price {
     flex-grow: 1;
-    flex-basis: 15%;
+    flex-basis: 13%;
     text-align: right;
   }
   .item-actions {
     flex-grow: 1;
-    flex-basis: 15%;
+    flex-basis: 13%;
     justify-content: flex-end;
+  }
+  .item-select {
+    flex-basis: 50px;
+    flex-shrink: 0;
+    justify-content: center;
   }
 }
 

@@ -1,21 +1,23 @@
 @if (user) {
-  <form name="deleteForm" (ngSubmit)="confirmDelete(user.login!)">
+  <form name="deleteForm" (ngSubmit)="confirmDelete(user.email!)">
     <div class="modal-header">
-      <h4 class="modal-title">Confirm delete operation</h4>
+      <h4 class="modal-title">Xác nhận xóa</h4>
     </div>
 
     <div class="modal-body">
       <jhi-alert-error />
 
-      <p>Are you sure you want to delete user {{ user.login }}?</p>
+      <p>
+        Bạn có chắc chắn muốn xóa người dùng <strong>{{ user.email }}</strong> ({{ user.firstName }} {{ user.lastName }})?
+      </p>
     </div>
 
     <div class="modal-footer">
       <button type="button" class="btn btn-secondary" data-dismiss="modal" (click)="cancel()">
-        <fa-icon icon="ban"></fa-icon>&nbsp;<span>Cancel</span>
+        <fa-icon icon="ban"></fa-icon>&nbsp;<span>Hủy</span>
       </button>
 
-      <button type="submit" class="btn btn-danger"><fa-icon icon="times"></fa-icon>&nbsp;<span>Delete</span></button>
+      <button type="submit" class="btn btn-danger"><fa-icon icon="times"></fa-icon>&nbsp;<span>Xóa</span></button>
     </div>
   </form>
 }

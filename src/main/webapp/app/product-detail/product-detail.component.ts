@@ -83,8 +83,13 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       return;
     }
     if (product.id && product.quantity && product.quantity > 0) {
-      // Use setBuyNowItem to proceed directly to checkout without adding to cart
+      // Navigate directly to checkout with buy-now mode, completely independent from cart
       this.cartService.setBuyNowItem(product, 1);
+      this.router.navigate(['/checkout'], {
+        queryParams: { mode: 'buy-now' },
+      });
+    } else {
+      this.notify.error('Sản phẩm này hiện không còn hàng!');
     }
   }
 

@@ -25,4 +25,16 @@ export class NotificationService {
   markAllAsRead(): Observable<Record<string, never>> {
     return this.http.post<Record<string, never>>(`${this.resourceUrl}/mark-all-as-read`, {});
   }
+
+  deleteReadNotifications(): Observable<Record<string, never>> {
+    return this.http.delete<Record<string, never>>(`${this.resourceUrl}/delete-read`);
+  }
+
+  deleteAll(): Observable<Record<string, never>> {
+    return this.http.delete<Record<string, never>>(`${this.resourceUrl}/delete-all`);
+  }
+
+  delete(id: number): Observable<Record<string, never>> {
+    return this.http.delete<Record<string, never>>(`${this.resourceUrl}/${id}`);
+  }
 }

@@ -147,16 +147,13 @@ export class HomeComponent implements OnInit, OnDestroy {
       return;
     }
     if (product.id && product.quantity && product.quantity > 0) {
-      this.cartService.addToCart(product.id).subscribe({
-        next: () => {
-          this.cartService.loadCart();
-          this.router.navigate(['/checkout']);
-        },
-        error: err => {
-          console.error('Error adding to cart:', err);
-          this.notificationService.error('Không thể thêm vào giỏ hàng. Vui lòng thử lại.');
-        },
+      // Navigate directly to checkout with buy-now mode, independent from cart
+      this.cartService.setBuyNowItem(product, 1);
+      this.router.navigate(['/checkout'], {
+        queryParams: { mode: 'buy-now' },
       });
+    } else {
+      this.notificationService.error('Sản phẩm này hiện không còn hàng!');
     }
   }
 

@@ -80,18 +80,42 @@
             <span class="notification-badge" *ngIf="((unreadCount$ | async) || 0) > 0">{{ unreadCount$ | async }}</span>
           </a>
           <ul class="dropdown-menu dropdown-menu-end notification-dropdown" ngbDropdownMenu aria-labelledby="notification-menu">
-            <li class="dropdown-header">
-              <a href="javascript:void(0);" (click)="markAllAsRead()" class="mark-all-read">Đánh dấu đã đọc tất cả</a>
+            <li class="dropdown-header d-flex justify-content-between align-items-center">
+              <strong>Thông báo</strong>
+              <div class="notification-actions" *ngIf="(notifications$ | async)?.length! > 0">
+                <button class="btn-action btn-mark-read" (click)="markAllAsRead()" title="Đánh dấu tất cả là đã đọc">
+                  <fa-icon icon="check-double"></fa-icon>
+                  <span>Đọc tất cả</span>
+                </button>
+                <button class="btn-action btn-delete-read" (click)="deleteReadNotifications()" title="Xóa thông báo đã đọc">
+                  <fa-icon icon="trash"></fa-icon>
+                  <span>Xóa đã đọc</span>
+                </button>
+              </div>
             </li>
-            <li *ngFor="let notification of notifications$ | async">
-              <a class="dropdown-item" [class.unread]="!notification.read" (click)="markAsRead(notification)" href="javascript:void(0);">
-                <p>{{ notification.message }}</p>
-                <small>{{ notification.timestamp | notificationDate | formatMediumDatetime }}</small>
-              </a>
-            </li>
-            <li *ngIf="(notifications$ | async)?.length === 0" class="dropdown-item text-center">
-              <small>Không có thông báo nào</small>
-            </li>
+            <li class="notification-divider"></li>
+            <div class="notification-list" [class.empty]="(notifications$ | async)?.length === 0">
+              <li *ngFor="let notification of notifications$ | async" class="notification-item-wrapper">
+                <a
+                  class="dropdown-item notification-item-link"
+                  [class.unread]="!notification.read"
+                  (click)="markAsRead(notification)"
+                  href="javascript:void(0);"
+                >
+                  <div class="notification-content">
+                    <p class="notification-message">{{ notification.message }}</p>
+                    <small class="notification-time">{{ notification.timestamp | notificationDate | formatMediumDatetime }}</small>
+                  </div>
+                  <button class="btn-delete-notification" (click)="deleteNotification($event, notification)" title="Xóa thông báo này">
+                    <fa-icon icon="times" size="sm"></fa-icon>
+                  </button>
+                </a>
+              </li>
+              <li *ngIf="(notifications$ | async)?.length === 0" class="dropdown-item text-center text-muted">
+                <fa-icon icon="bell-slash" class="me-2"></fa-icon>
+                <small>Không có thông báo nào</small>
+              </li>
+            </div>
           </ul>
         </li>
 

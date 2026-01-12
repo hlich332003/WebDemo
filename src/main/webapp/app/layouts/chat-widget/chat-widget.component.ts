@@ -183,6 +183,9 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
       conversationId: msg.conversationId,
       type: msg.type,
       currentConversation: this.currentConversation?.id,
+
+      isFromAdmin: msg.isFromAdmin,
+      senderType: msg.senderType,
     });
 
     // Handle SESSION_ENDED first
@@ -245,12 +248,17 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     );
 
     if (!msgExists) {
-      console.warn('[ChatWidget] ✅ Adding new message to chat');
-      this.messages.push({
+      const newMsg = {
         ...msg,
         content: msgContent,
         createdAt: msg.createdAt ?? new Date().toISOString(),
+      };
+      console.warn('[ChatWidget] ✅ Adding new message to chat:', {
+        isFromAdmin: newMsg.isFromAdmin,
+        senderType: newMsg.senderType,
+        content: newMsg.content?.substring(0, 30),
       });
+      this.messages.push(newMsg);
 
       // Play sound if message from admin and widget is closed
       if (msg.isFromAdmin && !this.isOpen) {
@@ -615,6 +623,14 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
           .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
         console.warn(`[ChatWidget] 📊 Total messages in UI: ${this.messages.length}`);
+        console.warn(
+          '[ChatWidget] 📊 Message isFromAdmin values:',
+          this.messages.map(m => ({
+            content: m.content?.substring(0, 20),
+            isFromAdmin: m.isFromAdmin,
+            senderType: m.senderType,
+          })),
+        );
 
         // Set view mode to CHAT to show the conversation
         this.viewMode = 'CHAT';

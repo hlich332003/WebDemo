@@ -196,7 +196,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   markAsRead(notification: INotification | undefined): void {
-    if (!notification || !notification.id) return;
+    if (!notification?.id) return;
 
     // Navigate to the link if exists
     if (notification.link) {
@@ -239,6 +239,65 @@ export class NavbarComponent implements OnInit, OnDestroy {
       if ((this.webSocketService as any).unreadCountSubject) {
         (this.webSocketService as any).unreadCountSubject.next(0);
       }
+    });
+  }
+
+  // Delete a single notification
+  deleteNotification(event: Event, notification: INotification): void {
+    event.stopPropagation(); // Prevent marking as read
+    if (!notification.id) return;
+
+    this.notificationService.delete(notification.id).subscribe({
+      next: () => {
+        // Remove notification from local state
+        const currentNotifications = (this.webSocketService as any).notificationsSubject?.getValue() ?? [];
+        const updatedNotifications = currentNotifications.filter((n: INotification) => n.id !== notification.id);
+
+        if ((this.webSocketService as any).notificationsSubject) {
+          (this.webSocketService as any).notificationsSubject.next(updatedNotifications);
+        }
+
+        // Update unread count
+        const unreadCount = updatedNotifications.filter((n: INotification) => !n.read).length;
+        if ((this.webSocketService as any).unreadCountSubject) {
+          (this.webSocketService as any).unreadCountSubject.next(unreadCount);
+        }
+      },
+      error(err) {
+        console.error('Error deleting notification:', err);
+      },
+    });
+  }
+
+  // Delete only read notifications
+  deleteReadNotifications(): void {
+    const currentNotifications = (this.webSocketService as any).notificationsSubject?.getValue() ?? [];
+    const readNotifications = currentNotifications.filter((n: INotification) => n.read);
+
+    if (readNotifications.length === 0) {
+      alert('Không có thông báo đã đọc nào để xóa!');
+      return;
+    }
+
+    if (!confirm(`Bạn có chắc chắn muốn xóa ${readNotifications.length} thông báo đã đọc không?`)) {
+      return;
+    }
+
+    this.notificationService.deleteReadNotifications().subscribe({
+      next: () => {
+        // Keep only unread notifications in local state
+        const unreadNotifications = currentNotifications.filter((n: INotification) => !n.read);
+        if ((this.webSocketService as any).notificationsSubject) {
+          (this.webSocketService as any).notificationsSubject.next(unreadNotifications);
+        }
+
+        // Unread count stays the same (only deleted read ones)
+        // No need to update unread count
+      },
+      error(err) {
+        console.error('Error deleting read notifications:', err);
+        alert('Có lỗi xảy ra khi xóa thông báo!');
+      },
     });
   }
 }

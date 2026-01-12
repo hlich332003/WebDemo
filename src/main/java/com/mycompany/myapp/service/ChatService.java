@@ -169,7 +169,7 @@ public class ChatService {
             payload.put("conversationId", ticket.getId());
             payload.put("content", dto.getMessage());
             payload.put("message", dto.getMessage()); // Include both for compatibility
-            payload.put("senderType", dto.getIsFromAdmin() ? "ADMIN" : "USER");
+            payload.put("senderType", dto.getIsFromAdmin() ? "CSKH" : "USER"); // Use CSKH for consistency
             payload.put("senderIdentifier", dto.getSenderEmail());
             payload.put("isFromAdmin", dto.getIsFromAdmin());
             payload.put("createdAt", dto.getCreatedAt().toString());

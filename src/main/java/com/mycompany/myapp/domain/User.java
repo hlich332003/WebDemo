@@ -34,11 +34,11 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
 
     @Email
     @Size(min = 5, max = 254)
-    @Column(length = 254, unique = true)
+    @Column(length = 254, unique = false)
     private String email;
 
-    @Size(max = 10)
-    @Column(name = "phone", length = 10)
+    @Size(max = 15)
+    @Column(name = "phone", length = 15, unique = true)
     private String phone;
 
     @NotNull

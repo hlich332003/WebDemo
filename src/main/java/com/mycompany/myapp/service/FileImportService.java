@@ -397,8 +397,9 @@ public class FileImportService {
     }
 
     /**
-     * Import khách hàng mua offline
-     * Format: SĐT | Tên | Sản phẩm đã mua
+     * Import khách hàng từ file Excel (.xlsx)
+     * Format: phone | name | product_purchased | date
+     * VD: 0987654321 | Nguyễn Văn An | Laptop Dell XPS 13, Chuột Logitech | 30/12/2025
      */
     public void importCustomers(MultipartFile file) throws Exception {
         if (!file.getOriginalFilename().endsWith(".xlsx")) {
@@ -420,46 +421,66 @@ public class FileImportService {
             List<com.mycompany.myapp.domain.Customer> customersToSave = new ArrayList<>();
             int rowNumber = 0;
 
+            // Validate header
+            if (rows.hasNext()) {
+                Row headerRow = rows.next();
+                String col0 = getCellValue(headerRow.getCell(0));
+                String col1 = getCellValue(headerRow.getCell(1));
+                String col2 = getCellValue(headerRow.getCell(2));
+                String col3 = getCellValue(headerRow.getCell(3));
+
+                // Kiểm tra header phải đúng: phone, name, product_purchased, date
+                if (
+                    !"phone".equalsIgnoreCase(col0) ||
+                    !"name".equalsIgnoreCase(col1) ||
+                    !"product_purchased".equalsIgnoreCase(col2) ||
+                    !"date".equalsIgnoreCase(col3)
+                ) {
+                    throw new BadRequestAlertException(
+                        "Header không đúng! Phải là: phone | name | product_purchased | date (viết thường, không dấu)",
+                        "fileImport",
+                        "invalidHeader"
+                    );
+                }
+                rowNumber++;
+            }
+
             while (rows.hasNext()) {
                 Row currentRow = rows.next();
-                if (rowNumber == 0) {
-                    rowNumber++;
-                    continue; // Skip header
-                }
 
                 try {
-                    // Đọc: SĐT | Tên | Sản phẩm đã mua | Ngày mua hàng (TẤT CẢ BẮT BUỘC)
+                    // Đọc: phone | name | product_purchased | date (TẤT CẢ BẮT BUỘC)
                     String phone = getCellValue(currentRow.getCell(0));
-                    String fullName = getCellValue(currentRow.getCell(1));
-                    String productsPurchased = getCellValue(currentRow.getCell(2));
+                    String name = getCellValue(currentRow.getCell(1));
+                    String productPurchased = getCellValue(currentRow.getCell(2));
                     Cell purchaseDateCell = currentRow.getCell(3);
 
                     // Validate: TẤT CẢ 4 CỘT ĐỀU BẮT BUỘC
                     if (phone == null || phone.trim().isEmpty()) {
-                        throw new IllegalArgumentException("Cột A (SĐT) không được để trống");
+                        throw new IllegalArgumentException("Cột phone (SĐT) không được để trống");
                     }
 
-                    if (fullName == null || fullName.trim().isEmpty()) {
-                        throw new IllegalArgumentException("Cột B (Tên) không được để trống");
+                    if (name == null || name.trim().isEmpty()) {
+                        throw new IllegalArgumentException("Cột name (Tên) không được để trống");
                     }
 
-                    if (productsPurchased == null || productsPurchased.trim().isEmpty()) {
-                        throw new IllegalArgumentException("Cột C (Sản phẩm đã mua) không được để trống");
+                    if (productPurchased == null || productPurchased.trim().isEmpty()) {
+                        throw new IllegalArgumentException("Cột product_purchased (Sản phẩm đã mua) không được để trống");
                     }
 
                     if (purchaseDateCell == null) {
-                        throw new IllegalArgumentException("Cột D (Ngày mua hàng) không được để trống");
+                        throw new IllegalArgumentException("Cột date (Ngày mua hàng) không được để trống");
                     }
 
                     // Parse ngày mua hàng (BẮT BUỘC)
-                    java.time.Instant purchaseDate = null;
+                    java.time.Instant purchaseDate;
                     if (purchaseDateCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(purchaseDateCell)) {
                         // Excel date format
                         purchaseDate = purchaseDateCell.getDateCellValue().toInstant();
                     } else {
                         String dateStr = getCellValue(purchaseDateCell);
                         if (dateStr == null || dateStr.trim().isEmpty()) {
-                            throw new IllegalArgumentException("Cột D (Ngày mua hàng) không được để trống");
+                            throw new IllegalArgumentException("Cột date (Ngày mua hàng) không được để trống");
                         }
                         try {
                             // Parse dd/MM/yyyy
@@ -468,7 +489,7 @@ public class FileImportService {
                             purchaseDate = localDate.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant();
                         } catch (Exception e) {
                             throw new IllegalArgumentException(
-                                "Cột D (Ngày mua hàng) sai định dạng. Vui lòng dùng format: dd/MM/yyyy (VD: 31/12/2025)"
+                                "Cột date (Ngày mua hàng) sai định dạng. Vui lòng dùng format: dd/MM/yyyy (VD: 31/12/2025)"
                             );
                         }
                     }
@@ -480,25 +501,25 @@ public class FileImportService {
                         // Tạo mới
                         customer = new com.mycompany.myapp.domain.Customer();
                         customer.setPhone(phone.trim());
-                        customer.setFullName(fullName.trim());
-                        customer.setProductsPurchased(productsPurchased.trim());
+                        customer.setFullName(name.trim());
+                        customer.setProductsPurchased(productPurchased.trim());
                         customer.setLastPurchaseDate(purchaseDate);
-                        log.info("Tạo mới khách hàng: {} - Ngày mua: {}", phone, purchaseDate);
+                        log.info("Tạo mới khách hàng: {} - {} - Ngày mua: {}", phone, name, purchaseDate);
                     } else {
                         // Cập nhật
-                        customer.setFullName(fullName.trim());
+                        customer.setFullName(name.trim());
 
                         // Append sản phẩm mới vào danh sách cũ
                         String existingProducts = customer.getProductsPurchased();
                         if (existingProducts != null && !existingProducts.isEmpty()) {
-                            customer.setProductsPurchased(existingProducts + ", " + productsPurchased.trim());
+                            customer.setProductsPurchased(existingProducts + ", " + productPurchased.trim());
                         } else {
-                            customer.setProductsPurchased(productsPurchased.trim());
+                            customer.setProductsPurchased(productPurchased.trim());
                         }
 
                         // Cập nhật ngày mua gần nhất
                         customer.setLastPurchaseDate(purchaseDate);
-                        log.info("Cập nhật khách hàng: {} - Ngày mua: {}", phone, purchaseDate);
+                        log.info("Cập nhật khách hàng: {} - {} - Ngày mua: {}", phone, name, purchaseDate);
                     }
 
                     customersToSave.add(customer);

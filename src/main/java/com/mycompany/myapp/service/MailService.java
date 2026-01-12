@@ -79,16 +79,32 @@ public class MailService {
     @Async
     public void sendEmailFromTemplate(User user, String templateName, String titleKey) {
         if (user.getEmail() == null) {
-            LOG.debug("Email doesn't exist for user '{}'", user.getEmail());
+            LOG.debug("❌ [MAIL_SERVICE] Email doesn't exist for user '{}'", user.getEmail());
             return;
         }
+        LOG.debug(
+            "📧 [MAIL_SERVICE] Preparing email from template '{}' with titleKey '{}' for user '{}'",
+            templateName,
+            titleKey,
+            user.getEmail()
+        );
+
         Locale locale = Locale.forLanguageTag(user.getLangKey());
+        LOG.debug("📧 [MAIL_SERVICE] Using locale: {}", locale);
+
         Context context = new Context(locale);
         context.setVariable(USER, user);
         context.setVariable(BASE_URL, jHipsterProperties.getMail().getBaseUrl());
+
+        LOG.debug("📧 [MAIL_SERVICE] Processing template '{}'", templateName);
         String content = templateEngine.process(templateName, context);
+        LOG.debug("📧 [MAIL_SERVICE] Template processed, content length: {} chars", content.length());
+
         String subject = messageSource.getMessage(titleKey, null, locale);
+        LOG.debug("📧 [MAIL_SERVICE] Email subject: '{}'", subject);
+
         sendEmailSync(user.getEmail(), subject, content, false, true);
+        LOG.info("✅ [MAIL_SERVICE] Email sent from template '{}' to '{}'", templateName, user.getEmail());
     }
 
     @Async
@@ -115,8 +131,26 @@ public class MailService {
 
     @Async
     public void sendCreationEmail(User user) {
-        LOG.debug("Sending creation email to '{}'", user.getEmail());
-        sendEmailFromTemplate(user, "mail/creationEmail", "email.creation.title");
+        LOG.debug("📧 [MAIL_SERVICE] Sending creation/welcome email to '{}'", user.getEmail());
+        LOG.debug(
+            "📧 [MAIL_SERVICE] User details - FirstName: {}, LastName: {}, LangKey: {}",
+            user.getFirstName(),
+            user.getLastName(),
+            user.getLangKey()
+        );
+
+        if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
+            LOG.error("❌ [MAIL_SERVICE] Cannot send email - user email is null or empty");
+            return;
+        }
+
+        try {
+            sendEmailFromTemplate(user, "mail/creationEmail", "email.creation.title");
+            LOG.info("✅ [MAIL_SERVICE] Creation/welcome email sent successfully to '{}'", user.getEmail());
+        } catch (Exception e) {
+            LOG.error("❌ [MAIL_SERVICE] Failed to send creation email to '{}'", user.getEmail(), e);
+            throw e;
+        }
     }
 
     @Async

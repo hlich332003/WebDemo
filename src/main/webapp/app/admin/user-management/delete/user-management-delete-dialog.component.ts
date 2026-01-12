@@ -22,8 +22,8 @@ export default class UserManagementDeleteDialogComponent {
     this.activeModal.dismiss();
   }
 
-  confirmDelete(login: string): void {
-    this.userService.delete(login).subscribe(() => {
+  confirmDelete(email: string): void {
+    this.userService.delete(email).subscribe(() => {
       this.activeModal.close('deleted');
     });
   }

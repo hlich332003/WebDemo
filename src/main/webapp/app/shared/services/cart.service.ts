@@ -173,7 +173,7 @@ export class CartService implements OnDestroy {
     return this.http.get<any[]>(this.API_URL).pipe(catchError(() => of([])));
   }
 
-  // Buy Now Logic
+  // Buy Now Logic - Completely independent from cart
   setBuyNowItem(product: IProduct, quantity: number): void {
     const item: ICartItem = {
       product,
@@ -181,7 +181,7 @@ export class CartService implements OnDestroy {
       selected: true,
     };
     sessionStorage.setItem(this.BUY_NOW_KEY, JSON.stringify(item));
-    this.router.navigate(['/checkout']);
+    // Don't navigate here - let the calling component handle navigation
   }
 
   getBuyNowItem(): ICartItem | null {
