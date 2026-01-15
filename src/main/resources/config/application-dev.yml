@@ -1,18 +1,3 @@
-# ===================================================================
-# Spring Boot configuration for the "dev" profile.
-#
-# This configuration overrides the application.yml file.
-#
-# More information on profiles: https://www.jhipster.tech/profiles/
-# More information on configuration properties: https://www.jhipster.tech/common-application-properties/
-# ===================================================================
-
-# ===================================================================
-# Standard Spring Boot properties.
-# Full reference is available at:
-# http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
-# ===================================================================
-
 logging:
   level:
     root: DEBUG
@@ -31,7 +16,7 @@ spring:
       enabled: true
       additional-exclude: static/**
     livereload:
-      enabled: false # we use Webpack dev server + BrowserSync for livereload
+      enabled: false
   docker:
     compose:
       enabled: false
@@ -41,35 +26,39 @@ spring:
   jackson:
     serialization:
       indent-output: true
+
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    # Cấu hình cho SQL Server - Primary DB (jhipster_db)
-    url: jdbc:sqlserver://localhost:1433;databaseName=jhipster_db;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true
-    username: jhipster_user
-    password: Jhip@123
+    url: jdbc:sqlserver://db38190.databaseasp.net:1433;databaseName=db38190;encrypt=false;trustServerCertificate=true;sendStringParametersAsUnicode=true;MultipleActiveResultSets=true
+    username: db38190
+    password: 'We8@b4%QS?j7'
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     hikari:
       poolName: Hikari
       auto-commit: false
-    # Analytics Database (analytics_db)
+      connection-timeout: 60000
+
     analytics:
-      url: jdbc:sqlserver://localhost:1433;databaseName=analytics_db;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true
-      username: jhipster_user
-      password: Jhip@123
+      url: jdbc:sqlserver://db38190.databaseasp.net:1433;databaseName=db38190;encrypt=false;trustServerCertificate=true;sendStringParametersAsUnicode=true;MultipleActiveResultSets=true
+      username: db38190
+      password: 'We8@b4%QS?j7'
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
       hikari:
         poolName: HikariAnalytics
         auto-commit: false
         maximum-pool-size: 5
+
   liquibase:
-    # Remove 'faker' if you do not want the sample data to be loaded automatically
     contexts: dev, faker
-  # Redis Configuration
+
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: redis-10289.crce178.ap-east-1-1.ec2.cloud.redislabs.com
+      port: 10289
+      password: 5ENdGvfn2FVLsTHyxbsYwlxWB8cwDZfE
       timeout: 2000ms
+      ssl:
+        enabled: false
       lettuce:
         pool:
           max-active: 8
@@ -78,24 +67,25 @@ spring:
   cache:
     type: redis
     redis:
-      time-to-live: 600000 # 10 minutes
+      time-to-live: 600000
       cache-null-values: false
-  # RabbitMQ Configuration
+
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    host: moose.rmq.cloudamqp.com
+    port: 5671
+    username: qpmivqly
+    password: kXWbjP-CBmxZtbRcwtOmDqaND8gjWT4D
+    virtual-host: qpmivqly
+    ssl:
+      enabled: true
     listener:
       simple:
         acknowledge-mode: auto
         retry:
           enabled: true
           max-attempts: 3
+
   mail:
-    # Use environment variables in dev. Set SPRING_MAIL_HOST, SPRING_MAIL_PORT, SPRING_MAIL_USERNAME and SPRING_MAIL_PASSWORD in your environment.
-    # Example (PowerShell):
-    # $env:SPRING_MAIL_HOST = "smtp.gmail.com"; $env:SPRING_MAIL_PORT = "587"; $env:SPRING_MAIL_USERNAME = "your_email@gmail.com"; $env:SPRING_MAIL_PASSWORD = "your_app_password"
     host: ${SPRING_MAIL_HOST:smtp.gmail.com}
     port: ${SPRING_MAIL_PORT:587}
     username: catbamaytongdai@gmail.com
@@ -110,65 +100,38 @@ spring:
           ssl:
             trust: '*'
   messages:
-    cache-duration: PT1S # 1 second, see the ISO 8601 standard
+    cache-duration: PT1S
   thymeleaf:
     cache: false
 
 server:
-  # make sure requests the proxy uri instead of the server one
   forward-headers-strategy: native
   servlet:
     async:
-      request-timeout: 600000 # 10 minutes (600,000 ms) for WebSocket connections
-      # WebSocket connections need long timeout to stay alive during long polling
-
-# ===================================================================
-# JHipster specific properties
-#
-# Full reference is available at: https://www.jhipster.tech/common-application-properties/
-# ===================================================================
+      request-timeout: 600000
 
 jhipster:
-  # Đã xóa hoàn toàn khối cache để tránh lỗi ConverterNotFoundException
-  # cache: # Cache configuration
-  # ehcache: # Ehcache configuration
-  # time-to-live-seconds: 3600 # By default objects stay 1 hour in the cache
-  # max-entries: 100 # Number of objects in each cache entry
-  # CORS is only enabled by default with the "dev" profile
   cors:
-    # Allow Ionic for JHipster by default (* no longer allowed in Spring Boot 2.4+)
-    # allowed-origins: 'http://localhost:8100,https://localhost:8100,http://localhost:9000,https://localhost:9000,http://localhost:4200,https://localhost:4200'
-    # Enable CORS when running in GitHub Codespaces
     allowed-origin-patterns: '*'
     allowed-methods: '*'
     allowed-headers: '*'
     exposed-headers: 'Authorization,Link,X-Total-Count,X-${jhipster.clientApp.name}-alert,X-${jhipster.clientApp.name}-error,X-${jhipster.clientApp.name}-params'
     allow-credentials: true
     max-age: 1800
+
   security:
     authentication:
       jwt:
-        # This token must be encoded using Base64 and be at least 256 bits long (you can type `openssl rand -base64 64` on your command line to generate a 512 bits one)
         base64-secret: YzBjZjNjN2VjM2IwYzRlYzJhNWI1NTc2ZWFjZTlmMjE0OTNiYjcwZjFlMjZkMWY3ZDI5Nzg5ZWM5MmUyMTU2ZGIzMTNlNDg4MTJmNDg5YWM2MDFlMmVmYTFiYTVmYTFmYjU3MjIzNDU4OWRlZjExY2ZlNWM4Njg3NWMzZTNlZGU=
-        # Token is valid 24 hours
         token-validity-in-seconds: 86400
         token-validity-in-seconds-for-remember-me: 2592000
-  mail: # specific JHipster mail property, for standard properties see MailProperties
+
+  mail:
     base-url: http://127.0.0.1:8080
   logging:
-    use-json-format: false # By default, logs are not in Json format
-    logstash: # Forward logs to logstash over a socket, used by LoggingConfiguration
+    use-json-format: false
+    logstash:
       enabled: false
       host: localhost
       port: 5000
       ring-buffer-size: 512
-# ===================================================================
-# Application specific properties
-# Add your own application properties here, see the ApplicationProperties class
-# to have type-safe configuration, like in the JHipsterProperties above
-#
-# More documentation is available at:
-# https://www.jhipster.tech/common-application-properties/
-# ===================================================================
-
-# application:

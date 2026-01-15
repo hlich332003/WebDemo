@@ -1,15 +1,11 @@
-# Spring Boot configuration.
-
 spring:
   application:
     name: webDemo
   docker:
     compose:
       enabled: false
-  # OTHER CONFIGURATIONS
   messages:
     basename: i18n/messages
-
     encoding: UTF-8
   main:
     allow-bean-definition-overriding: true
@@ -20,13 +16,11 @@ spring:
           authority-prefix: ''
           authorities-claim-name: auth
 
-# JHipster specific properties
-
 jhipster:
   clientApp:
     name: 'webDemoApp'
   mail:
-    from: webDemo@localhost
+    from: catbamaytongdai@gmail.com
   api-docs:
     default-include-pattern: /api/**
     management-include-pattern: /management/**
@@ -35,6 +29,18 @@ jhipster:
     version: 0.0.1
   security:
     content-security-policy: "default-src 'self'; frame-src 'self' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://storage.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:"
+    authentication:
+      jwt:
+        base64-secret: YzBjZjNjN2VjM2IwYzRlYzJhNWI1NTc2ZWFjZTlmMjE0OTNiYjcwZjFlMjZkMWY3ZDI5Nzg5ZWM5MmUyMTU2ZGIzMTNlNDg4MTJmNDg5YWM2MDFlMmVmYTFiYTVmYTFmYjU3MjIzNDU4OWRlZjExY2ZlNWM4Njg3NWMzZTNlZGU=
+        token-validity-in-seconds: 86400
+        token-validity-in-seconds-for-remember-me: 2592000
+  cors:
+    allowed-origin-patterns: '*'
+    allowed-methods: '*'
+    allowed-headers: '*'
+    exposed-headers: 'Authorization,Link,X-Total-Count,X-${jhipster.clientApp.name}-alert,X-${jhipster.clientApp.name}-error,X-${jhipster.clientApp.name}-params'
+    allow-credentials: true
+    max-age: 1800
 
 server:
   port: 8080
@@ -43,91 +49,12 @@ server:
       charset: UTF-8
       force: true
       enabled: true
-    # WebSocket async timeout configuration
-    # WebSocket is a long-lived connection, so we need a long timeout
-    # -1 means no timeout (unlimited)
     async:
       request-timeout: -1
   tomcat:
-    # WebSocket keep-alive settings
-    # Prevents Tomcat from closing idle WebSocket connections
     keep-alive-timeout: 60000
     max-keep-alive-requests: -1
+
 logging:
   level:
     com.mycompany.myapp.config.WebSocketConfig: INFO
----
-# Profile-specific configuration: dev
-
-spring:
-  config:
-    activate:
-      on-profile: dev
-
-  # DATASOURCE CONFIGURATION (dev)
-  datasource:
-    url: jdbc:sqlserver://localhost:1433;databaseName=jhipster_db;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true
-    username: jhipster_user
-    password: Jhip@123
-    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-
-  # JPA & HIBERNATE CONFIGURATION (dev)
-  jpa:
-    properties:
-      hibernate.jdbc.time_zone: UTC
-      hibernate.timezone.default_storage: NORMALIZE
-    hibernate:
-      ddl-auto: none
-      naming:
-        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
-        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
-    show-sql: true
-
-  # REDIS CONFIGURATION (dev)
-  data:
-    redis:
-      host: localhost
-      port: 6379
-
-  # RABBITMQ CONFIGURATION (dev)
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-
-  # Mail dev để Spring tạo JavaMailSender
-  mail:
-    host: ${SPRING_MAIL_HOST:smtp.gmail.com} # Thay đổi: đọc từ biến môi trường hoặc default smtp.gmail.com
-    port: ${SPRING_MAIL_PORT:587} # Cổng SMTP, thường là 587 cho TLS hoặc 465 cho SSL
-    username: catbamaytongdai@gmail.com
-    password: ivte ulsr wcqw ydyu
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.starttls.enable: true # Bật STARTTLS để mã hóa kết nối
-      mail.smtp.starttls.required: true # Yêu cầu STARTTLS
-      mail.smtp.ssl.trust: '*' # Tin tưởng tất cả các chứng chỉ SSL (chỉ dùng cho dev, không khuyến khích cho production)
-  # If you prefer a local SMTP dev server use MailHog (no auth):
-  # docker run --rm -p 1025:1025 -p 8025:8025 mailhog/mailhog
-  # Then set SPRING_MAIL_HOST=localhost and SPRING_MAIL_PORT=1025 and leave username/password empty
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: 'health'
-  health:
-    mail:
-      enabled: false
-  info:
-    env:
-      enabled: false # Tắt info endpoint
-
-jhipster:
-  cors:
-    allowed-origins: 'http://localhost:9000,http://127.0.0.1:9000,http://localhost:9001,http://127.0.0.1:9001'
-    allowed-methods: '*'
-    allowed-headers: '*'
-    exposed-headers: 'Authorization,Link,X-Total-Count,X-${jhipster.clientApp.name}-alert,X-${jhipster.clientApp.name}-error,X-${jhipster.clientApp.name}-params'
-    allow-credentials: true
-    max-age: 1800
