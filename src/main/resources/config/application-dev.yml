@@ -29,7 +29,7 @@ spring:
 
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:sqlserver://db38190.databaseasp.net:1433;databaseName=db38190;encrypt=false;trustServerCertificate=true;sendStringParametersAsUnicode=true;MultipleActiveResultSets=true
+    url: jdbc:sqlserver://db38190.public.databaseasp.net:1433;databaseName=db38190;encrypt=false;trustServerCertificate=true;sendStringParametersAsUnicode=true;MultipleActiveResultSets=true
     username: db38190
     password: 'We8@b4%QS?j7'
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
@@ -39,7 +39,7 @@ spring:
       connection-timeout: 60000
 
     analytics:
-      url: jdbc:sqlserver://db38190.databaseasp.net:1433;databaseName=db38190;encrypt=false;trustServerCertificate=true;sendStringParametersAsUnicode=true;MultipleActiveResultSets=true
+      url: jdbc:sqlserver://db38190.public.databaseasp.net:1433;databaseName=db38190;encrypt=false;trustServerCertificate=true;sendStringParametersAsUnicode=true;MultipleActiveResultSets=true
       username: db38190
       password: 'We8@b4%QS?j7'
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
