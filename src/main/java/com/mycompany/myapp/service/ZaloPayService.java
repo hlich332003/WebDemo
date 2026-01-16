@@ -1,170 +1,227 @@
 package com.mycompany.myapp.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mycompany.myapp.service.dto.ZaloPayOrderRequest;
-import com.mycompany.myapp.service.dto.ZaloPayOrderResponse;
-import java.nio.charset.StandardCharsets;
+import com.mycompany.myapp.config.ZaloPayProperties;
+import com.mycompany.myapp.domain.Order;
+import com.mycompany.myapp.domain.PaymentTransaction;
+import com.mycompany.myapp.domain.enumeration.OrderStatus;
+import com.mycompany.myapp.repository.OrderRepository;
+import com.mycompany.myapp.repository.PaymentTransactionRepository;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.*;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
+import org.apache.commons.codec.digest.HmacUtils;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service for handling ZaloPay payment integration
- */
 @Service
+@Transactional
 public class ZaloPayService {
 
     private static final Logger log = LoggerFactory.getLogger(ZaloPayService.class);
+    private static final int CONNECTION_TIMEOUT = 10000; // 10 seconds
+    private static final int SOCKET_TIMEOUT = 10000; // 10 seconds
 
-    @Value("${zalopay.appid}")
-    private String appId;
+    private final ZaloPayProperties zalopayConfig;
+    private final PaymentTransactionRepository paymentTransactionRepository;
+    private final OrderRepository orderRepository;
 
-    @Value("${zalopay.key1}")
-    private String key1;
+    public ZaloPayService(
+        ZaloPayProperties zalopayConfig,
+        PaymentTransactionRepository paymentTransactionRepository,
+        OrderRepository orderRepository
+    ) {
+        this.zalopayConfig = zalopayConfig;
+        this.paymentTransactionRepository = paymentTransactionRepository;
+        this.orderRepository = orderRepository;
+    }
 
-    @Value("${zalopay.key2}")
-    private String key2;
+    public Map<String, Object> createOrder(Long orderId) {
+        log.info("Creating ZaloPay order for Order ID: {}", orderId);
+        Map<String, Object> result = new HashMap<>();
 
-    @Value("${zalopay.endpoint}")
-    private String endpoint;
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng ID: " + orderId));
 
-    @Value("${zalopay.callback-url}")
-    private String callbackUrl;
+        long amount = order.getTotalAmount().longValue();
 
-    @Value("${zalopay.redirect-url}")
-    private String redirectUrl;
+        // Lấy thông tin user mua hàng để gửi sang ZaloPay (thay vì fix cứng user123)
+        String appUser = order.getCustomerEmail();
+        if (appUser == null || appUser.isEmpty()) {
+            appUser = order.getCustomerFullName();
+        }
+        if (appUser == null || appUser.isEmpty()) {
+            appUser = "Guest";
+        }
 
-    private final RestTemplate restTemplate = new RestTemplate();
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    /**
-     * Create ZaloPay payment order
-     */
-    public ZaloPayOrderResponse createOrder(ZaloPayOrderRequest request) throws Exception {
-        log.debug("Creating ZaloPay order for: {}", request);
-
-        // Generate app_trans_id with format: yyMMdd_xxxxx
-        String appTransId = generateAppTransId(request.getOrderCode());
-
-        // Current timestamp in milliseconds
+        String appTransId = new SimpleDateFormat("yyMMdd").format(new Date()) + "_" + orderId + "_" + System.currentTimeMillis();
         long appTime = System.currentTimeMillis();
 
-        // Prepare embed_data and item
-        Map<String, Object> embedData = new HashMap<>();
-        embedData.put("redirecturl", redirectUrl);
+        JSONObject embedData = new JSONObject();
+        embedData.put("redirecturl", zalopayConfig.getRedirectUrl());
+        embedData.put("orderId", orderId);
+        String embedDataStr = embedData.toString(); // Lưu thành chuỗi để đảm bảo nhất quán
 
-        List<Map<String, Object>> items = new ArrayList<>();
-        Map<String, Object> item = new HashMap<>();
-        item.put("itemid", request.getOrderCode());
-        item.put("itemname", request.getDescription());
-        item.put("itemprice", request.getAmount());
-        item.put("itemquantity", 1);
-        items.add(item);
+        String item = "[]";
 
-        // Convert to JSON strings
-        String embedDataJson = objectMapper.writeValueAsString(embedData);
-        String itemJson = objectMapper.writeValueAsString(items);
+        // Tính MAC
+        String data =
+            zalopayConfig.getAppid() + "|" + appTransId + "|" + appUser + "|" + amount + "|" + appTime + "|" + embedDataStr + "|" + item;
+        String mac = new HmacUtils("HmacSHA256", zalopayConfig.getKey1()).hmacHex(data);
 
-        // Build order data
-        Map<String, Object> orderData = new HashMap<>();
-        orderData.put("app_id", appId);
-        orderData.put("app_user", request.getAppUser());
-        orderData.put("app_time", appTime);
-        orderData.put("amount", request.getAmount());
-        orderData.put("app_trans_id", appTransId);
-        orderData.put("embed_data", embedDataJson);
-        orderData.put("item", itemJson);
-        orderData.put("description", request.getDescription());
-        orderData.put("bank_code", "");
-        orderData.put("callback_url", callbackUrl);
+        List<NameValuePair> params = new ArrayList<>();
+        params.add(new BasicNameValuePair("app_id", zalopayConfig.getAppid()));
+        params.add(new BasicNameValuePair("app_user", appUser));
+        params.add(new BasicNameValuePair("app_time", String.valueOf(appTime)));
+        params.add(new BasicNameValuePair("amount", String.valueOf(amount)));
+        params.add(new BasicNameValuePair("app_trans_id", appTransId));
+        params.add(new BasicNameValuePair("embed_data", embedDataStr));
+        params.add(new BasicNameValuePair("item", item));
+        params.add(new BasicNameValuePair("description", "Thanh toan don hang #" + orderId));
+        params.add(new BasicNameValuePair("bank_code", ""));
+        params.add(new BasicNameValuePair("callback_url", zalopayConfig.getCallbackUrl()));
+        params.add(new BasicNameValuePair("mac", mac));
 
-        // Calculate MAC signature
-        String macData = String.format(
-            "%s|%s|%s|%s|%s|%s|%s",
-            appId,
-            appTransId,
-            request.getAppUser(),
-            request.getAmount(),
-            appTime,
-            embedDataJson,
-            itemJson
-        );
-        String mac = calculateHmacSHA256(macData, key1);
-        orderData.put("mac", mac);
+        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(CONNECTION_TIMEOUT).setSocketTimeout(SOCKET_TIMEOUT).build();
 
-        log.debug("ZaloPay order data: {}", orderData);
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
+            HttpPost post = new HttpPost(zalopayConfig.getEndpoint());
+            post.setConfig(requestConfig);
+            post.setEntity(new UrlEncodedFormEntity(params));
 
-        // Send request to ZaloPay
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+            try (CloseableHttpResponse res = client.execute(post)) {
+                BufferedReader rd = new BufferedReader(new InputStreamReader(res.getEntity().getContent()));
+                StringBuilder resultJsonStr = new StringBuilder();
+                String line;
+                while ((line = rd.readLine()) != null) {
+                    resultJsonStr.append(line);
+                }
+                JSONObject resultJson = new JSONObject(resultJsonStr.toString());
 
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(orderData, headers);
+                log.info("ZaloPay response: {}", resultJson);
 
-        ResponseEntity<Map> response = restTemplate.exchange(endpoint, HttpMethod.POST, entity, Map.class);
+                if (resultJson.getInt("return_code") == 1) {
+                    PaymentTransaction trans = new PaymentTransaction();
+                    trans.setOrder(order);
+                    trans.setAmount(BigDecimal.valueOf(amount));
+                    trans.setAppTransId(appTransId);
+                    trans.setStatus("PENDING");
+                    trans.setCreatedAt(Instant.now());
+                    trans.setDescription("Cho thanh toan qua ZaloPay");
+                    trans.setPaymentUrl(resultJson.optString("order_url"));
 
-        log.debug("ZaloPay response: {}", response.getBody());
+                    paymentTransactionRepository.save(trans);
 
-        // Parse response
-        ZaloPayOrderResponse orderResponse = new ZaloPayOrderResponse();
-        Map<String, Object> responseBody = response.getBody();
+                    result.put("order_url", resultJson.get("order_url"));
+                    result.put("qr_code_url", resultJson.optString("qr_code_url", ""));
+                    result.put("app_trans_id", appTransId);
+                    log.info("Payment transaction created successfully for Order ID: {}", orderId);
+                } else {
+                    log.error("ZaloPay order creation failed with return_code: {}", resultJson.getInt("return_code"));
+                }
 
-        if (responseBody != null) {
-            orderResponse.setReturnCode((Integer) responseBody.get("return_code"));
-            orderResponse.setReturnMessage((String) responseBody.get("return_message"));
-            orderResponse.setOrderUrl((String) responseBody.get("order_url"));
-            orderResponse.setZpTransToken((String) responseBody.get("zp_trans_token"));
-        }
-
-        return orderResponse;
-    }
-
-    /**
-     * Verify callback from ZaloPay
-     */
-    public boolean verifyCallback(String dataStr, String reqMac) {
-        try {
-            String mac = calculateHmacSHA256(dataStr, key2);
-            return mac.equals(reqMac);
-        } catch (Exception e) {
-            log.error("Error verifying callback: {}", e.getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Generate app_trans_id with format: yyMMdd_xxxxx
-     */
-    private String generateAppTransId(String orderCode) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd");
-        String dateStr = sdf.format(new Date());
-        return dateStr + "_" + orderCode;
-    }
-
-    /**
-     * Calculate HMAC SHA256
-     */
-    private String calculateHmacSHA256(String data, String key) throws Exception {
-        Mac hmac = Mac.getInstance("HmacSHA256");
-        SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-        hmac.init(secretKey);
-        byte[] hash = hmac.doFinal(data.getBytes(StandardCharsets.UTF_8));
-
-        // Convert to hex string
-        StringBuilder hexString = new StringBuilder();
-        for (byte b : hash) {
-            String hex = Integer.toHexString(0xff & b);
-            if (hex.length() == 1) {
-                hexString.append('0');
+                result.put("return_code", resultJson.get("return_code"));
+                result.put("return_message", resultJson.get("return_message"));
             }
-            hexString.append(hex);
+        } catch (Exception e) {
+            log.error("Error creating ZaloPay order", e);
+            throw new RuntimeException("Lỗi khi tạo đơn hàng ZaloPay: " + e.getMessage());
         }
-        return hexString.toString();
+
+        return result;
+    }
+
+    public JSONObject verifyCallback(String jsonStr) {
+        log.info("Verifying ZaloPay callback");
+        JSONObject result = new JSONObject();
+        try {
+            JSONObject cbdata = new JSONObject(jsonStr);
+            String dataStr = cbdata.getString("data");
+            String reqMac = cbdata.getString("mac");
+
+            String mac = new HmacUtils("HmacSHA256", zalopayConfig.getKey2()).hmacHex(dataStr);
+
+            if (!mac.equals(reqMac)) {
+                log.error("MAC verification failed");
+                result.put("return_code", -1);
+                result.put("return_message", "mac not equal");
+                return result;
+            }
+
+            JSONObject dataJson = new JSONObject(dataStr);
+            String appTransId = dataJson.getString("app_trans_id");
+            String zpTransId = dataJson.getString("zp_trans_id");
+
+            log.info("Processing callback for app_trans_id: {}", appTransId);
+
+            Optional<PaymentTransaction> transOpt = paymentTransactionRepository.findByAppTransId(appTransId);
+
+            if (transOpt.isPresent()) {
+                PaymentTransaction trans = transOpt.get();
+                if (!"SUCCESS".equals(trans.getStatus())) {
+                    trans.setStatus("SUCCESS");
+                    trans.setZpTransId(zpTransId);
+                    trans.setPaidAt(Instant.now());
+                    paymentTransactionRepository.save(trans);
+
+                    Order order = trans.getOrder();
+                    if (order != null) {
+                        order.setStatus(OrderStatus.PAID);
+                        orderRepository.save(order);
+                        log.info("Order ID: {} marked as PAID", order.getId());
+                    }
+                }
+            } else {
+                log.warn("Payment transaction not found for app_trans_id: {}", appTransId);
+            }
+
+            result.put("return_code", 1);
+            result.put("return_message", "success");
+        } catch (Exception e) {
+            log.error("Error verifying callback", e);
+            result.put("return_code", 0);
+            result.put("return_message", e.getMessage());
+        }
+        return result;
+    }
+
+    public Map<String, Object> checkPaymentStatus(String appTransId) {
+        log.info("Checking payment status for app_trans_id: {}", appTransId);
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            Optional<PaymentTransaction> transOpt = paymentTransactionRepository.findByAppTransId(appTransId);
+
+            if (transOpt.isPresent()) {
+                PaymentTransaction trans = transOpt.get();
+                result.put("status", trans.getStatus());
+                result.put("amount", trans.getAmount());
+                result.put("created_at", trans.getCreatedAt());
+                result.put("paid_at", trans.getPaidAt());
+                result.put("zp_trans_id", trans.getZpTransId());
+                result.put("return_code", 1);
+            } else {
+                result.put("return_code", -1);
+                result.put("return_message", "Transaction not found");
+            }
+        } catch (Exception e) {
+            log.error("Error checking payment status", e);
+            result.put("return_code", 0);
+            result.put("return_message", e.getMessage());
+        }
+
+        return result;
     }
 }

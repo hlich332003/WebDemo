@@ -172,7 +172,7 @@ public class SecurityConfiguration {
                     // ZaloPay payment endpoints
                     .requestMatchers(mvc.pattern("/api/zalopay/callback"))
                     .permitAll()
-                    .requestMatchers(mvc.pattern(HttpMethod.POST, "/api/zalopay/create-payment"))
+                    .requestMatchers(mvc.pattern(HttpMethod.POST, "/api/zalopay/create-order"))
                     .permitAll()
                     .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/zalopay/status/*"))
                     .permitAll()

@@ -1,0 +1,116 @@
+﻿.zalopay-payment-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.payment-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+.payment-header h2 {
+  color: #0088cc;
+  font-weight: 600;
+}
+.payment-status {
+  text-align: center;
+  padding: 2rem;
+}
+.payment-status.loading,
+.payment-status.pending {
+  min-height: 400px;
+}
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+.qr-frame {
+  width: 100%;
+  max-width: 400px;
+  height: 500px;
+  border: 3px solid #0088cc;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 136, 204, 0.2);
+  background: #f8f9fa;
+}
+.qr-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+.qr-instructions {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 500px;
+}
+.qr-instructions h4 {
+  color: #333;
+  margin-bottom: 1rem;
+}
+.qr-instructions ol {
+  text-align: left;
+  padding-left: 1.5rem;
+}
+.qr-instructions li {
+  margin-bottom: 0.5rem;
+  color: #555;
+}
+.payment-waiting {
+  margin-top: 2rem;
+}
+.payment-waiting .spinner-grow {
+  width: 3rem;
+  height: 3rem;
+}
+.success-icon {
+  color: #28a745;
+  margin-bottom: 1rem;
+}
+.error-icon {
+  color: #dc3545;
+  margin-bottom: 1rem;
+}
+.warning-icon {
+  color: #ffc107;
+  margin-bottom: 1rem;
+}
+.payment-status.success,
+.payment-status.failed,
+.payment-status.timeout {
+  padding: 3rem 2rem;
+}
+.payment-status h3 {
+  margin: 1rem 0;
+  font-weight: 600;
+}
+.error-text {
+  color: #dc3545;
+  font-weight: 500;
+}
+.alert {
+  margin-top: 1rem;
+  text-align: left;
+}
+@media (max-width: 768px) {
+  .zalopay-payment-container {
+    padding: 1rem;
+    margin: 1rem;
+  }
+  .qr-frame {
+    max-width: 100%;
+    height: 400px;
+  }
+  .qr-container {
+    gap: 1rem;
+  }
+}

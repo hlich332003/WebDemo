@@ -21,7 +21,13 @@
       <p><strong>Địa chỉ:</strong> {{ orderDetails.customerInfo.address }}</p>
       <p>
         <strong>Phương thức thanh toán:</strong>
-        {{ orderDetails.customerInfo.paymentMethod === 'cod' ? 'Thanh toán khi nhận hàng' : 'Chuyển khoản ngân hàng' }}
+        {{
+          orderDetails.customerInfo.paymentMethod === 'cod'
+            ? 'Thanh toán khi nhận hàng'
+            : orderDetails.customerInfo.paymentMethod === 'zalopay'
+              ? 'Thanh toán qua ZaloPay'
+              : 'Chuyển khoản ngân hàng'
+        }}
       </p>
     </div>
     <div class="alert alert-warning mt-3"><strong>⚠️ Lưu ý:</strong> Vui lòng lưu lại mã đơn hàng để tra cứu sau này!</div>
