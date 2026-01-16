@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "web-demo": {
+    "pcno1": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -90,15 +90,15 @@
         "serve": {
           "builder": "@angular-builders/custom-webpack:dev-server",
           "options": {
-            "buildTarget": "web-demo:build:development",
+            "buildTarget": "pcno1:build:development",
             "port": 4200
           },
           "configurations": {
             "production": {
-              "buildTarget": "web-demo:build:production"
+              "buildTarget": "pcno1:build:production"
             },
             "development": {
-              "buildTarget": "web-demo:build:development"
+              "buildTarget": "pcno1:build:development"
             }
           },
           "defaultConfiguration": "development"

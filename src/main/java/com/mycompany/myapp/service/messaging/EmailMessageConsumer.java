@@ -311,7 +311,7 @@ public class EmailMessageConsumer {
                 <p><strong>Order Code:</strong> %s</p>
                 <p><strong>Total Amount:</strong> $%.2f</p>
                 <p>We will send you updates as your order progresses.</p>
-                <p>Best regards,<br/>Web Demo Team</p>
+                <p>Best regards,<br/>PcNo.1 Team</p>
             </body>
             </html>
             """,

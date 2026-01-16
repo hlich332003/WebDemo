@@ -4,7 +4,7 @@
  * Automated End-to-End Testing
  */
 
-describe('WebDemo E-Commerce E2E Tests', () => {
+describe('PcNo.1 E-Commerce E2E Tests', () => {
   const baseUrl = 'http://localhost:8080';
 
   const testUser = { username: 'user', password: 'user' };

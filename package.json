@@ -1,8 +1,8 @@
 {
-  "name": "web-demo",
+  "name": "pcno1",
   "version": "0.0.1-SNAPSHOT",
   "private": true,
-  "description": "Description for Web Demo",
+  "description": "PcNo.1 - Computer Store",
   "license": "UNLICENSED",
   "scripts": {
     "app:start": "./mvnw -ntp --batch-mode",

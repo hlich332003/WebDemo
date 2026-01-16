@@ -3,12 +3,11 @@ package com.mycompany.myapp.service.messaging;
 import com.mycompany.myapp.config.RabbitMQConfig;
 import com.mycompany.myapp.service.MailService;
 import com.mycompany.myapp.service.dto.OrderDTO;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
 
 /**
  * Service for consuming messages from RabbitMQ queues.
@@ -97,8 +96,8 @@ public class MessageConsumerService {
             log.info("👤 Received user registration event from RabbitMQ: email = {}", email);
 
             // Send welcome email
-            String subject = "Chào mừng bạn đến với Web Demo!";
-            String body = String.format("Xin chào %s,\n\nChúc mừng bạn đã đăng ký thành công!\n\nTrân trọng,\nWeb Demo Team", firstName);
+            String subject = "Chào mừng bạn đến với PcNo.1!";
+            String body = String.format("Xin chào %s,\n\nChúc mừng bạn đã đăng ký thành công!\n\nTrân trọng,\nPcNo.1 Team", firstName);
             mailService.sendEmail(email, subject, body, false, false);
 
             log.info("✅ Welcome email sent successfully to: {}", email);
@@ -138,4 +137,3 @@ public class MessageConsumerService {
         log.info("Sending push notification to user {}: {} - {}", userId, title, message);
     }
 }
-

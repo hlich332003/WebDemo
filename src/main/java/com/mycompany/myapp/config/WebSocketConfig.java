@@ -1,5 +1,8 @@
 package com.mycompany.myapp.config;
 
+import io.undertow.websockets.jsr.WebSocketDeploymentInfo;
+import org.springframework.boot.web.embedded.undertow.UndertowServletWebServerFactory;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -14,6 +17,10 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.server.HandshakeInterceptor;
+import org.xnio.ByteBufferSlicePool;
+import org.xnio.OptionMap;
+import org.xnio.Xnio;
+import org.xnio.XnioWorker;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -55,5 +62,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         scheduler.setThreadNamePrefix("websocket-heartbeat-");
         scheduler.initialize();
         return scheduler;
+    }
+
+    @Bean
+    public WebServerFactoryCustomizer<UndertowServletWebServerFactory> undertowWebSocketCustomizer() {
+        return factory ->
+            factory.addDeploymentInfoCustomizers(deploymentInfo -> {
+                WebSocketDeploymentInfo webSocketDeploymentInfo = new WebSocketDeploymentInfo();
+                webSocketDeploymentInfo.setBuffers(new ByteBufferSlicePool(1024, 10240));
+                deploymentInfo.addServletContextAttribute(WebSocketDeploymentInfo.ATTRIBUTE_NAME, webSocketDeploymentInfo);
+            });
     }
 }

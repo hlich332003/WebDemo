@@ -36,13 +36,13 @@ spring:
           authorities-claim-name: auth
   task:
     execution:
-      thread-name-prefix: web-demo-task-
+      thread-name-prefix: pcno1-task-
       pool:
         core-size: 1
         max-size: 50
         queue-capacity: 10000
     scheduling:
-      thread-name-prefix: web-demo-scheduling-
+      thread-name-prefix: pcno1-scheduling-
       pool:
         size: 20
   thymeleaf:
@@ -59,9 +59,9 @@ server:
 # ===================================================================
 jhipster:
   clientApp:
-    name: 'webDemoApp'
+    name: 'pcno1App'
   mail:
-    from: webDemo@localhost.com
+    from: pcno1@localhost.com
     base-url: http://127.0.0.1:8080
   logging:
     # To test json console appender

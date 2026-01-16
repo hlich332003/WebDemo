@@ -83,6 +83,8 @@ public class SecurityConfiguration {
         source.registerCorsConfiguration("/v3/api-docs", config);
         source.registerCorsConfiguration("/swagger-ui/**", config);
         source.registerCorsConfiguration("/websocket/**", config);
+        // Allow CORS for actuator endpoints
+        source.registerCorsConfiguration("/actuator/**", config);
         return source;
     }
 
@@ -167,6 +169,13 @@ public class SecurityConfiguration {
                     .permitAll()
                     .requestMatchers(mvc.pattern("/api/support/tickets"))
                     .permitAll()
+                    // ZaloPay payment endpoints
+                    .requestMatchers(mvc.pattern("/api/zalopay/callback"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.POST, "/api/zalopay/create-payment"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/zalopay/status/*"))
+                    .permitAll()
                     // All other API endpoints require authentication
                     .requestMatchers(mvc.pattern("/api/**"))
                     .authenticated()
@@ -181,6 +190,21 @@ public class SecurityConfiguration {
                     .requestMatchers(mvc.pattern("/management/prometheus"))
                     .permitAll()
                     .requestMatchers(mvc.pattern("/management/**"))
+                    .hasAuthority(AuthoritiesConstants.ADMIN)
+                    // Actuator endpoints
+                    .requestMatchers(mvc.pattern("/actuator/health"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern("/actuator/health/**"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern("/actuator/info"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern("/actuator/prometheus"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern("/actuator/metrics"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern("/actuator/metrics/**"))
+                    .permitAll()
+                    .requestMatchers(mvc.pattern("/actuator/**"))
                     .hasAuthority(AuthoritiesConstants.ADMIN)
                     // FIX: Allow websocket connection for guests
                     .requestMatchers(mvc.pattern("/websocket/**"))

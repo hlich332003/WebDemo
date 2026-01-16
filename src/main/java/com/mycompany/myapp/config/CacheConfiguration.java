@@ -76,6 +76,53 @@ public class CacheConfiguration {
 
         Map<String, RedisCacheConfiguration> cacheConfigs = new HashMap<>();
 
+        // Add missing caches to avoid HHH90001006 warning
+        cacheConfigs.put(
+            "com.mycompany.myapp.domain.Cart",
+            RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(10))
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(
+                    RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper))
+                )
+        );
+        cacheConfigs.put(
+            "com.mycompany.myapp.domain.Cart.items",
+            RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(10))
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(
+                    RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper))
+                )
+        );
+        cacheConfigs.put(
+            "com.mycompany.myapp.domain.WishlistItem",
+            RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(10))
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(
+                    RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper))
+                )
+        );
+        cacheConfigs.put(
+            "com.mycompany.myapp.domain.Authority",
+            RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofHours(24)) // Authorities rarely change
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(
+                    RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper))
+                )
+        );
+        cacheConfigs.put(
+            "com.mycompany.myapp.domain.CartItem",
+            RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(10))
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(
+                    RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper))
+                )
+        );
+
         cacheConfigs.put(
             "products",
             RedisCacheConfiguration.defaultCacheConfig()

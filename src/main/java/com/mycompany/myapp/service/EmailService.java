@@ -61,7 +61,7 @@ public class EmailService {
                 " VND\n" +
                 "Chúng tôi sẽ xử lý đơn hàng của bạn sớm nhất có thể.\n\n" +
                 "Trân trọng,\n" +
-                "Đội ngũ WebDemo"
+                "Đội ngũ PcNo.1"
             );
             mailSender.send(message);
             log.info("✅ Confirmation email sent successfully to {}", customerEmail);
@@ -79,14 +79,14 @@ public class EmailService {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
             message.setTo(user.getEmail());
-            message.setSubject("Chào mừng bạn đến với WebDemo!");
+            message.setSubject("Chào mừng bạn đến với PcNo.1!");
             message.setText(
                 "Kính gửi " +
                 user.getFirstName() +
                 ",\n\n" +
-                "Chào mừng bạn đã đăng ký tài khoản tại WebDemo. Chúc bạn có trải nghiệm mua sắm tuyệt vời!\n\n" +
+                "Chào mừng bạn đã đăng ký tài khoản tại PcNo.1. Chúc bạn có trải nghiệm mua sắm tuyệt vời!\n\n" +
                 "Trân trọng,\n" +
-                "Đội ngũ WebDemo"
+                "Đội ngũ PcNo.1"
             );
             mailSender.send(message);
             log.info("Welcome email sent for user {}", user.getEmail());

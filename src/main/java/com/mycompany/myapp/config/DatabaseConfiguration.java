@@ -74,7 +74,7 @@ public class DatabaseConfiguration {
     ) {
         Map<String, Object> properties = new HashMap<>();
         properties.put("hibernate.hbm2ddl.auto", "none");
-        properties.put("hibernate.dialect", "org.hibernate.dialect.SQLServerDialect");
+        // properties.put("hibernate.dialect", "org.hibernate.dialect.SQLServerDialect"); // Removed to avoid HHH90000025 warning
         properties.put("hibernate.default_schema", "dbo");
 
         return builder

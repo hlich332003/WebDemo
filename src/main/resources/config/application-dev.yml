@@ -1,14 +1,14 @@
 logging:
   level:
-    root: DEBUG
-    tech.jhipster: DEBUG
-    com.mycompany.myapp: DEBUG
-    com.mycompany.myapp.config: DEBUG
-    com.mycompany.myapp.web.websocket: DEBUG
-    org.springframework.web.socket: DEBUG
-    org.springframework.messaging: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql: TRACE
+    root: ERROR
+    tech.jhipster: INFO
+    com.mycompany.myapp: INFO
+    com.mycompany.myapp.config: INFO
+    com.mycompany.myapp.web.websocket: WARN
+    org.springframework.web.socket: WARN
+    org.springframework.messaging: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql: WARN
 
 spring:
   devtools:
@@ -135,3 +135,21 @@ jhipster:
       host: localhost
       port: 5000
       ring-buffer-size: 512
+
+# CẤU HÌNH ZALOPAY (Sandbox)
+zalopay:
+  appid: '2553'
+  key1: '9phuAOYhan4urywHTh0ndEXiM3pKHyv1'
+  key2: 'kLtgPl8HHhfvMuDHPwKfgfsY4Ydm9eIz'
+  endpoint: 'https://sb-openapi.zalopay.vn/v2/create'
+  callback-url: 'http://localhost:8080/api/zalopay/callback'
+  redirect-url: 'http://localhost:8080/payment-result'
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,configprops,threaddump,heapdump,prometheus
+  endpoint:
+    health:
+      show-details: always
